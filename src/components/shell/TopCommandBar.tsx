@@ -1,0 +1,58 @@
+"use client";
+
+import React from "react";
+import { AssetSearchBox } from "../search/AssetSearchBox";
+import { Asset } from "@/domain/market/asset";
+import { Activity } from "lucide-react";
+
+interface TopCommandBarProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  onSelectAsset: (asset: Asset) => void;
+}
+
+export const TopCommandBar: React.FC<TopCommandBarProps> = ({
+  activeTab,
+  onTabChange,
+  onSelectAsset,
+}) => {
+  const tabs = [
+    { id: "markets", label: "Markets" },
+    { id: "portfolio", label: "Portfolio" },
+    { id: "research", label: "Research" },
+    { id: "tools", label: "Tools" },
+    { id: "ai", label: "AI" },
+  ];
+
+  return (
+    <header className="flex items-center justify-between px-6 py-3 bg-kt-bg-overlay-300/40 backdrop-blur-md border-b border-kt-border-panel sticky top-0 z-40">
+      <div className="flex items-center gap-2">
+        <Activity className="w-5 h-5 text-kt-positive-text flex-shrink-0" />
+        <span className="text-md font-bold tracking-tight text-kt-text-primary tabular-nums">K-Terminal</span>
+      </div>
+
+      <div className="flex-1 max-w-sm mx-6">
+        <AssetSearchBox onSelectAsset={onSelectAsset} />
+      </div>
+
+      <nav className="flex items-center gap-1.5 bg-kt-bg-surface-100 p-1 rounded-kt-pill border border-kt-border-panel">
+        {tabs.map((tab) => {
+          const isActive = tab.id === activeTab;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`px-3 py-1 text-xs font-medium rounded-kt-pill transition-colors cursor-pointer ${
+                isActive
+                  ? "bg-kt-bg-body text-kt-text-primary border border-kt-border-panel"
+                  : "text-kt-text-secondary hover:text-kt-text-primary"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </nav>
+    </header>
+  );
+};

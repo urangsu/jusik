@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+:root {
+  --kt-bg-surface-100: #101013;
+  --kt-bg-body: rgb(23, 23, 28);
+  --kt-bg-overlay-300: #202025;
+
+  --kt-border-panel: rgba(239, 215, 215, 0.09);
+
+  --kt-text-primary: rgba(255, 240, 240, 0.9);
+  --kt-text-secondary: rgb(195, 195, 198);
+  --kt-text-muted: rgba(255, 240, 240, 0.47);
+
+  --kt-positive: #dc2e47;
+  --kt-positive-text: #f5445a;
+  --kt-positive-weak: rgba(219, 81, 87, 0.2);
+
+  --kt-negative: #171717;
+  --kt-negative-text: #4391ff;
+  --kt-negative-weak: rgba(67, 145, 255, 0.16);
+
+  --kt-radius-card: 8px;
+  --kt-radius-pill: 32px;
+}
+
+@theme {
+  --color-kt-bg-surface-100: var(--kt-bg-surface-100);
+  --color-kt-bg-body: var(--kt-bg-body);
+  --color-kt-bg-overlay-300: var(--kt-bg-overlay-300);
+
+  --color-kt-border-panel: var(--kt-border-panel);
+
+  --color-kt-text-primary: var(--kt-text-primary);
+  --color-kt-text-secondary: var(--kt-text-secondary);
+  --color-kt-text-muted: var(--kt-text-muted);
+
+  --color-kt-positive: var(--kt-positive);
+  --color-kt-positive-text: var(--kt-positive-text);
+  --color-kt-positive-weak: var(--kt-positive-weak);
+
+  --color-kt-negative: var(--kt-negative);
+  --color-kt-negative-text: var(--kt-negative-text);
+  --color-kt-negative-weak: var(--kt-negative-weak);
+
+  --radius-kt-card: var(--kt-radius-card);
+  --radius-kt-pill: var(--kt-radius-pill);
+}
+
+body {
+  background-color: var(--kt-bg-body);
+  color: var(--kt-text-primary);
+  font-family:
+    "Toss Product Sans",
+    Tossface,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans KR",
+    "Segoe UI",
+    "Apple SD Gothic Neo",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Numeric columns should be strictly tabular numbers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom scrollbars matching the dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--kt-bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--kt-border-panel);
+  border-radius: var(--kt-radius-card);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--kt-text-muted);
+}
