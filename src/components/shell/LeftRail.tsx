@@ -10,7 +10,7 @@ interface LeftRailProps {
 
 export const LeftRail: React.FC<LeftRailProps> = ({ onSelectAsset }) => {
   return (
-    <aside className="w-80 border-r border-kt-border-panel flex flex-col gap-4 p-4 overflow-y-auto bg-kt-bg-body">
+    <aside className="w-80 border-r border-kt-border-panel flex flex-col gap-4 p-4 overflow-y-auto bg-kt-bg-body max-lg:w-full max-lg:max-h-64 max-lg:border-r-0 max-lg:border-b">
       <Panel title="관심 종목 (Watchlist)">
         <div className="flex flex-col gap-1.5">
           {SEED_ASSETS.map((asset) => (

@@ -10,7 +10,7 @@ interface RightRailProps {
 
 export const RightRail: React.FC<RightRailProps> = ({ selectedAsset }) => {
   return (
-    <aside className="w-80 border-l border-kt-border-panel flex flex-col gap-4 p-4 overflow-y-auto bg-kt-bg-body">
+    <aside className="w-80 border-l border-kt-border-panel flex flex-col gap-4 p-4 overflow-y-auto bg-kt-bg-body max-lg:w-full max-lg:max-h-72 max-lg:border-l-0 max-lg:border-t">
       {/* AI Insight */}
       <Panel
         title="AI 인사이트 (AI Insight)"
