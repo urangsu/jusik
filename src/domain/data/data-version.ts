@@ -8,8 +8,3 @@ export type DataVersion = {
   revisionId?: string;
   hash: string;
 };
-
-export type EngineVersion = {
-  engineId: string;
-  engineVersion: string;
-};
