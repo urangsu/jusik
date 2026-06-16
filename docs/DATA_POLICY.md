@@ -56,3 +56,24 @@
 * 전략 합의는 참여 가능한 전략 뷰가 3개 미만이면 계산하지 않습니다.
 * AI는 전략 점수를 생성하지 않으며, 이미 계산된 데이터와 veto 사유만 설명합니다.
 * expected alpha 연환산 값은 P0/P1 UI에 표시하지 않습니다.
+
+---
+
+## 6. Versioning and Reproducibility
+
+모든 신호와 계산 산출물은 재현 가능한 버전 정보를 가져야 합니다.
+
+* `DataVersion`: 어떤 원천 데이터로 계산했는지 기록합니다.
+* `EngineVersion`: 어떤 deterministic engine과 configHash로 계산했는지 기록합니다.
+* `SignalVersion`: 특정 신호가 어떤 dataVersion, engineVersion, inputHash, calculatedAt, expiryAt으로 생성됐는지 기록합니다.
+
+`engineVersion` 문자열만으로는 충분하지 않습니다. engineId와 configHash가 같이 있어야 합니다.
+
+---
+
+## 7. Runtime Guard Rails
+
+* expected alpha는 domain에는 존재할 수 있지만 P0/P1 UI에 렌더링하지 않습니다.
+* `productionEligible=true`는 ResearchGate 검증 없이 사용할 수 없습니다.
+* Strategy Agreement는 최소 참여 view 조건 미달 시 숫자 점수를 표시하지 않습니다.
+* StdDev overlay는 OHLCV 미연결 시 z-score를 표시하지 않습니다.
