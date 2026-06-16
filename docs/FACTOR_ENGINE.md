@@ -44,3 +44,11 @@ Health badge는 production eligibility가 아닙니다. production 전환은 Res
 ## Market Scope
 
 KR과 US를 같은 percentile 공간에서 정규화하지 않습니다. KOSPI200, KOSDAQ, SP500, NASDAQ100 같은 universe 별로 breakpoint를 분리합니다.
+
+## Universe Snapshot Guard
+
+Factor normalization must receive a `UniverseSnapshot`. Market-only normalization is not enough.
+
+- `SEED_DEMO` is rejected for research normalization.
+- observations outside `UniverseSnapshot.assetIds` are invalid.
+- mixed KR/US universes are not eligible for factor validation.

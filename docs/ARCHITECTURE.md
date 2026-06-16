@@ -164,3 +164,16 @@ npm run build
 `check:wording`은 UI 실행 경로의 투자조언성 문구를 fail 처리합니다. 문서의 금지어 설명은 warning만 출력합니다.
 
 `check:alpha-ui`는 `expectedAlphaAnnualized`와 expected alpha wording이 UI 경로에 들어가는 것을 차단합니다.
+
+---
+
+## 8. PIT and Universe Foundation
+
+003-A introduces immutable PIT contracts and universe snapshots before any real provider is connected.
+
+```txt
+AssetIdentity -> UniverseMembership -> UniverseSnapshot
+DataVersion -> PitRecord -> getAsOf(knownAt)
+```
+
+`InMemoryDataVersionStore` and `InMemoryPitStore` are test/dev-only boundaries. Production storage will be introduced later and must preserve immutable historical records.

@@ -77,3 +77,12 @@
 * `productionEligible=true`는 ResearchGate 검증 없이 사용할 수 없습니다.
 * Strategy Agreement는 최소 참여 view 조건 미달 시 숫자 점수를 표시하지 않습니다.
 * StdDev overlay는 OHLCV 미연결 시 z-score를 표시하지 않습니다.
+
+---
+
+## 8. PIT Store and Seed Data
+
+* PIT record는 `asOfDate`, `effectiveAt`, `ingestedAt`을 구분합니다.
+* backtest와 research lookup은 `knownAt` 이후에 수집된 데이터를 읽을 수 없습니다.
+* revision은 새 record와 새 dataVersion으로 저장하며 기존 record를 덮어쓰지 않습니다.
+* seed/demo data는 production data가 아니며 실제 투자 신호에 사용할 수 없습니다.
