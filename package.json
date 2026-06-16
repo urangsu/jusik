@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:wording": "node scripts/check-forbidden-ui-text.mjs",
+    "check:alpha-ui": "node scripts/check-alpha-ui-exposure.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
