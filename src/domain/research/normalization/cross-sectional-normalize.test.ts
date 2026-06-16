@@ -79,7 +79,7 @@ describe("crossSectionalNormalize", () => {
         { assetId: "B", market: "KR", universe: "KOSPI200", value: 20 },
       ],
       method: "rank_percentile",
-    });
+    } as Parameters<typeof crossSectionalNormalize>[0]);
 
     expect(output.status).toBe("invalid_input");
     expect(output.value).toBeNull();

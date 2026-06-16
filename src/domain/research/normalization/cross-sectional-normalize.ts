@@ -21,7 +21,7 @@ type NormalizedObservation = NormalizeObservation & {
 type CrossSectionalNormalizeParams = {
   observations: NormalizeObservation[];
   method: NormalizationMethod;
-  universeSnapshot?: UniverseSnapshot;
+  universeSnapshot: UniverseSnapshot;
   sectorNeutral?: boolean;
   winsorizePct?: number;
 };
