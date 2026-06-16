@@ -64,4 +64,44 @@ describe("decomposePortfolioRisk", () => {
       ]),
     );
   });
+
+  it("returns invalid_input when covariance dimensions do not match factorIds", () => {
+    const output = decomposePortfolioRisk({
+      portfolioId: "p1",
+      date: "2026-06-16",
+      weights: [{ assetId: "A", weight: 0.5 }],
+      factorExposures: { A: { value: 1, momentum: 0.5 } },
+      factorCovariance: {
+        factorIds: ["value", "momentum"],
+        covariance: [[0.04]],
+      },
+      specificVariances: { A: 0.01 },
+      engineVersion: "0.2.0",
+      dataVersionId: "dv1",
+    });
+
+    expect(output.status).toBe("invalid_input");
+    expect(output.value).toBeNull();
+    expect(output.warnings).toContain("Factor covariance matrix dimensions must match factorIds.");
+  });
+
+  it("returns invalid_input when negative variance would make total volatility invalid", () => {
+    const output = decomposePortfolioRisk({
+      portfolioId: "p1",
+      date: "2026-06-16",
+      weights: [{ assetId: "A", weight: 1 }],
+      factorExposures: { A: { value: 1 } },
+      factorCovariance: {
+        factorIds: ["value"],
+        covariance: [[-0.04]],
+      },
+      specificVariances: { A: 0.01 },
+      engineVersion: "0.2.0",
+      dataVersionId: "dv1",
+    });
+
+    expect(output.status).toBe("invalid_input");
+    expect(output.value).toBeNull();
+    expect(output.warnings).toContain("Variance inputs must not produce negative portfolio variance.");
+  });
 });
