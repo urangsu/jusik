@@ -8,7 +8,8 @@ export type DataStatus =
   | "not_supported"
   | "not_found"
   | "error"
-  | "insufficient_data";
+  | "insufficient_data"
+  | "stale";
 
 export type MarketRegion = "US" | "KR";
 

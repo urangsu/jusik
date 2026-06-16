@@ -1,16 +1,16 @@
-import { MarketRegion } from "../common/data-status";
+import { Market } from "./exchange";
 
 export type Quote = {
   assetId: string;
+  market: Market;
   symbol: string;
-  region: MarketRegion;
-  last: number | null;
-  change: number | null;
-  changePercent: number | null;
-  open: number | null;
-  high: number | null;
-  low: number | null;
-  volume: number | null;
+  price: number | null;
   currency: "KRW" | "USD";
-  marketTime: string | null;
+  change: number | null;
+  changePct: number | null;
+  volume: number | null;
+  tradeDate: string | null;
+  updatedAt: string | null;
+  source: string;
+  dataVersionId: string | null;
 };
