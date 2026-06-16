@@ -1,4 +1,5 @@
 import { DataStatus } from "@/domain/common/data-status";
+import { SignalVersion } from "@/domain/signals/signal-version";
 
 export type StdDevWindow = 20 | 60 | 120;
 
@@ -42,4 +43,5 @@ export type StdDevSignal = {
   dataQualityScore: number;
   vetoReasons: string[];
   explanation: string;
+  version?: SignalVersion;
 };

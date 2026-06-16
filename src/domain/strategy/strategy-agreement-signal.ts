@@ -1,4 +1,5 @@
 import { DataStatus } from "@/domain/common/data-status";
+import { SignalVersion } from "@/domain/signals/signal-version";
 import { StrategyViewId } from "./strategy-view";
 
 export type StrategyAgreementLabel =
@@ -31,4 +32,5 @@ export type StrategyAgreementSignal = {
   status: DataStatus;
   dataQualityScore: number;
   explanation: string;
+  version?: SignalVersion;
 };
