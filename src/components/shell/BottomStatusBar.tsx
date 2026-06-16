@@ -1,12 +1,15 @@
 import React from "react";
 import { AlertCircle, Terminal } from "lucide-react";
 import { DataStatus } from "@/domain/common/data-status";
+import { useI18n } from "@/i18n/use-i18n";
 
 interface BottomStatusBarProps {
   status: DataStatus;
 }
 
 export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({ status }) => {
+  const { locale } = useI18n();
+
   return (
     <footer className="h-8 px-4 bg-kt-bg-overlay-300 border-t border-kt-border-panel flex items-center justify-between text-xs text-kt-text-secondary select-none">
       <div className="flex items-center gap-2">
@@ -15,7 +18,9 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({ status }) => {
         {status === "api_required" ? (
           <span className="flex items-center gap-1 text-kt-negative-text font-medium">
             <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-            외부 API 연동 누락 (DART, SEC, Market API 연결 없음)
+            {locale === "ko"
+              ? "외부 API 연동 누락 (DART, SEC, Market API 연결 없음)"
+              : "Missing External API integration (No connection to DART, SEC, or Market APIs)"}
           </span>
         ) : (
           <span className="text-kt-text-secondary">{status}</span>

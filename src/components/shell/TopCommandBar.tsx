@@ -3,6 +3,7 @@
 import React from "react";
 import { AssetSearchBox } from "../search/AssetSearchBox";
 import { Asset } from "@/domain/market/asset";
+import { useI18n } from "@/i18n/use-i18n";
 import { Activity } from "lucide-react";
 
 interface TopCommandBarProps {
@@ -16,14 +17,16 @@ export const TopCommandBar: React.FC<TopCommandBarProps> = ({
   onTabChange,
   onSelectAsset,
 }) => {
+  const { locale } = useI18n();
+
   const tabs = [
-    { id: "markets", label: "Markets" },
-    { id: "terminal", label: "Terminal" },
-    { id: "financials", label: "Financials" },
-    { id: "strategy", label: "Strategy" },
-    { id: "portfolio", label: "Portfolio" },
-    { id: "research", label: "Research" },
-    { id: "ai", label: "AI" },
+    { id: "markets", label: locale === "ko" ? "시장 보드" : "Markets" },
+    { id: "terminal", label: locale === "ko" ? "터미널" : "Terminal" },
+    { id: "financials", label: locale === "ko" ? "재무분석" : "Financials" },
+    { id: "strategy", label: locale === "ko" ? "전략 점수" : "Strategy" },
+    { id: "portfolio", label: locale === "ko" ? "포트폴리오" : "Portfolio" },
+    { id: "research", label: locale === "ko" ? "리서치" : "Research" },
+    { id: "ai", label: locale === "ko" ? "AI 분석" : "AI" },
   ];
 
   return (

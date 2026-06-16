@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getServerLocale } from "@/i18n/server-locale";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -6,13 +7,14 @@ export const metadata: Metadata = {
   description: "미국주식과 한국주식을 함께 분석하는 개인투자용 한국어 금융 터미널의 첫 번째 기반",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getServerLocale();
   return (
-    <html lang="ko" className="h-full">
+    <html lang={locale} className="h-full">
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

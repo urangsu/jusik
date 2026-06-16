@@ -1,5 +1,6 @@
 import React from "react";
 import { MarketUniverseId } from "@/domain/universe/market-universe";
+import { useI18n } from "@/i18n/use-i18n";
 
 interface UniverseToggleProps {
   activeUniverseId: MarketUniverseId;
@@ -10,9 +11,11 @@ export const UniverseToggle: React.FC<UniverseToggleProps> = ({
   activeUniverseId,
   onChange,
 }) => {
+  const { t } = useI18n();
+
   const options = [
-    { id: "KOSPI_SAMPLE" as const, label: "코스피 대표" },
-    { id: "SP500_SAMPLE" as const, label: "S&P 500 대표" },
+    { id: "KOSPI_SAMPLE" as const, labelKey: "universeKospiSample" },
+    { id: "SP500_SAMPLE" as const, labelKey: "universeSp500Sample" },
   ];
 
   return (
@@ -29,7 +32,7 @@ export const UniverseToggle: React.FC<UniverseToggleProps> = ({
                 : "text-kt-text-secondary hover:text-kt-text-primary"
             }`}
           >
-            {opt.label}
+            {t(opt.labelKey)}
           </button>
         );
       })}

@@ -35,6 +35,21 @@ export type ProviderProfile = {
 
 export const PROVIDERS: ProviderProfile[] = [
   {
+    id: "kis",
+    displayName: "Korea Investment Securities (KIS) Open API",
+    tier: "official",
+    markets: ["KR"],
+    capabilities: ["quote", "ohlcv"],
+    requiresApiKey: true,
+    isOfficialSource: true,
+    isUnofficial: false,
+    freeLimitLabel: "official developer account limits",
+    licenseRisk: "low",
+    commercialUseAllowed: "yes",
+    priority: 5,
+    enabledByDefault: true,
+  },
+  {
     id: "opendart",
     displayName: "OpenDART",
     tier: "official",

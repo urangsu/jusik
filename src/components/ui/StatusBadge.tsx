@@ -1,19 +1,7 @@
 import React from "react";
 import { DataStatus } from "@/domain/common/data-status";
-
-export const STATUS_LABEL: Record<DataStatus, string> = {
-  real_time: "실시간",
-  delayed: "지연",
-  eod: "종가",
-  cached: "캐시",
-  api_required: "API 필요",
-  rate_limited: "호출 제한",
-  not_supported: "미지원",
-  not_found: "없음",
-  error: "오류",
-  insufficient_data: "데이터 부족",
-  stale: "오래된 데이터",
-};
+import { useI18n } from "@/i18n/use-i18n";
+import { getDataStatusLabel } from "@/i18n/status-labels";
 
 interface StatusBadgeProps {
   status: DataStatus;
@@ -21,7 +9,8 @@ interface StatusBadgeProps {
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = "" }) => {
-  const label = STATUS_LABEL[status] || status;
+  const { locale } = useI18n();
+  const label = getDataStatusLabel(status, locale);
 
   let colorClasses = "bg-kt-bg-overlay-300 text-kt-text-secondary border-kt-border-panel";
 

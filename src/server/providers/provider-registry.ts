@@ -49,6 +49,8 @@ export class ProviderRegistry {
 
   private getApiKeyVarName(id: string): string {
     switch (id) {
+      case "kis":
+        return "KIS_APP_KEY";
       case "opendart":
         return "OPENDART_API_KEY";
       case "fmp_free":

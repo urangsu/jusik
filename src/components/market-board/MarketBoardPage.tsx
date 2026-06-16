@@ -8,6 +8,8 @@ import { MarketBoardToolbar } from "./MarketBoardToolbar";
 import { MarketHeatmap } from "./MarketHeatmap";
 import { MarketScreenerTable } from "./MarketScreenerTable";
 import { MarketBoardDiagnostics } from "./MarketBoardDiagnostics";
+import { LocaleToggle } from "../settings/LocaleToggle";
+import { useI18n } from "@/i18n/use-i18n";
 import { LayoutGrid } from "lucide-react";
 
 interface MarketBoardPageProps {
@@ -15,6 +17,8 @@ interface MarketBoardPageProps {
 }
 
 export const MarketBoardPage: React.FC<MarketBoardPageProps> = ({ initialSnapshot }) => {
+  const { t, locale } = useI18n();
+
   const [activeUniverseId, setActiveUniverseId] = useState<MarketUniverseId>(
     initialSnapshot?.universeId || "KOSPI_SAMPLE"
   );
@@ -162,19 +166,22 @@ export const MarketBoardPage: React.FC<MarketBoardPageProps> = ({ initialSnapsho
         <div>
           <h1 className="text-md font-bold tracking-tight text-kt-text-primary flex items-center gap-2">
             <LayoutGrid className="w-4 h-4 text-kt-positive-text flex-shrink-0" />
-            시장 보드 (Market Board)
+            {t("marketBoard")}
           </h1>
           <p className="text-[10px] text-kt-text-muted mt-1 leading-normal">
-            KOSPI와 S&P 500 대표 주식들의 실시간 데이터 수신 상태 및 밸류에이션 스크리너 대시보드입니다.
+            {t("marketBoardDesc")}
           </p>
         </div>
-        <UniverseToggle
-          activeUniverseId={activeUniverseId}
-          onChange={(id) => {
-            setActiveUniverseId(id);
-            setSelectedSector("ALL"); // reset sector
-          }}
-        />
+        <div className="flex items-center gap-3">
+          <LocaleToggle />
+          <UniverseToggle
+            activeUniverseId={activeUniverseId}
+            onChange={(id) => {
+              setActiveUniverseId(id);
+              setSelectedSector("ALL"); // reset sector
+            }}
+          />
+        </div>
       </div>
 
       {/* Snapshot Provenance Banner */}
@@ -183,18 +190,20 @@ export const MarketBoardPage: React.FC<MarketBoardPageProps> = ({ initialSnapsho
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-kt-positive flex-shrink-0 animate-pulse" />
             <div>
-              <span className="font-bold text-kt-text-primary">데이터 출처: </span>
+              <span className="font-bold text-kt-text-primary">{t("dataSource")}</span>
               <span>Yahoo Finance via yfinance</span>
               <span className="mx-2 text-kt-border-panel">|</span>
-              <span className="font-bold text-kt-text-primary">상태: </span>
-              <span className="text-kt-positive-text font-medium">비공식 개인용 fallback</span>
+              <span className="font-bold text-kt-text-primary">{t("status")}</span>
+              <span className="text-kt-positive-text font-medium">{t("personalFallbackStatus")}</span>
               <span className="mx-2 text-kt-border-panel">|</span>
-              <span className="font-bold text-kt-text-primary">기준 시각: </span>
-              <span className="tabular-nums">{new Date(snapshot.generatedAt).toLocaleString()}</span>
+              <span className="font-bold text-kt-text-primary">{t("generatedAt")}</span>
+              <span className="tabular-nums">
+                {new Date(snapshot.generatedAt).toLocaleString(locale === "ko" ? "ko-KR" : "en-US")}
+              </span>
             </div>
           </div>
           <div className="text-[10px] text-kt-text-muted border-t sm:border-t-0 sm:border-l border-kt-border-panel pt-2 sm:pt-0 sm:pl-3">
-            주의: 공식/상용 데이터가 아닙니다. 개인 연구 목적 외 배포 금지.
+            {t("fallbackWarning")}
           </div>
         </div>
       )}

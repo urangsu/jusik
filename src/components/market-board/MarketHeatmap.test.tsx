@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MarketHeatmap } from "./MarketHeatmap";
 import { MarketMapTile } from "@/domain/market-board/market-map-tile";
+import { I18nProvider } from "@/i18n/use-i18n";
 
 describe("MarketHeatmap Component", () => {
   const mockTiles: MarketMapTile[] = [
@@ -45,8 +46,12 @@ describe("MarketHeatmap Component", () => {
   ];
 
   it("should render grouped sector names and stock tiles", () => {
-    render(<MarketHeatmap tiles={mockTiles} />);
-    expect(screen.getByText("Technology")).toBeInTheDocument();
+    render(
+      <I18nProvider initialLocale="en">
+        <MarketHeatmap tiles={mockTiles} />
+      </I18nProvider>
+    );
+    expect(screen.getByText("Information Technology")).toBeInTheDocument();
     expect(screen.getByText("Automotive")).toBeInTheDocument();
     expect(screen.getByText("AAPL")).toBeInTheDocument();
     expect(screen.getByText("TSLA")).toBeInTheDocument();

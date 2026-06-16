@@ -1,4 +1,5 @@
 import React from "react";
+import { useI18n } from "@/i18n/use-i18n";
 
 interface ProviderBudgetBadgeProps {
   used: number;
@@ -6,10 +7,12 @@ interface ProviderBudgetBadgeProps {
 }
 
 export const ProviderBudgetBadge: React.FC<ProviderBudgetBadgeProps> = ({ used, limit }) => {
+  const { locale } = useI18n();
+
   if (limit === null) {
     return (
       <span className="text-[10px] px-1.5 py-0.5 rounded-kt-pill bg-kt-bg-body text-kt-text-muted border border-kt-border-panel">
-        무제한
+        {locale === "ko" ? "무제한" : "Unlimited"}
       </span>
     );
   }

@@ -1,15 +1,18 @@
 import React from "react";
 import { MarketMapTile } from "@/domain/market-board/market-map-tile";
+import { useI18n } from "@/i18n/use-i18n";
 
 interface MarketHeatmapProps {
   tiles: MarketMapTile[];
 }
 
 export const MarketHeatmap: React.FC<MarketHeatmapProps> = ({ tiles }) => {
+  const { tSector, locale } = useI18n();
+
   // Group tiles by sector
   const sectorsMap: Record<string, MarketMapTile[]> = {};
   tiles.forEach((tile) => {
-    const sector = tile.sector || "기타";
+    const sector = tile.sector || (locale === "ko" ? "기타" : "Other");
     if (!sectorsMap[sector]) {
       sectorsMap[sector] = [];
     }
@@ -21,8 +24,12 @@ export const MarketHeatmap: React.FC<MarketHeatmapProps> = ({ tiles }) => {
   return (
     <div className="w-full flex flex-col gap-3 bg-kt-bg-surface-100 border border-kt-border-panel rounded-kt-card p-4">
       <div className="flex items-center justify-between border-b border-kt-border-panel/40 pb-2">
-        <h3 className="text-xs font-semibold text-kt-text-primary">시장 트리맵 (Market Heatmap)</h3>
-        <span className="text-[9px] text-kt-text-muted">시가총액 규모 비중 기준</span>
+        <h3 className="text-xs font-semibold text-kt-text-primary">
+          {locale === "ko" ? "시장 트리맵 (Market Heatmap)" : "Market Heatmap"}
+        </h3>
+        <span className="text-[9px] text-kt-text-muted">
+          {locale === "ko" ? "시가총액 규모 비중 기준" : "By Market Capitalization Weight"}
+        </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 h-[400px] overflow-y-auto pr-1">
@@ -36,7 +43,7 @@ export const MarketHeatmap: React.FC<MarketHeatmapProps> = ({ tiles }) => {
               className="border border-kt-border-panel rounded-kt-card bg-kt-bg-body/30 p-2 flex flex-col gap-1.5 h-[185px]"
             >
               <span className="text-[10px] font-bold text-kt-text-secondary truncate">
-                {sector}
+                {tSector(sector)}
               </span>
 
               <div className="flex-1 flex flex-wrap gap-1 overflow-hidden">
@@ -57,12 +64,20 @@ export const MarketHeatmap: React.FC<MarketHeatmapProps> = ({ tiles }) => {
                     ? Math.max(1, Math.min(6, Math.round((tile.marketCap / totalCap) * 10)))
                     : 1;
 
+                  const formattedCap = tile.marketCap
+                    ? (tile.marketCap / 1e12).toFixed(1) + (locale === "ko" ? "조" : "T")
+                    : "N/A";
+
+                  const tooltipText = locale === "ko"
+                    ? `${tile.name} (${tile.symbol})\n등락률: ${percent !== null ? (percent > 0 ? "+" : "") + percent.toFixed(2) + "%" : "N/A"}\n시총: ${formattedCap}\n출처: ${tile.source}`
+                    : `${tile.name} (${tile.symbol})\nChange: ${percent !== null ? (percent > 0 ? "+" : "") + percent.toFixed(2) + "%" : "N/A"}\nMkt Cap: ${formattedCap}\nSource: ${tile.source}`;
+
                   return (
                     <div
                       key={tile.symbol}
                       style={{ flexGrow: sizeWeight }}
                       className={`h-10 min-w-[48px] p-1 flex flex-col justify-center rounded text-center transition-colors select-none ${bgClass} ${borderClass}`}
-                      title={`${tile.name} (${tile.symbol})\n등락률: ${percent !== null ? percent.toFixed(2) + "%" : "N/A"}\n시총: ${tile.marketCap ? (tile.marketCap / 1e12).toFixed(1) + "T" : "N/A"}\n출처: ${tile.source}`}
+                      title={tooltipText}
                     >
                       <div className="text-[9px] font-semibold tracking-tight truncate tabular-nums">
                         {tile.symbol}

@@ -2,6 +2,8 @@ import React from "react";
 import { SourceSummary } from "@/domain/source/source-summary";
 import { ProviderBudgetBadge } from "./ProviderBudgetBadge";
 import { Panel } from "../ui/Panel";
+import { useI18n } from "@/i18n/use-i18n";
+import { getProviderPolicyLabel } from "@/i18n/provider-labels";
 import { ShieldAlert, CheckCircle, XCircle } from "lucide-react";
 
 interface MarketBoardDiagnosticsProps {
@@ -11,21 +13,23 @@ interface MarketBoardDiagnosticsProps {
 export const MarketBoardDiagnostics: React.FC<MarketBoardDiagnosticsProps> = ({
   sourceSummary,
 }) => {
+  const { t, locale } = useI18n();
+
   const isPersonalFallbackActive = sourceSummary.some(
     (s) => s.tier === "personal_fallback" && s.enabled
   );
 
   return (
-    <Panel title="데이터 소스 진단 (Diagnostics)">
+    <Panel title={t("diagnosticsTitle")}>
       <div className="flex flex-col gap-3">
         {/* Fallback Warning */}
         {isPersonalFallbackActive && (
           <div className="bg-kt-positive-weak border border-kt-positive/20 p-2.5 rounded-kt-card flex items-start gap-2 text-xs text-kt-positive-text leading-relaxed">
             <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold block mb-0.5">개인용 비공식 Fallback 활성화</span>
+              <span className="font-bold block mb-0.5">{t("diagnosticsWarningTitle")}</span>
               <p className="text-[10px] text-kt-text-primary opacity-80 leading-normal">
-                yfinance 또는 Stooq 등의 비공식 API 데이터가 연동되어 수신 중입니다. 이 값은 개인 교육/로컬 테스트 목적으로만 이용 가능하며, 전략 점수 조건 적격 판정에 단독 활용되지 않습니다.
+                {t("diagnosticsWarningDesc")}
               </p>
             </div>
           </div>
@@ -51,8 +55,8 @@ export const MarketBoardDiagnostics: React.FC<MarketBoardDiagnosticsProps> = ({
                     <span className="text-xs font-semibold text-kt-text-primary">
                       {src.displayName}
                     </span>
-                    <span className="text-[9px] text-kt-text-muted capitalize">
-                      {src.tier.replace("_", " ")}
+                    <span className="text-[9px] text-kt-text-muted">
+                      {getProviderPolicyLabel(src.tier, locale)}
                     </span>
                   </div>
                 </div>

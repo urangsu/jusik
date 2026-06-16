@@ -1,0 +1,89 @@
+export const ko = {
+  // Common
+  appName: "K-Terminal",
+  marketBoard: "시장 보드 (Market Board)",
+  marketBoardDesc: "KOSPI와 S&P 500 대표 주식들의 실시간 데이터 수신 상태 및 밸류에이션 스크리너 대시보드입니다.",
+  close: "닫기",
+  language: "언어",
+  
+  // Navigation / Tabs
+  tabMarkets: "시장 보드",
+  tabStrategy: "전략 점수",
+
+  // Universe
+  universeKospiSample: "코스피 샘플",
+  universeSp500Sample: "S&P 500 샘플",
+
+  // Provenance banner
+  dataSource: "데이터 출처: ",
+  status: "상태: ",
+  generatedAt: "기준 시각: ",
+  personalFallbackStatus: "비공식 개인용 fallback",
+  fallbackWarning: "주의: 공식/상용 데이터가 아닙니다. 개인 연구 목적 외 배포 금지.",
+
+  // Toolbar / Filters
+  searchPlaceholder: "종목코드 또는 사명 검색",
+  sectorLabel: "섹터",
+  allSectors: "전체 섹터",
+  sortByLabel: "정렬 기준",
+  filterDataSource: "데이터 필터",
+  allSources: "모든 소스",
+  officialOnly: "공식 데이터만",
+  excludeFallback: "개인 fallback 제외",
+
+  // Screener Table Columns
+  colTicker: "티커",
+  colName: "종목명",
+  colSector: "섹터",
+  colSource: "데이터 소스",
+
+  // Diagnostics Panel
+  diagnosticsTitle: "데이터 소스 진단",
+  activeProviderBudgets: "활성 공급자 예산 한도",
+  colProvider: "공급자",
+  colLimitReset: "한도/초기화 주기",
+  colUsed: "사용량",
+  colRemaining: "남은 횟수",
+  diagnosticsLog: "진단 로그",
+  noLogs: "로그가 없습니다.",
+
+  // Warnings Modal
+  warningModalTitle: "데이터 출처 경고 상세",
+  warningColDescription: "경고 설명",
+  warningNoneDesc: "경고가 없습니다.",
+  warningUnofficialDesc: "비공식 데이터 공급자로부터 가져온 데이터입니다. 상업적 용도로 사용할 수 없습니다.",
+  warningPersonalUseDesc: "개인적/비상업적 연구 목적으로만 사용할 수 있는 Fallback 데이터입니다. 공식 서비스 수준의 실거래 투자 결정을 내리는 데 사용하는 것을 금지합니다.",
+  warningLicenseReviewDesc: "데이터 유통사 계약 및 라이선스 검토가 완료되지 않은 데이터입니다.",
+  warningCommercialProhibitedDesc: "상업적 재배포 및 투자 리서치 상품 판매용 사용이 불가능한 라이선스 조건입니다.",
+  warningManualImportDesc: "사용자가 수동으로 파일 업로드 또는 임포트해야 유효한 오프라인 데이터입니다.",
+
+  // Right Rail / Account Info
+  currentPrice: "현재가",
+  prevCloseChange: "전일대비",
+  sector: "섹터",
+  industry: "산업",
+  chartFrameTitle: "시세 차트 (Chart Frame)",
+  chartFrameMuted: "실시간 차트 프레임 (대기 중)",
+  chartFrameMutedDesc: "상승(빨강)/하락(파랑)의 시맨틱 토큰 기반의 시세 데이터 수신을 준비하고 있습니다.",
+  financialSnapshotTitle: "재무 및 밸류에이션 (Financial Snapshot)",
+  newsFeedTitle: "실시간 뉴스 (News Feed)",
+  newsFeedMuted: "실시간 금융 뉴스 헤드라인 대기 중",
+  financialInfoDisclaimer: "기업의 DART(한국) / SEC EDGAR(미국) 공시 보고서를 수집해 매핑하기 위한 재무 모델 데이터 스키마가 완비되어 있습니다. API 연결 후 분석 지표가 활성화됩니다.",
+  
+  // Diagnostics
+  diagnosticsWarningTitle: "개인용 비공식 Fallback 활성화",
+  diagnosticsWarningDesc: "yfinance 또는 Stooq 등의 비공식 API 데이터가 연동되어 수신 중입니다. 이 값은 개인 교육/로컬 테스트 목적으로만 이용 가능하며, 전략 점수 조건 적격 판정에 단독 활용되지 않습니다.",
+
+  // Sectors mapping
+  sector_IT: "정보기술",
+  sector_Financials: "금융",
+  sector_HealthCare: "헬스케어",
+  sector_Industrials: "산업재",
+  sector_ConsumerDiscretionary: "경기소비재",
+  sector_Communication: "커뮤니케이션",
+  sector_Materials: "소재",
+  sector_Energy: "에너지",
+  sector_Utilities: "유틸리티",
+  sector_ConsumerStaples: "필수소비재",
+  sector_RealEstate: "부동산",
+};
