@@ -37,3 +37,20 @@
   - 한국/미국 인덱스의 모멘텀 및 변동성을 바탕으로 한 6단계 시장 레짐(Market Regime) 분류 엔진 구현.
   - 개별 종목별 멀티팩터(Value, Quality, Momentum) 점수 및 Z-Score 산출.
   - 포트폴리오 종목별 수동 기록 및 누적 성과 요약 카드 활성화.
+
+## Phase 6: 전략 신호 실제 데이터 연결
+* **목표**: P0에서 고정한 전략 탭 계약에 실제 데이터 공급자를 연결합니다.
+* **주요 과제**:
+  - OHLCV provider 연결 및 표준편차 밴드 실제 차트 렌더링.
+  - OpenDART 재무/공시 연결과 SEC/FMP/Finnhub 미국 데이터 연결.
+  - 레짐 게이트 계산 엔진, 월천식 눌림 뷰, 알상무식 레짐-우선 뷰 구현.
+  - Factor Store 저장 구조와 포트폴리오 닥터, AI 설명 레이어 연결.
+
+## Phase 7: Quant Core Contract 확장
+* **목표**: 002-A에서 고정한 research contract를 실제 PIT store와 factor pipeline에 연결.
+* **주요 과제**:
+  - PIT Data Store & Universe Builder.
+  - Factor Definition Implementation.
+  - IC/ICIR Validation Engine.
+  - Factor Risk Model과 Portfolio Risk Diagnostics.
+  - Overlay Engine Refactor와 Influencer Extraction Prompt Store.

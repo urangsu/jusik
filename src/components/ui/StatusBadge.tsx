@@ -11,6 +11,7 @@ export const STATUS_LABEL: Record<DataStatus, string> = {
   not_supported: "미지원",
   not_found: "없음",
   error: "오류",
+  insufficient_data: "데이터 부족",
 };
 
 interface StatusBadgeProps {
@@ -31,7 +32,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = ""
     colorClasses = "bg-kt-negative-weak text-kt-negative-text border-kt-negative-text/20";
   } else if (status === "error" || status === "rate_limited") {
     colorClasses = "bg-red-500/10 text-red-500 border-red-500/20";
-  } else if (status === "not_supported" || status === "not_found") {
+  } else if (status === "not_supported" || status === "not_found" || status === "insufficient_data") {
     colorClasses = "bg-kt-bg-surface-100 text-kt-text-muted border-kt-border-panel";
   }
 

@@ -25,6 +25,7 @@
 * `not_supported`: 지원하지 않는 국가의 시장이나 자산군.
 * `not_found`: 해당 티커/심볼이 거래소나 정보 제공사에 없음.
 * `error`: 알 수 없는 연결 거부 또는 서버 장애 오류.
+* `insufficient_data`: 계산에 필요한 최소 데이터 길이, 품질, 또는 참여 전략 수를 충족하지 못함.
 
 ---
 
@@ -44,3 +45,44 @@
 * **상세 규정**:
   1. 모의 매매 인터페이스를 그리거나 시각 디자인을 확인할 경우, 해당 컨테이너는 즉시 차단 처리되어야 하고 거래 불가 상태와 그 이유가 화면상에 잠금(`Lock`) 레이아웃과 문구로 명확히 표시되어야 합니다.
   2. 실거래 API Adapter의 코드 작성을 금지하며, 버튼 클릭에 의한 가상의 주문 전송 모의 통과 창 같은 눈속임 컴포넌트(Fake UI)를 작성하지 않습니다.
+
+---
+
+## 5. 전략 신호 데이터 정책
+
+* 전략 신호는 투자 조언이 아니라 통계적/팩터 기반 진단 도구입니다.
+* 전략 계산 함수는 입력 데이터가 부족할 때 값을 `0`으로 대체하지 않고 `null`과 `insufficient_data`를 반환해야 합니다.
+* 표준편차 위치, 레짐, 눌림, 퀀트, 배당/환원, 모멘텀 뷰는 모두 `dataQualityScore`와 `vetoReasons`를 포함해야 합니다.
+* 전략 합의는 참여 가능한 전략 뷰가 3개 미만이면 계산하지 않습니다.
+* AI는 전략 점수를 생성하지 않으며, 이미 계산된 데이터와 veto 사유만 설명합니다.
+* expected alpha 연환산 값은 P0/P1 UI에 표시하지 않습니다.
+
+---
+
+## 6. Versioning and Reproducibility
+
+모든 신호와 계산 산출물은 재현 가능한 버전 정보를 가져야 합니다.
+
+* `DataVersion`: 어떤 원천 데이터로 계산했는지 기록합니다.
+* `EngineVersion`: 어떤 deterministic engine과 configHash로 계산했는지 기록합니다.
+* `SignalVersion`: 특정 신호가 어떤 dataVersion, engineVersion, inputHash, calculatedAt, expiryAt으로 생성됐는지 기록합니다.
+
+`engineVersion` 문자열만으로는 충분하지 않습니다. engineId와 configHash가 같이 있어야 합니다.
+
+---
+
+## 7. Runtime Guard Rails
+
+* expected alpha는 domain에는 존재할 수 있지만 P0/P1 UI에 렌더링하지 않습니다.
+* `productionEligible=true`는 ResearchGate 검증 없이 사용할 수 없습니다.
+* Strategy Agreement는 최소 참여 view 조건 미달 시 숫자 점수를 표시하지 않습니다.
+* StdDev overlay는 OHLCV 미연결 시 z-score를 표시하지 않습니다.
+
+---
+
+## 8. PIT Store and Seed Data
+
+* PIT record는 `asOfDate`, `effectiveAt`, `ingestedAt`을 구분합니다.
+* backtest와 research lookup은 `knownAt` 이후에 수집된 데이터를 읽을 수 없습니다.
+* revision은 새 record와 새 dataVersion으로 저장하며 기존 record를 덮어쓰지 않습니다.
+* seed/demo data는 production data가 아니며 실제 투자 신호에 사용할 수 없습니다.
