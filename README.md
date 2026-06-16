@@ -46,9 +46,13 @@ npm run build
 * **초성 검색(Hangul Choseong Search)**: 한국 주식 종목명 검색 시 초성(예: 'ㅅㅅㅇㅈ' -> 삼성전자) 매칭을 완벽히 지원하는 검색 어댑터 구성.
 * **공통 금융 데이터 계약(Data Contract)**: 모든 시세, 공시, 재무, 포트폴리오 데이터를 `DataEnvelope<T>` 구조로 래핑하여 상태와 출처를 보존.
 * **API Adapter Interface**: 향후 OpenDART, SEC EDGAR, 시세 API를 얹을 수 있는 인터페이스 정의 및 API 미연결 시 `api_required`를 반환하는 디폴트 프로바이더 완비.
+* **Strategy Signal Shell**: 표준편차 매매와 전략 합의 탭의 타입 계약, 데이터 부족 처리, veto 사유 표시를 고정했습니다. 실제 가격/재무 데이터가 없으면 신호나 점수를 생성하지 않습니다.
+* **Quant Core Contract**: PIT 데이터 버전, atomic signal, factor definition, IC/ICIR, 단면 정규화, 팩터 공분산, 리스크 분해의 순수 계산 계약을 분리했습니다.
 
 ## 4. 관련 상세 문서
-* 아키텍처 및 폴더 구조: [docs/ARCHITECTURE.md](file:///Volumes/무제/jusik/docs/ARCHITECTURE.md)
-* 데이터 및 AI 수치 제한 정책: [docs/DATA_POLICY.md](file:///Volumes/무제/jusik/docs/DATA_POLICY.md)
-* 디자인 가이드 및 사용법: [docs/DESIGN_USAGE.md](file:///Volumes/무제/jusik/docs/DESIGN_USAGE.md)
-* 향후 로드맵: [docs/ROADMAP.md](file:///Volumes/무제/jusik/docs/ROADMAP.md)
+* 아키텍처 및 폴더 구조: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+* 데이터 및 AI 수치 제한 정책: [docs/DATA_POLICY.md](docs/DATA_POLICY.md)
+* 전략 신호 정책: [docs/STRATEGY_SIGNALS.md](docs/STRATEGY_SIGNALS.md)
+* 퀀트 엔진 재설계: [docs/QUANT_REDESIGN_REPORT.md](docs/QUANT_REDESIGN_REPORT.md)
+* 디자인 가이드 및 사용법: [docs/DESIGN_USAGE.md](docs/DESIGN_USAGE.md)
+* 향후 로드맵: [docs/ROADMAP.md](docs/ROADMAP.md)
