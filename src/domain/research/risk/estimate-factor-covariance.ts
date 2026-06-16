@@ -12,6 +12,7 @@ type EstimateFactorCovarianceParams = {
   }>;
   lookbackDays: 60 | 120 | 252;
   annualized: boolean;
+  configHash?: string;
 };
 
 function covariance(xs: number[], ys: number[]): number {
@@ -23,6 +24,15 @@ function covariance(xs: number[], ys: number[]): number {
 export function estimateFactorCovariance(
   params: EstimateFactorCovarianceParams,
 ): ResearchCalcResult<FactorCovarianceMatrix> {
+  if (params.factorIds.length === 0) {
+    return {
+      value: null,
+      status: "invalid_input",
+      warnings: ["At least one factorId is required for factor covariance."],
+      sampleSize: 0,
+    };
+  }
+
   const minimumObservations = Math.max(30, params.factorIds.length * 3);
   const usable = params.observations.filter((observation) =>
     params.factorIds.every((factorId) => isFiniteNumber(observation.returns[factorId])),
@@ -46,6 +56,20 @@ export function estimateFactorCovariance(
     }),
   );
 
+  const hasInvalidValue = covarianceMatrix.some((row, rowIndex) =>
+    row.length !== params.factorIds.length ||
+    row.some((value, columnIndex) => !Number.isFinite(value) || (rowIndex === columnIndex && value < 0)),
+  );
+
+  if (hasInvalidValue) {
+    return {
+      value: null,
+      status: "invalid_input",
+      warnings: ["Factor covariance matrix contains invalid or negative diagonal values."],
+      sampleSize: usable.length,
+    };
+  }
+
   return {
     value: {
       date: params.date,
@@ -57,6 +81,7 @@ export function estimateFactorCovariance(
       shrinkageMethod: "none",
       annualized: params.annualized,
       engineVersion: "0.2.0",
+      configHash: params.configHash ?? "research-config",
       dataVersionId: "research-input",
     },
     status: "ok",
