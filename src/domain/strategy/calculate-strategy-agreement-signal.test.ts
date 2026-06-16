@@ -118,4 +118,22 @@ describe("calculateStrategyAgreementSignal", () => {
     expect(signal.agreementScore).toBeNull();
     expect(signal.excludedViews.map((view) => view.strategyId)).toContain("macro_first_largecap");
   });
+
+  it("returns insufficient_data before scoring when a P0 fatal veto is present", () => {
+    const signal = calculateStrategyAgreementSignal({
+      assetId: "KR:005930",
+      symbol: "005930",
+      date: "2026-06-16",
+      views: [
+        makeView({ strategyId: "macro_first_largecap", vetoReasons: ["P0 fatal: PIT data missing"] }),
+        makeView({ strategyId: "stddev_mean_reversion" }),
+        makeView({ strategyId: "momentum" }),
+      ],
+    });
+
+    expect(signal.status).toBe("insufficient_data");
+    expect(signal.agreementScore).toBeNull();
+    expect(signal.agreementLabel).toBe("insufficient_data");
+    expect(signal.vetoReasons).toContain("P0 fatal veto로 전략 합의를 계산하지 않습니다.");
+  });
 });

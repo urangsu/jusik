@@ -56,4 +56,28 @@ describe("StrategyAgreementSummaryCard", () => {
       screen.getByText("이 화면은 여러 전략 신호의 합의 정도를 보여주는 진단 도구이며, 매수·매도 지시가 아닙니다."),
     ).toBeInTheDocument();
   });
+
+  it("renders an explicit missing-data state instead of score cells when agreement cannot be calculated", () => {
+    render(<StrategyAgreementSummaryCard signal={insufficientAgreement} />);
+
+    expect(screen.getByText("전략 합의 계산 불가")).toBeInTheDocument();
+    expect(screen.getByText("필요 데이터가 아직 연결되지 않았습니다.")).toBeInTheDocument();
+    expect(screen.getByText("현재 상태: 데이터 부족")).toBeInTheDocument();
+    expect(screen.queryByText("합의 점수")).toBeNull();
+  });
+
+  it("does not render expected alpha wording or return percentages", () => {
+    render(<StrategyAgreementSummaryCard signal={insufficientAgreement} />);
+    const expectedReturnPattern = new RegExp(
+      [
+        `예상 초과${"수익률"}`,
+        `예상 ${"수익률"}`,
+        `기대${"수익률"}`,
+        "연환산",
+      ].join("|"),
+    );
+
+    expect(screen.queryByText(/expected alpha/i)).toBeNull();
+    expect(screen.queryByText(expectedReturnPattern)).toBeNull();
+  });
 });

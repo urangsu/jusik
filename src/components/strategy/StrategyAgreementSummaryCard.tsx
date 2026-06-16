@@ -16,6 +16,8 @@ const AGREEMENT_LABEL: Record<StrategyAgreementSignal["agreementLabel"], string>
 };
 
 export const StrategyAgreementSummaryCard: React.FC<{ signal: StrategyAgreementSignal }> = ({ signal }) => {
+  const isInsufficient = signal.status === "insufficient_data" || signal.agreementScore === null;
+
   return (
     <Panel
       title="전략 합의"
@@ -32,22 +34,35 @@ export const StrategyAgreementSummaryCard: React.FC<{ signal: StrategyAgreementS
           <StatusBadge status={signal.status} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        {isInsufficient ? (
           <div className="rounded-kt-card border border-kt-border-panel bg-kt-bg-overlay-300/30 p-3">
-            <p className="mb-2 text-xs text-kt-text-muted">합의 점수</p>
-            <MetricCell value={signal.agreementScore} status={signal.status} />
+            <p className="text-sm font-semibold text-kt-text-primary">전략 합의 계산 불가</p>
+            <p className="mt-2 text-xs leading-relaxed text-kt-text-muted">
+              필요 데이터가 아직 연결되지 않았습니다.
+            </p>
+            <p className="mt-2 text-xs font-semibold text-kt-text-secondary">현재 상태: 데이터 부족</p>
+            <p className="mt-2 text-xs leading-relaxed text-kt-text-muted">
+              필요 항목: 가격 OHLCV, 재무제표, 팩터 노출, 레짐, 포트폴리오 컨텍스트
+            </p>
           </div>
-          <div className="rounded-kt-card border border-kt-border-panel bg-kt-bg-overlay-300/30 p-3">
-            <p className="mb-2 text-xs text-kt-text-muted">데이터 품질</p>
-            <MetricCell
-              value={signal.status === "insufficient_data" ? null : signal.dataQualityScore}
-              status={signal.status}
-              formatter={(value) => `${value}%`}
-            />
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-kt-card border border-kt-border-panel bg-kt-bg-overlay-300/30 p-3">
+              <p className="mb-2 text-xs text-kt-text-muted">합의 점수</p>
+              <MetricCell value={signal.agreementScore} status={signal.status} />
+            </div>
+            <div className="rounded-kt-card border border-kt-border-panel bg-kt-bg-overlay-300/30 p-3">
+              <p className="mb-2 text-xs text-kt-text-muted">데이터 품질</p>
+              <MetricCell
+                value={signal.dataQualityScore}
+                status={signal.status}
+                formatter={(value) => `${value}%`}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
-        <StrategyAgreementBar agreementRate={signal.agreementRate} />
+        {!isInsufficient ? <StrategyAgreementBar agreementRate={signal.agreementRate} /> : null}
 
         <p className="rounded-kt-card border border-kt-border-panel bg-kt-bg-overlay-300/30 p-3 text-xs leading-relaxed text-kt-text-muted">
           이 화면은 여러 전략 신호의 합의 정도를 보여주는 진단 도구이며, 매수·매도 지시가 아닙니다.
