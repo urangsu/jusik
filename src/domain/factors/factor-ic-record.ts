@@ -20,5 +20,6 @@ export type FactorICRecord = {
   startDate: string;
   endDate: string;
   engineVersion: string;
+  configHash: string;
   dataVersionId: string;
 };

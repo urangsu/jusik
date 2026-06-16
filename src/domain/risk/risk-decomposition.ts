@@ -16,5 +16,6 @@ export type RiskDecomposition = {
   specificRiskContribution: number | null;
   warnings: string[];
   engineVersion: string;
+  configHash: string;
   dataVersionId: string;
 };

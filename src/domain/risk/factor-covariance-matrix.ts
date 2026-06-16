@@ -10,5 +10,6 @@ export type FactorCovarianceMatrix = {
   shrinkageMethod: "none" | "diagonal" | "ledoit_wolf_like";
   annualized: boolean;
   engineVersion: string;
+  configHash: string;
   dataVersionId: string;
 };
