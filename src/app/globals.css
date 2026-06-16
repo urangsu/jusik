@@ -85,3 +85,9 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--kt-text-muted);
 }
+
+/* Custom dashed border for unofficial fallback metrics */
+.border-unofficial {
+  border-style: dashed !important;
+  border-color: rgba(255, 240, 240, 0.25) !important;
+}

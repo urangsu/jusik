@@ -17,6 +17,8 @@ export class ApiRequiredProvider
       value: null,
       status: "api_required",
       source: this.sourceName,
+      sourceTier: "official",
+      warnings: [],
       updatedAt: null,
       message: "API 연결이 필요합니다.",
     };
@@ -33,6 +35,8 @@ export class ApiRequiredProvider
       value: null,
       status: "api_required",
       source: this.sourceName,
+      sourceTier: "official",
+      warnings: [],
       updatedAt: null,
       message: "API 연결이 필요합니다.",
     };
@@ -47,6 +51,8 @@ export class ApiRequiredProvider
       value: null,
       status: "api_required",
       source: this.sourceName,
+      sourceTier: "official",
+      warnings: [],
       updatedAt: null,
       message: "API 연결이 필요합니다.",
     };
@@ -63,6 +69,8 @@ export class ApiRequiredProvider
       value: null,
       status: "api_required",
       source: this.sourceName,
+      sourceTier: "official",
+      warnings: [],
       updatedAt: null,
       message: "API 연결이 필요합니다.",
     };

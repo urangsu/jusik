@@ -24,6 +24,8 @@ export class ApiRequiredMarketDataProvider implements MarketDataProvider {
       value: null,
       status: "api_required",
       source: this.providerId,
+      sourceTier: "official",
+      warnings: [],
       updatedAt: null,
       message: API_REQUIRED_MESSAGE,
     };
@@ -39,6 +41,8 @@ export class ApiRequiredMarketDataProvider implements MarketDataProvider {
       value: null,
       status: "api_required",
       source: this.providerId,
+      sourceTier: "official",
+      warnings: [],
       updatedAt: null,
       message: API_REQUIRED_MESSAGE,
     };

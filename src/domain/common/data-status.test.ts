@@ -7,6 +7,8 @@ describe("Data Envelope Type Contract", () => {
       value: 50000,
       status: "delayed",
       source: "KoreaInvestment",
+      sourceTier: "official",
+      warnings: [],
       updatedAt: "2026-06-15T09:00:00Z",
       delayMinutes: 15,
     };
@@ -21,6 +23,8 @@ describe("Data Envelope Type Contract", () => {
       value: null,
       status: "error",
       source: "DART",
+      sourceTier: "official",
+      warnings: [],
       updatedAt: null,
       errorCode: "500",
       message: "Internal Connection Refused",
