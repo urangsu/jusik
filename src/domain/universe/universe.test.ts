@@ -11,6 +11,8 @@ describe("universe policy", () => {
   });
 
   it("does not treat mixed universe as production eligible", () => {
+    const productionEligible = true;
+
     expect(
       isProductionEligibleUniverse({
         universeId: "USER_WATCHLIST",
@@ -18,7 +20,7 @@ describe("universe policy", () => {
         kind: "user_defined",
         displayName: "Watchlist",
         description: "Mixed user list",
-        productionEligible: true,
+        productionEligible,
         createdAt: "2026-06-16T00:00:00.000Z",
         updatedAt: "2026-06-16T00:00:00.000Z",
       }),
