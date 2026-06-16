@@ -86,3 +86,13 @@
 * backtest와 research lookup은 `knownAt` 이후에 수집된 데이터를 읽을 수 없습니다.
 * revision은 새 record와 새 dataVersion으로 저장하며 기존 record를 덮어쓰지 않습니다.
 * seed/demo data는 production data가 아니며 실제 투자 신호에 사용할 수 없습니다.
+
+---
+
+## 9. Market Data Provider Boundary
+
+* Quote/OHLCV provider는 `DataEnvelope<T>`로만 값을 반환합니다.
+* API 미연결 상태는 `value: null`, `status: api_required`입니다.
+* null price/change/close를 0으로 바꾸지 않습니다.
+* OHLCV candle은 chart, StdDev, strategy 계산 전에 finite number와 OHLC 관계를 검증해야 합니다.
+* stale/delayed/eod/cached는 real-time처럼 표시하지 않습니다.
