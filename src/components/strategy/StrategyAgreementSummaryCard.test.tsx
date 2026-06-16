@@ -53,7 +53,7 @@ describe("StrategyAgreementSummaryCard", () => {
     render(<StrategyAgreementSummaryCard signal={insufficientAgreement} />);
 
     expect(
-      screen.getByText("이 화면은 여러 전략 신호의 합의 정도를 보여주는 진단 도구이며, 매수·매도 지시가 아닙니다."),
+      screen.getByText("이 화면은 여러 전략 신호의 합의 정도를 보여주는 진단 도구이며, 거래 지시가 아닙니다."),
     ).toBeInTheDocument();
   });
 
