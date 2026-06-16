@@ -12,4 +12,15 @@ describe("createSuppressedAlphaEstimate", () => {
     expect(estimate.expectedAlphaAnnualized).toBeNull();
     expect(estimate.expectedAlphaDisplayAllowed).toBe(false);
   });
+
+  it("keeps P0/P1 factory output suppressed even when the domain type supports expected alpha", () => {
+    const estimate = createSuppressedAlphaEstimate({
+      assetId: "KR:005930",
+      date: "2026-06-16",
+      engineVersion: "0.2.0",
+    });
+
+    expect(estimate.expectedAlphaDisplayAllowed).toBe(false);
+    expect(estimate.reasonForSuppression).toMatch(/disabled in P0\/P1/);
+  });
 });

@@ -1,5 +1,6 @@
 import { FactorId } from "@/domain/factors/factor-id";
 import { FactorHealthBadge } from "@/domain/factors/factor-health";
+import { SignalVersion } from "@/domain/signals/signal-version";
 
 export type AlphaEstimate = {
   assetId: string;
@@ -18,6 +19,9 @@ export type AlphaEstimate = {
   confidence: "none" | "low" | "medium" | "high";
   reasonForSuppression?: string;
   engineVersion: string;
+  configHash?: string;
+  dataVersionId?: string;
+  version?: SignalVersion;
 };
 
 export function createSuppressedAlphaEstimate(input: {
