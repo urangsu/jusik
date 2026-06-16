@@ -1,5 +1,6 @@
 import { MarketRegion } from "@/domain/common/data-status";
 import { NormalizationMethod, NormalizationScope } from "@/domain/signals/normalization-scope";
+import { UniverseSnapshot } from "@/domain/universe/universe-snapshot";
 import { ResearchCalcResult, isFiniteNumber } from "../research-calc-result";
 
 type NormalizeObservation = {
@@ -20,6 +21,7 @@ type NormalizedObservation = NormalizeObservation & {
 type CrossSectionalNormalizeParams = {
   observations: NormalizeObservation[];
   method: NormalizationMethod;
+  universeSnapshot?: UniverseSnapshot;
   sectorNeutral?: boolean;
   winsorizePct?: number;
 };
@@ -61,6 +63,25 @@ function percentileRows(rows: NormalizeObservation[]): Map<string, number | null
 export function crossSectionalNormalize(
   params: CrossSectionalNormalizeParams,
 ): ResearchCalcResult<NormalizedObservation[]> {
+  if (!params.universeSnapshot) {
+    return {
+      value: null,
+      status: "invalid_input",
+      warnings: ["UniverseSnapshot is required for cross-sectional normalization."],
+      sampleSize: 0,
+    };
+  }
+
+  if (params.universeSnapshot.universeId === "SEED_DEMO") {
+    return {
+      value: null,
+      status: "not_supported",
+      warnings: ["SEED_DEMO cannot be used for research normalization or factor validation."],
+      sampleSize: params.observations.length,
+    };
+  }
+  const universeSnapshot = params.universeSnapshot;
+
   if (params.observations.length === 0) {
     return {
       value: null,
@@ -83,6 +104,17 @@ export function crossSectionalNormalize(
 
   const market = params.observations[0].market;
   const universe = params.observations[0].universe;
+  const snapshotAssets = new Set(universeSnapshot.assetIds);
+  const outsideSnapshot = params.observations.filter((row) => !snapshotAssets.has(row.assetId));
+  if (outsideSnapshot.length > 0) {
+    return {
+      value: null,
+      status: "invalid_input",
+      warnings: ["All normalization observations must be members of the supplied UniverseSnapshot."],
+      sampleSize: params.observations.length - outsideSnapshot.length,
+    };
+  }
+
   const groups = new Map<string, NormalizeObservation[]>();
   if (params.sectorNeutral || params.method === "sector_neutral_zscore") {
     for (const row of params.observations) {
@@ -113,10 +145,12 @@ export function crossSectionalNormalize(
       zScore: zScores.get(row.assetId) ?? null,
       normalizationScope: {
         market,
+        universeId: universeSnapshot.universeId,
         universe,
         sector: params.sectorNeutral ? row.sector : undefined,
         method: params.method,
         winsorizePct: params.winsorizePct,
+        dataVersionId: universeSnapshot.dataVersionId,
       },
     })),
     status: "ok",

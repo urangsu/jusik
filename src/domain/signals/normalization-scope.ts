@@ -1,4 +1,5 @@
 import { MarketRegion } from "@/domain/common/data-status";
+import { UniverseId } from "@/domain/universe/universe";
 
 export type NormalizationMethod =
   | "zscore"
@@ -8,8 +9,10 @@ export type NormalizationMethod =
 
 export type NormalizationScope = {
   market: MarketRegion;
+  universeId: UniverseId;
   universe: string;
   sector?: string;
   method: NormalizationMethod;
   winsorizePct?: number;
+  dataVersionId?: string;
 };
