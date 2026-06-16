@@ -7,6 +7,7 @@ import { LeftRail } from "./LeftRail";
 import { RightRail } from "./RightRail";
 import { BottomStatusBar } from "./BottomStatusBar";
 import { StrategyWorkspace } from "../strategy/StrategyWorkspace";
+import { AlertSettingsPage } from "../alerts/AlertSettingsPage";
 import { Panel } from "../ui/Panel";
 import { MetricCell } from "../ui/MetricCell";
 import { Asset } from "@/domain/market/asset";
@@ -59,6 +60,8 @@ export const TerminalShell: React.FC = () => {
         <main className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto">
           {activeTab === "strategy" ? (
             <StrategyWorkspace selectedAsset={selectedAsset} />
+          ) : activeTab === "alerts" ? (
+            <AlertSettingsPage />
           ) : (
             <>
               {/* Active Asset Info Block */}

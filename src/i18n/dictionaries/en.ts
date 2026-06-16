@@ -86,4 +86,10 @@ export const en = {
   sector_Utilities: "Utilities",
   sector_ConsumerStaples: "Consumer Staples",
   sector_RealEstate: "Real Estate",
+  severityCritical: "Critical",
+  severityWarning: "Warning",
+  severityWatch: "Watch",
+  severityInfo: "Info",
+  tabAlerts: "Alerts",
+  tabReports: "Daily Reports",
 };

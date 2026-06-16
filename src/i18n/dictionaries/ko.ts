@@ -86,4 +86,10 @@ export const ko = {
   sector_Utilities: "유틸리티",
   sector_ConsumerStaples: "필수소비재",
   sector_RealEstate: "부동산",
+  severityCritical: "위험",
+  severityWarning: "경고",
+  severityWatch: "주의",
+  severityInfo: "정보",
+  tabAlerts: "알림 설정",
+  tabReports: "일일 보고서",
 };

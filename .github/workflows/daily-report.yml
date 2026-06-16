@@ -1,0 +1,44 @@
+name: Daily K-Terminal Report
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: "Force run even on non-trading day"
+        required: false
+        default: "false"
+  schedule:
+    - cron: "30 8 * * 1-5" # KST 17:30
+
+jobs:
+  daily-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Alert Rules Engine Evaluator
+        run: npm run alerts:evaluate
+        env:
+          NOTIFICATION_ENABLED: true
+          ALERT_EVALUATION_ENABLED: true
+
+      - name: Generate Daily Report
+        run: |
+          if [ "${{ github.event.inputs.force_run }}" = "true" ]; then
+            npm run reports:daily -- --force
+          else
+            npm run reports:daily
+          fi
+        env:
+          DAILY_REPORT_ENABLED: true
+          DAILY_REPORT_USE_LLM: false

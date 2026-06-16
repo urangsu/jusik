@@ -7,6 +7,7 @@ import { getSnapshotDir, getSnapshotPath } from "@/server/snapshots/snapshot-pat
 import { kisConfig } from "@/server/providers/kis/kis-config";
 import { kisDomesticStockProvider } from "@/server/providers/kis/kis-domestic-stock-provider";
 import { validateMarketBoardSnapshot } from "@/server/snapshots/snapshot-schema";
+import { providerHealthStore } from "@/server/providers/provider-health-store";
 
 /**
  * Runs a snapshot generation job for the KOSPI_SAMPLE universe using KIS Open API.
@@ -195,8 +196,11 @@ export async function runKisSnapshotJob(
   if (validateMarketBoardSnapshot(snapshot)) {
     const filePath = getSnapshotPath("KOSPI_SAMPLE");
     await fs.writeFile(filePath, JSON.stringify(snapshot, null, 2), "utf-8");
+    await providerHealthStore.setHealth("kis-snapshot-job", "real_time");
   } else {
-    throw new Error("Generated snapshot failed verification against MarketBoardSnapshot schema.");
+    const errMsg = "Generated snapshot failed verification against MarketBoardSnapshot schema.";
+    await providerHealthStore.setHealth("kis-snapshot-job", "error", errMsg);
+    throw new Error(errMsg);
   }
 
   // Save list of failures
@@ -206,6 +210,14 @@ export async function runKisSnapshotJob(
     JSON.stringify({ failures, timestamp: now }, null, 2),
     "utf-8"
   );
+
+  if (failures.length > 0) {
+    await providerHealthStore.setHealth(
+      "kis-snapshot-job",
+      "error",
+      `Failed Constituents: ${failures.join(", ")}`
+    );
+  }
 
   return {
     success: failures.length < constituents.length,
