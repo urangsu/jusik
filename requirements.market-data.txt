@@ -1,0 +1,5 @@
+yfinance
+pandas
+pydantic
+python-dateutil
+python-dotenv

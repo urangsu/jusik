@@ -9,6 +9,8 @@ interface MarketBoardToolbarProps {
   sectors: string[];
   sortBy: string;
   onSortChange: (sort: string) => void;
+  dataSourceFilter: string;
+  onDataSourceFilterChange: (filter: string) => void;
   generatedAt: string;
 }
 
@@ -20,11 +22,13 @@ export const MarketBoardToolbar: React.FC<MarketBoardToolbarProps> = ({
   sectors,
   sortBy,
   onSortChange,
+  dataSourceFilter,
+  onDataSourceFilterChange,
   generatedAt,
 }) => {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-kt-bg-surface-100 border border-kt-border-panel rounded-kt-card">
-      <div className="flex items-center gap-4 flex-1 min-w-[280px]">
+      <div className="flex items-wrap items-center gap-4 flex-1 min-w-[280px]">
         <CommandInput
           placeholder="종목명 또는 티커 검색..."
           value={searchQuery}
@@ -45,6 +49,20 @@ export const MarketBoardToolbar: React.FC<MarketBoardToolbarProps> = ({
                 {s}
               </option>
             ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-kt-text-muted">출처 필터</span>
+          <select
+            value={dataSourceFilter}
+            onChange={(e) => onDataSourceFilterChange(e.target.value)}
+            className="bg-kt-bg-overlay-300 border border-kt-border-panel text-xs text-kt-text-primary px-3 py-1.5 rounded-kt-card focus:outline-none focus:border-kt-text-muted/40 cursor-pointer"
+          >
+            <option value="ALL">전체</option>
+            <option value="OFFICIAL_ONLY">공식/제한 API만</option>
+            <option value="INCLUDE_FALLBACK">개인용 fallback 포함</option>
+            <option value="EXCLUDE_FALLBACK">개인용 fallback 제외</option>
           </select>
         </div>
 
