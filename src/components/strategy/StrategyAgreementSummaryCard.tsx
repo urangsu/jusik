@@ -65,7 +65,7 @@ export const StrategyAgreementSummaryCard: React.FC<{ signal: StrategyAgreementS
         {!isInsufficient ? <StrategyAgreementBar agreementRate={signal.agreementRate} /> : null}
 
         <p className="rounded-kt-card border border-kt-border-panel bg-kt-bg-overlay-300/30 p-3 text-xs leading-relaxed text-kt-text-muted">
-          이 화면은 여러 전략 신호의 합의 정도를 보여주는 진단 도구이며, 매수·매도 지시가 아닙니다.
+          이 화면은 여러 전략 신호의 합의 정도를 보여주는 진단 도구이며, 거래 지시가 아닙니다.
         </p>
         <p className="text-xs leading-relaxed text-kt-text-muted">{signal.explanation}</p>
       </div>

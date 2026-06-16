@@ -177,3 +177,17 @@ DataVersion -> PitRecord -> getAsOf(knownAt)
 ```
 
 `InMemoryDataVersionStore` and `InMemoryPitStore` are test/dev-only boundaries. Production storage will be introduced later and must preserve immutable historical records.
+
+---
+
+## 9. Market Data Provider Boundary
+
+003-B adds provider contracts without connecting real APIs.
+
+```txt
+MarketDataProvider -> DataEnvelope<Quote | OhlcvSeries>
+marketDataQueryKeys -> providerId + market + assetId + range + interval
+validateOhlcvCandle -> chart / StdDev / strategy input gate
+```
+
+Provider classes must accept `AbortSignal` and must not surface fake prices or fake candles when credentials or provider connections are missing.

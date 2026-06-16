@@ -67,7 +67,7 @@ export const RightRail: React.FC<RightRailProps> = ({ selectedAsset }) => {
               <span className="text-sm font-semibold">0</span>
             </div>
             <button className="w-full py-2 bg-kt-positive text-white font-bold rounded-kt-card text-xs mt-2" disabled>
-              매수하기
+              주문 비활성화
             </button>
           </div>
         </div>

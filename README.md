@@ -56,6 +56,7 @@ npm run build
 * No real market data provider is connected.
 * No real trading signal is produced.
 * Seed demo data is not production data.
+* Quote/OHLCV provider contracts and query keys exist, but live market APIs are still not connected.
 
 ## 5. 관련 상세 문서
 * 아키텍처 및 폴더 구조: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
@@ -63,6 +64,7 @@ npm run build
 * PIT 데이터 정책: [docs/PIT_DATA_POLICY.md](docs/PIT_DATA_POLICY.md)
 * 유니버스 정책: [docs/UNIVERSE_POLICY.md](docs/UNIVERSE_POLICY.md)
 * Seed 데이터 정책: [docs/SEED_DATA_POLICY.md](docs/SEED_DATA_POLICY.md)
+* 시장 데이터 Provider 정책: [docs/MARKET_DATA_PROVIDER.md](docs/MARKET_DATA_PROVIDER.md)
 * 전략 신호 정책: [docs/STRATEGY_SIGNALS.md](docs/STRATEGY_SIGNALS.md)
 * 퀀트 엔진 재설계: [docs/QUANT_REDESIGN_REPORT.md](docs/QUANT_REDESIGN_REPORT.md)
 * 디자인 가이드 및 사용법: [docs/DESIGN_USAGE.md](docs/DESIGN_USAGE.md)
