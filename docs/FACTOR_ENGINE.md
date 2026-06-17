@@ -52,3 +52,9 @@ Factor normalization must receive a `UniverseSnapshot`. Market-only normalizatio
 - `SEED_DEMO` is rejected for research normalization.
 - observations outside `UniverseSnapshot.assetIds` are invalid.
 - mixed KR/US universes are not eligible for factor validation.
+
+## IC Calculation & Backtest Integration
+
+- **Spearman Rank IC**: IC calculations for factor validation must strictly use Spearman rank correlation (converting scores and future returns to cross-sectional ranks before Pearson correlation). Pearson correlation on raw values is prohibited to avoid outlier distortion.
+- **Backtest Veto Integration**: Any factor execution or backtest run that violates the minimum data constraints (average quality score < 50%, universe size < 3, or OOS windows < 2) will set veto reasons in the result. In such cases, UI components must suppress/placeholder the numeric metrics to prevent false trust.
+

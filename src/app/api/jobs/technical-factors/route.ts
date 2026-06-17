@@ -2,8 +2,15 @@ import { NextRequest } from "next/server";
 import { createSafeResponse } from "@/server/security/safe-api-response";
 import { runTechnicalFactorJob } from "@/server/factors/technical-factor-job";
 import { DataEnvelope } from "@/domain/common/data-status";
+import { checkJobRouteEnabled } from "@/server/security/job-route-guard";
 
 export async function POST(request: NextRequest) {
+  const guard = checkJobRouteEnabled({
+    routeFlag: process.env.TECHNICAL_FACTOR_JOB_ROUTE_ENABLED,
+    routeName: "technical-factors",
+  });
+  if (guard) return guard;
+
   try {
     let universeId: "KOSPI_SAMPLE" | "SP500_SAMPLE" = "KOSPI_SAMPLE";
     try {

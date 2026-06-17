@@ -15,7 +15,10 @@
     "reports:daily": "tsx scripts/reports/generate-daily-report.ts",
     "docs:check": "tsx scripts/docs/check-required-docs.ts",
     "docs:quant": "tsx scripts/docs/check-quant-docs.ts",
-    "factors:technical": "tsx scripts/factors/calculate-technical-factors.ts"
+    "factors:technical": "tsx scripts/factors/calculate-technical-factors.ts",
+    "backtest:run": "tsx scripts/backtest/run-backtest.ts",
+    "backtest:consistency": "tsx scripts/backtest/check-consistency.ts"
+
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",

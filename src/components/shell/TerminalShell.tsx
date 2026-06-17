@@ -8,6 +8,7 @@ import { RightRail } from "./RightRail";
 import { BottomStatusBar } from "./BottomStatusBar";
 import { StrategyWorkspace } from "../strategy/StrategyWorkspace";
 import { AlertSettingsPage } from "../alerts/AlertSettingsPage";
+import { BacktestWorkspace } from "../backtest/BacktestWorkspace";
 import { Panel } from "../ui/Panel";
 import { MetricCell } from "../ui/MetricCell";
 import { Asset } from "@/domain/market/asset";
@@ -62,6 +63,8 @@ export const TerminalShell: React.FC = () => {
             <StrategyWorkspace selectedAsset={selectedAsset} />
           ) : activeTab === "alerts" ? (
             <AlertSettingsPage />
+          ) : activeTab === "backtest" ? (
+            <BacktestWorkspace />
           ) : (
             <>
               {/* Active Asset Info Block */}

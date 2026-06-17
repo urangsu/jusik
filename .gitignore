@@ -44,3 +44,22 @@ next-env.d.ts
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Generated runtime data (never commit — use test/fixtures/ for test data)
+data/market/
+data/factors/
+data/signals/
+data/backtest/
+data/backtests/
+data/snapshots/
+
+# Keep directory structure placeholders
+!data/.gitkeep
+!data/market/.gitkeep
+!data/factors/.gitkeep
+!data/signals/.gitkeep
+!data/backtest/.gitkeep
+!data/backtests/.gitkeep
+
+# Test fixtures are allowed to be committed (keep small & synthetic)
+!test/fixtures/**
