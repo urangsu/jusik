@@ -5,6 +5,7 @@ import time
 import json
 import argparse
 from dotenv import load_dotenv
+import pandas as pd
 
 # Load local .env
 load_dotenv()
@@ -70,6 +71,8 @@ def write_failures_merged(dest_dir: str, new_failures: list[dict], current_symbo
     print(f"Failures logged to {filepath} (total failures: {len(merged)})")
 
 def main():
+    from datetime import datetime
+    now_str = datetime.now().isoformat()
     # Load settings
     allow_fallback = os.getenv("ALLOW_PERSONAL_FALLBACK", "false").lower() == "true"
     enable_yfinance = os.getenv("ENABLE_YFINANCE_PERSONAL", "false").lower() == "true"
@@ -186,6 +189,70 @@ def main():
     snapshot = format_snapshot(universe_id, constituents, ticker_data_map, valuation_map)
     write_snapshot_json(dest_dir, f"{universe_id}.latest.json", snapshot)
     
+    # Save individual OHLCV history files
+    ohlcv_base_dir = os.path.join("data", "market", "ohlcv", universe_id)
+    os.makedirs(ohlcv_base_dir, exist_ok=True)
+    
+    for c in constituents:
+        symbol = c["symbol"]
+        asset_id = c["assetId"]
+        
+        if symbol in ticker_data_map:
+            df = ticker_data_map[symbol]
+            bars = []
+            for ts, row in df.iterrows():
+                date_str = ts.strftime("%Y-%m-%d") if hasattr(ts, 'strftime') else str(ts)[:10]
+                
+                # Retrieve standard columns case-insensitively
+                open_col, high_col, low_col, close_col, vol_col = None, None, None, None, None
+                for col in df.columns:
+                    lcol = col.lower()
+                    if lcol == "open": open_col = col
+                    elif lcol == "high": high_col = col
+                    elif lcol == "low": low_col = col
+                    elif lcol == "close": close_col = col
+                    elif lcol == "volume": vol_col = col
+                
+                if open_col is None or high_col is None or low_col is None or close_col is None:
+                    continue
+                    
+                open_val = row[open_col]
+                high_val = row[high_col]
+                low_val = row[low_col]
+                close_val = row[close_col]
+                vol_val = row[vol_col] if vol_col is not None else 0
+                
+                if pd.isna(open_val) or pd.isna(high_val) or pd.isna(low_val) or pd.isna(close_val):
+                    continue
+                    
+                bars.append({
+                    "assetId": asset_id,
+                    "date": date_str,
+                    "open": float(open_val),
+                    "high": float(high_val),
+                    "low": float(low_val),
+                    "close": float(close_val),
+                    "volume": float(vol_val) if not pd.isna(vol_val) else 0.0
+                })
+                
+            history_file = {
+                "assetId": asset_id,
+                "symbol": symbol,
+                "universeId": universe_id,
+                "source": "Yahoo Finance via yfinance",
+                "sourceTier": "personal_fallback",
+                "warnings": ["unofficial", "personal_use_only"],
+                "updatedAt": now_str,
+                "dataStatus": "cached",
+                "bars": bars
+            }
+            
+            safe_asset_id = asset_id.replace(":", "_")
+            filepath = os.path.join(ohlcv_base_dir, f"{safe_asset_id}.json")
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(history_file, f, indent=2, ensure_ascii=False)
+            print(f"OHLCV history written for {symbol} to {filepath}")
+            
     # Write failures
     all_symbols_in_run = [c["symbol"] for c in constituents]
     write_failures_merged(dest_dir, failures, all_symbols_in_run)

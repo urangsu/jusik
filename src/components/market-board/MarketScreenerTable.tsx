@@ -15,11 +15,16 @@ import {
 interface MarketScreenerTableProps {
   rows: MarketScreenerRow[];
   onRowClick?: (row: MarketScreenerRow) => void;
+  momentumScores?: Record<
+    string,
+    { short: number | null; medium: number | null; long: number | null }
+  >;
 }
 
 export const MarketScreenerTable: React.FC<MarketScreenerTableProps> = ({
   rows,
   onRowClick,
+  momentumScores,
 }) => {
   const { t, tSector, locale } = useI18n();
 
@@ -61,6 +66,9 @@ export const MarketScreenerTable: React.FC<MarketScreenerTableProps> = ({
               <th className="py-2.5 px-2 font-medium text-right" title={labels.pbr.full}>{labels.pbr.short}</th>
               <th className="py-2.5 px-2 font-medium text-right" title={labels.roe.full}>{labels.roe.short}</th>
               <th className="py-2.5 px-2 font-medium text-right" title={labels.div.full}>{labels.div.short}</th>
+              <th className="py-2.5 px-2 font-medium text-right">{locale === "ko" ? "단기" : "Short"}</th>
+              <th className="py-2.5 px-2 font-medium text-right">{locale === "ko" ? "중기" : "Medium"}</th>
+              <th className="py-2.5 px-2 font-medium text-right">{locale === "ko" ? "장기" : "Long"}</th>
             </tr>
           </thead>
           <tbody>
@@ -142,6 +150,21 @@ export const MarketScreenerTable: React.FC<MarketScreenerTableProps> = ({
                       formatter={(val) => formatPercentShort(Number(val))}
                     />
                   </td>
+                  {(() => {
+                    const mScores = momentumScores?.[row.assetId];
+                    const renderScore = (score: number | null | undefined) => {
+                      if (score === undefined || score === null) return <span className="text-kt-text-muted">-</span>;
+                      const color = score > 0 ? "text-kt-positive-text" : score < 0 ? "text-kt-negative-text" : "text-kt-text-primary";
+                      return <span className={`${color} font-semibold tabular-nums`}>{score > 0 ? "+" : ""}{score}</span>;
+                    };
+                    return (
+                      <>
+                        <td className="py-2 px-2 text-right">{renderScore(mScores?.short)}</td>
+                        <td className="py-2 px-2 text-right">{renderScore(mScores?.medium)}</td>
+                        <td className="py-2 px-2 text-right">{renderScore(mScores?.long)}</td>
+                      </>
+                    );
+                  })()}
                 </tr>
               );
             })}

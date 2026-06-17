@@ -1,6 +1,6 @@
 {
   "universeId": "SP500_SAMPLE",
-  "generatedAt": "2026-06-16T14:13:54.000Z",
+  "generatedAt": "2026-06-17T12:48:27.000Z",
   "sourceSummary": [
     {
       "providerId": "opendart",
@@ -86,11 +86,11 @@
       "name": "애플",
       "sector": "Information Technology",
       "industry": "Technology Hardware",
-      "price": 297.7250061035156,
-      "changePercent": 2.2653114107416674,
-      "marketCap": 4373160132608,
+      "price": 299.239990234375,
+      "changePercent": 0.9513449426140453,
+      "marketCap": 4395044175872,
       "weight": null,
-      "volume": 5283227.0,
+      "volume": 39830400.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -99,7 +99,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:MSFT",
@@ -107,11 +107,11 @@
       "name": "마이크로소프트",
       "sector": "Information Technology",
       "industry": "Software",
-      "price": 394.3739929199219,
-      "changePercent": 0.9300309096509715,
-      "marketCap": 2930071830528,
+      "price": 393.8299865722656,
+      "changePercent": -1.4833957996038882,
+      "marketCap": 2925540409344,
       "weight": null,
-      "volume": 6317615.0,
+      "volume": 31453400.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -120,7 +120,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:NVDA",
@@ -128,11 +128,11 @@
       "name": "엔비디아",
       "sector": "Information Technology",
       "industry": "Semiconductors",
-      "price": 209.77999877929688,
-      "changePercent": 2.2369493071190627,
-      "marketCap": 5082050461696,
+      "price": 207.41000366210938,
+      "changePercent": -2.3723197733726837,
+      "marketCap": 5023677808640,
       "weight": null,
-      "volume": 24584895.0,
+      "volume": 125334200.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -141,7 +141,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:AMZN",
@@ -149,11 +149,11 @@
       "name": "아마존",
       "sector": "Consumer Discretionary",
       "industry": "Broadline Retail",
-      "price": 247.0399932861328,
-      "changePercent": 3.558998166322781,
-      "marketCap": 2656575946752,
+      "price": 246.0,
+      "changePercent": -0.008131156862668482,
+      "marketCap": 2646249046016,
       "weight": null,
-      "volume": 6590696.0,
+      "volume": 35127400.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -162,7 +162,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:GOOGL",
@@ -170,11 +170,11 @@
       "name": "알파벳",
       "sector": "Communication Services",
       "industry": "Interactive Media",
-      "price": 370.3800048828125,
-      "changePercent": 2.974870002479214,
-      "marketCap": 4519955005440,
+      "price": 373.25,
+      "changePercent": 1.0559073594251807,
+      "marketCap": 4554610442240,
       "weight": null,
-      "volume": 3821970.0,
+      "volume": 24826500.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -183,7 +183,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:META",
@@ -191,11 +191,11 @@
       "name": "메타",
       "sector": "Communication Services",
       "industry": "Interactive Media",
-      "price": 600.7313842773438,
-      "changePercent": 1.2218447205020047,
-      "marketCap": 1523866271744,
+      "price": 593.47998046875,
+      "changePercent": 4.6738863651043125,
+      "marketCap": 1523587088384,
       "weight": null,
-      "volume": 2531068.0,
+      "volume": 17653300.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -204,7 +204,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:BRK.B",
@@ -225,7 +225,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:TSLA",
@@ -233,11 +233,11 @@
       "name": "테슬라",
       "sector": "Consumer Discretionary",
       "industry": "Automobiles",
-      "price": 407.1700134277344,
-      "changePercent": 0.18207828292422723,
-      "marketCap": 1528110120960,
+      "price": 404.6600036621094,
+      "changePercent": -1.5784969793794987,
+      "marketCap": 1519791243264,
       "weight": null,
-      "volume": 10492389.0,
+      "volume": 40144700.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -246,7 +246,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:LLY",
@@ -254,11 +254,11 @@
       "name": "일라이 릴리",
       "sector": "Health Care",
       "industry": "Pharmaceuticals",
-      "price": 1124.0,
-      "changePercent": -0.7943512797881729,
-      "marketCap": 1002317283328,
+      "price": 1122.5,
+      "changePercent": -0.6065414383511671,
+      "marketCap": 1000979693568,
       "weight": null,
-      "volume": 391137.0,
+      "volume": 2259300.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -267,7 +267,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:AVGO",
@@ -275,11 +275,11 @@
       "name": "브로드컴",
       "sector": "Information Technology",
       "industry": "Semiconductors",
-      "price": 385.8599853515625,
-      "changePercent": 0.9919590532338313,
-      "marketCap": 1836901728256,
+      "price": 376.7099914550781,
+      "changePercent": -4.373765263630692,
+      "marketCap": 1792228065280,
       "weight": null,
-      "volume": 4165076.0,
+      "volume": 31509700.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -288,7 +288,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:JPM",
@@ -296,11 +296,11 @@
       "name": "JP모건 체이스",
       "sector": "Financials",
       "industry": "Banks",
-      "price": 326.8550109863281,
-      "changePercent": 1.912886549723851,
-      "marketCap": 876776259584,
+      "price": 331.1400146484375,
+      "changePercent": 3.6756483958349717,
+      "marketCap": 887293411328,
       "weight": null,
-      "volume": 1489984.0,
+      "volume": 11087400.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -309,7 +309,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:UNH",
@@ -317,11 +317,11 @@
       "name": "유나이티드헬스",
       "sector": "Health Care",
       "industry": "Healthcare Providers",
-      "price": 408.489990234375,
-      "changePercent": -0.007343283095964011,
-      "marketCap": 371049627648,
+      "price": 407.6499938964844,
+      "changePercent": -0.824740798453689,
+      "marketCap": 370205065216,
       "weight": null,
-      "volume": 663802.0,
+      "volume": 4813200.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -330,7 +330,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:XOM",
@@ -338,11 +338,11 @@
       "name": "엑손모빌",
       "sector": "Energy",
       "industry": "Oil & Gas",
-      "price": 141.26499938964844,
-      "changePercent": -3.9078942465509434,
-      "marketCap": 585888301056,
+      "price": 141.86000061035156,
+      "changePercent": 0.6670468731338653,
+      "marketCap": 588002230272,
       "weight": null,
-      "volume": 2989634.0,
+      "volume": 18917400.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -351,7 +351,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:V",
@@ -359,11 +359,11 @@
       "name": "비자",
       "sector": "Financials",
       "industry": "Financial Services",
-      "price": 326.8699951171875,
-      "changePercent": 1.3896151447604126,
-      "marketCap": 621661061120,
+      "price": 333.1199951171875,
+      "changePercent": 2.8719620723302963,
+      "marketCap": 633508855808,
       "weight": null,
-      "volume": 745930.0,
+      "volume": 9246000.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -372,7 +372,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:PG",
@@ -380,11 +380,11 @@
       "name": "프록터 앤 갬블",
       "sector": "Consumer Staples",
       "industry": "Household Products",
-      "price": 152.16000366210938,
-      "changePercent": 1.7044335548123628,
-      "marketCap": 354179940352,
+      "price": 152.49000549316406,
+      "changePercent": 1.3491949280298547,
+      "marketCap": 355088072704,
       "weight": null,
-      "volume": 1179820.0,
+      "volume": 8517600.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -393,7 +393,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:COST",
@@ -401,11 +401,11 @@
       "name": "코스트코",
       "sector": "Consumer Staples",
       "industry": "Consumer Staples Retail",
-      "price": 980.2000122070312,
-      "changePercent": -0.21885920825965022,
-      "marketCap": 435347619840,
+      "price": 986.6799926757812,
+      "changePercent": 0.7381673774712009,
+      "marketCap": 437571682304,
       "weight": null,
-      "volume": 174600.0,
+      "volume": 1521400.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -414,7 +414,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:JNJ",
@@ -422,11 +422,11 @@
       "name": "존슨 앤 존슨",
       "sector": "Health Care",
       "industry": "Pharmaceuticals",
-      "price": 232.625,
-      "changePercent": -3.423006303950878,
-      "marketCap": 560412098560,
+      "price": 235.17999267578125,
+      "changePercent": -0.20368793128611143,
+      "marketCap": 566129262592,
       "weight": null,
-      "volume": 1258041.0,
+      "volume": 7714600.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -435,7 +435,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:MA",
@@ -443,11 +443,11 @@
       "name": "마스터카드",
       "sector": "Financials",
       "industry": "Financial Services",
-      "price": 492.6050109863281,
-      "changePercent": 0.5357361404837483,
-      "marketCap": 435553828864,
+      "price": 501.3299865722656,
+      "changePercent": 2.1787811031857856,
+      "marketCap": 442967097344,
       "weight": null,
-      "volume": 599061.0,
+      "volume": 4005300.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -456,7 +456,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:HD",
@@ -464,11 +464,11 @@
       "name": "홈디포",
       "sector": "Consumer Discretionary",
       "industry": "Specialty Retail",
-      "price": 337.30999755859375,
-      "changePercent": 2.7162771437206037,
-      "marketCap": 336008478720,
+      "price": 337.0899963378906,
+      "changePercent": 2.2042292317716647,
+      "marketCap": 336118054912,
       "weight": null,
-      "volume": 666924.0,
+      "volume": 5129200.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -477,7 +477,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:MRK",
@@ -485,11 +485,11 @@
       "name": "머크",
       "sector": "Health Care",
       "industry": "Pharmaceuticals",
-      "price": 114.43000030517578,
-      "changePercent": -3.8807245931555774,
-      "marketCap": 282782564352,
+      "price": 115.16999816894531,
+      "changePercent": 0.23498402043588743,
+      "marketCap": 284449669120,
       "weight": null,
-      "volume": 1455107.0,
+      "volume": 10663700.0,
       "tileSizeMetric": "market_cap",
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
@@ -498,7 +498,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     }
   ],
   "tableRows": [
@@ -508,16 +508,16 @@
       "name": "애플",
       "sector": "Information Technology",
       "industry": "Technology Hardware",
-      "price": 297.7250061035156,
-      "changePercent": 2.2653114107416674,
-      "volume": 5283227.0,
-      "turnover": 1572948790.8212585,
-      "marketCap": 4373160132608,
-      "high52WeekPercent": -5.544100706454796,
-      "return20Day": -0.8343619195772447,
-      "return60Day": 19.58748315977299,
-      "per": 36.003624,
-      "pbr": 41.012394,
+      "price": 299.239990234375,
+      "changePercent": 0.9513449426140453,
+      "volume": 39830400.0,
+      "turnover": 11918848507.03125,
+      "marketCap": 4395044175872,
+      "high52WeekPercent": -5.063458551573059,
+      "return20Day": 0.4700489906319108,
+      "return60Day": 20.6661492826265,
+      "per": 36.2276,
+      "pbr": 41.21763,
       "roe": 141.47099,
       "dividendYield": 36.0,
       "dataStatus": "cached",
@@ -527,7 +527,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:MSFT",
@@ -535,18 +535,18 @@
       "name": "마이크로소프트",
       "sector": "Information Technology",
       "industry": "Software",
-      "price": 394.3739929199219,
-      "changePercent": 0.9300309096509715,
-      "volume": 6317615.0,
-      "turnover": 2491503053.280792,
-      "marketCap": 2930071830528,
-      "high52WeekPercent": -19.18896729681425,
-      "return20Day": -6.528730477614693,
-      "return60Day": 1.3762798975509294,
-      "per": 23.492554,
-      "pbr": 7.071732,
+      "price": 393.8299865722656,
+      "changePercent": -1.4833957996038882,
+      "volume": 31453400.0,
+      "turnover": 12387292099.6521,
+      "marketCap": 2925540409344,
+      "high52WeekPercent": -19.300439441378604,
+      "return20Day": -7.0146907903046705,
+      "return60Day": 3.131953703617868,
+      "per": 23.470201,
+      "pbr": 7.0607953,
       "roe": 34.013999,
-      "dividendYield": 91.0,
+      "dividendYield": 92.0,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -554,7 +554,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:NVDA",
@@ -562,18 +562,18 @@
       "name": "엔비디아",
       "sector": "Information Technology",
       "industry": "Semiconductors",
-      "price": 209.77999877929688,
-      "changePercent": 2.2369493071190627,
-      "volume": 24584895.0,
-      "turnover": 5157419243.089142,
-      "marketCap": 5082050461696,
-      "high52WeekPercent": -11.0121346012355,
-      "return20Day": -6.89686137039795,
-      "return60Day": 17.48431991911201,
-      "per": 32.180984,
-      "pbr": 26.000002,
+      "price": 207.41000366210938,
+      "changePercent": -2.3723197733726837,
+      "volume": 125334200.0,
+      "turnover": 25995566880.98755,
+      "marketCap": 5023677808640,
+      "high52WeekPercent": -12.017477378007525,
+      "return20Day": -6.70655054466847,
+      "return60Day": 20.09844083799822,
+      "per": 31.762634,
+      "pbr": 25.701365,
       "roe": 114.28799999999998,
-      "dividendYield": 47.0,
+      "dividendYield": 0.018827959,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -581,7 +581,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:AMZN",
@@ -589,16 +589,16 @@
       "name": "아마존",
       "sector": "Consumer Discretionary",
       "industry": "Broadline Retail",
-      "price": 247.0399932861328,
-      "changePercent": 3.558998166322781,
-      "volume": 6590696.0,
-      "turnover": 1628165495.5909424,
-      "marketCap": 2656575946752,
-      "high52WeekPercent": -10.164005215033573,
-      "return20Day": -6.473847358971456,
-      "return60Day": 18.336846036870046,
-      "per": 31.783785,
-      "pbr": 6.0097833,
+      "price": 246.0,
+      "changePercent": -0.008131156862668482,
+      "volume": 35127400.0,
+      "turnover": 8641340400.0,
+      "marketCap": 2646249046016,
+      "high52WeekPercent": -10.542198357717211,
+      "return20Day": -7.120737897243577,
+      "return60Day": 19.78380768798692,
+      "per": 31.660233,
+      "pbr": 5.986421,
       "roe": 24.285,
       "dividendYield": 0.0,
       "dataStatus": "cached",
@@ -608,7 +608,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:GOOGL",
@@ -616,16 +616,16 @@
       "name": "알파벳",
       "sector": "Communication Services",
       "industry": "Interactive Media",
-      "price": 370.3800048828125,
-      "changePercent": 2.974870002479214,
-      "volume": 3821970.0,
-      "turnover": 1415581267.261963,
-      "marketCap": 4519955005440,
-      "high52WeekPercent": -8.007548215530418,
-      "return20Day": -6.65355964960547,
-      "return60Day": 20.59388499802664,
-      "per": 28.254005,
-      "pbr": 9.3741455,
+      "price": 373.25,
+      "changePercent": 1.0559073594251807,
+      "volume": 24826500.0,
+      "turnover": 9266491125.0,
+      "marketCap": 4554610442240,
+      "high52WeekPercent": -7.294718462414913,
+      "return20Day": -5.9681569747819045,
+      "return60Day": 24.003322259136212,
+      "per": 28.492365,
+      "pbr": 9.446019,
       "roe": 38.884997,
       "dividendYield": 24.0,
       "dataStatus": "cached",
@@ -635,7 +635,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:META",
@@ -643,16 +643,16 @@
       "name": "메타",
       "sector": "Communication Services",
       "industry": "Interactive Media",
-      "price": 600.7313842773438,
-      "changePercent": 1.2218447205020047,
-      "volume": 2531068.0,
-      "turnover": 1520491983.340088,
-      "marketCap": 1523866271744,
-      "high52WeekPercent": -18.63426118245561,
-      "return20Day": -1.7144086841856927,
-      "return60Day": 1.191155114493614,
-      "per": 21.845707,
-      "pbr": 6.2524867,
+      "price": 593.47998046875,
+      "changePercent": 4.6738863651043125,
+      "volume": 17653300.0,
+      "turnover": 10476880139.208984,
+      "marketCap": 1523587088384,
+      "high52WeekPercent": -19.616423666042763,
+      "return20Day": -3.3782134802610297,
+      "return60Day": -2.1790063412377227,
+      "per": 21.83376,
+      "pbr": 6.2513413,
       "roe": 32.930002,
       "dividendYield": 35.0,
       "dataStatus": "cached",
@@ -662,7 +662,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:BRK.B",
@@ -689,7 +689,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:TSLA",
@@ -697,16 +697,16 @@
       "name": "테슬라",
       "sector": "Consumer Discretionary",
       "industry": "Automobiles",
-      "price": 407.1700134277344,
-      "changePercent": 0.18207828292422723,
-      "volume": 10492389.0,
-      "turnover": 4272186170.0190125,
-      "marketCap": 1528110120960,
-      "high52WeekPercent": -16.883724714354027,
-      "return20Day": -3.5690548397075443,
-      "return60Day": 7.0654815927560275,
-      "per": 366.55405,
-      "pbr": 18.581312,
+      "price": 404.6600036621094,
+      "changePercent": -1.5784969793794987,
+      "volume": 40144700.0,
+      "turnover": 16244954449.014282,
+      "marketCap": 1519791243264,
+      "high52WeekPercent": -17.201728036826154,
+      "return20Day": -1.3000284639190052,
+      "return60Day": 9.973913756738337,
+      "per": 371.2477,
+      "pbr": 18.480158,
       "roe": 4.901,
       "dividendYield": 0.0,
       "dataStatus": "cached",
@@ -716,7 +716,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:LLY",
@@ -724,18 +724,18 @@
       "name": "일라이 릴리",
       "sector": "Health Care",
       "industry": "Pharmaceuticals",
-      "price": 1124.0,
-      "changePercent": -0.7943512797881729,
-      "volume": 391137.0,
-      "turnover": 439637988.0,
-      "marketCap": 1002317283328,
-      "high52WeekPercent": -3.1827342026740544,
-      "return20Day": 11.849701380700871,
-      "return60Day": 22.506811989100818,
-      "per": 39.97155,
-      "pbr": 32.190624,
+      "price": 1122.5,
+      "changePercent": -0.6065414383511671,
+      "volume": 2259300.0,
+      "turnover": 2536064250.0,
+      "marketCap": 1000979693568,
+      "high52WeekPercent": -3.31193873888045,
+      "return20Day": 13.60300878375244,
+      "return60Day": 23.800593899594443,
+      "per": 39.847355,
+      "pbr": 32.147663,
       "roe": 107.45899999999999,
-      "dividendYield": 61.0,
+      "dividendYield": 0.55164476,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -743,7 +743,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:AVGO",
@@ -751,18 +751,18 @@
       "name": "브로드컴",
       "sector": "Information Technology",
       "industry": "Semiconductors",
-      "price": 385.8599853515625,
-      "changePercent": 0.9919590532338313,
-      "volume": 4165076.0,
-      "turnover": 1607136164.3481445,
-      "marketCap": 1836901728256,
-      "high52WeekPercent": -19.87458116514701,
-      "return20Day": -9.249986327057082,
-      "return60Day": 20.64156758678985,
-      "per": 64.02985,
-      "pbr": 20.94954,
+      "price": 376.7099914550781,
+      "changePercent": -4.373765263630692,
+      "volume": 31509700.0,
+      "turnover": 11870018817.752075,
+      "marketCap": 1792228065280,
+      "high52WeekPercent": -21.774615170031392,
+      "return20Day": -10.458510825431194,
+      "return60Day": 21.31975769136116,
+      "per": 62.472633,
+      "pbr": 20.440042,
       "roe": 37.280998,
-      "dividendYield": 66.0,
+      "dividendYield": 69.0,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -770,7 +770,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:JPM",
@@ -778,18 +778,18 @@
       "name": "JP모건 체이스",
       "sector": "Financials",
       "industry": "Banks",
-      "price": 326.8550109863281,
-      "changePercent": 1.912886549723851,
-      "volume": 1489984.0,
-      "turnover": 487008736.6894531,
-      "marketCap": 876776259584,
-      "high52WeekPercent": -2.3176159423594327,
-      "return20Day": 9.752867152157913,
-      "return60Day": 13.503146022430002,
-      "per": 15.663715,
-      "pbr": 2.5488203,
+      "price": 331.1400146484375,
+      "changePercent": 3.6756483958349717,
+      "volume": 11087400.0,
+      "turnover": 3671481798.413086,
+      "marketCap": 887293411328,
+      "high52WeekPercent": -1.0370194719321446,
+      "return20Day": 10.11206150073658,
+      "return60Day": 15.556957520118747,
+      "per": 15.851604,
+      "pbr": 2.579394,
       "roe": 16.465001,
-      "dividendYield": 188.0,
+      "dividendYield": 1.8472135,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -797,7 +797,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:UNH",
@@ -805,18 +805,18 @@
       "name": "유나이티드헬스",
       "sector": "Health Care",
       "industry": "Healthcare Providers",
-      "price": 408.489990234375,
-      "changePercent": -0.007343283095964011,
-      "volume": 663802.0,
-      "turnover": 271156472.4975586,
-      "marketCap": 371049627648,
-      "high52WeekPercent": -1.0920120497881356,
-      "return20Day": 3.717147112855838,
-      "return60Day": 45.66038606411825,
-      "per": 30.766565,
-      "pbr": 3.7902372,
+      "price": 407.6499938964844,
+      "changePercent": -0.824740798453689,
+      "volume": 4813200.0,
+      "turnover": 1962100950.6225586,
+      "marketCap": 370205065216,
+      "high52WeekPercent": -1.2954009935873183,
+      "return20Day": 4.22365679120462,
+      "return60Day": 47.91900987461094,
+      "per": 30.673439,
+      "pbr": 3.78161,
       "roe": 12.175999599999999,
-      "dividendYield": 225.99999999999997,
+      "dividendYield": 2.1506423,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -824,7 +824,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:XOM",
@@ -832,18 +832,18 @@
       "name": "엑손모빌",
       "sector": "Energy",
       "industry": "Oil & Gas",
-      "price": 141.26499938964844,
-      "changePercent": -3.9078942465509434,
-      "volume": 2989634.0,
-      "turnover": 422330645.1852722,
-      "marketCap": 585888301056,
-      "high52WeekPercent": -17.61532723859791,
-      "return20Day": -10.546478579286136,
-      "return60Day": -10.682222990178456,
-      "per": 23.756304,
-      "pbr": 2.2773044,
+      "price": 141.86000061035156,
+      "changePercent": 0.6670468731338653,
+      "volume": 18917400.0,
+      "turnover": 2683622375.5462646,
+      "marketCap": 588002230272,
+      "high52WeekPercent": -17.268327054036597,
+      "return20Day": -11.608202532964603,
+      "return60Day": -11.154254251164431,
+      "per": 23.882154,
+      "pbr": 2.285521,
       "roe": 9.873,
-      "dividendYield": 292.0,
+      "dividendYield": 290.0,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -851,7 +851,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:V",
@@ -859,18 +859,18 @@
       "name": "비자",
       "sector": "Financials",
       "industry": "Financial Services",
-      "price": 326.8699951171875,
-      "changePercent": 1.3896151447604126,
-      "volume": 745930.0,
-      "turnover": 243822135.45776367,
-      "marketCap": 621661061120,
-      "high52WeekPercent": -8.583175593174973,
-      "return20Day": 0.3438204504029163,
-      "return60Day": 9.062094837162023,
-      "per": 28.524433,
-      "pbr": 17.535137,
+      "price": 333.1199951171875,
+      "changePercent": 2.8719620723302963,
+      "volume": 9246000.0,
+      "turnover": 3080027474.8535156,
+      "marketCap": 633508855808,
+      "high52WeekPercent": -6.8352171966332005,
+      "return20Day": 0.14429426635796794,
+      "return60Day": 10.443604704575836,
+      "per": 29.068062,
+      "pbr": 17.869328,
       "roe": 60.349,
-      "dividendYield": 83.0,
+      "dividendYield": 80.0,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -878,7 +878,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:PG",
@@ -886,18 +886,18 @@
       "name": "프록터 앤 갬블",
       "sector": "Consumer Staples",
       "industry": "Household Products",
-      "price": 152.16000366210938,
-      "changePercent": 1.7044335548123628,
-      "volume": 1179820.0,
-      "turnover": 179521415.52062988,
-      "marketCap": 354179940352,
-      "high52WeekPercent": -8.995211459715838,
-      "return20Day": 7.480395415702551,
-      "return60Day": 5.053857711472347,
-      "per": 22.20438,
-      "pbr": 6.589836,
+      "price": 152.49000549316406,
+      "changePercent": 1.3491949280298547,
+      "volume": 8517600.0,
+      "turnover": 1298848870.7885742,
+      "marketCap": 355088072704,
+      "high52WeekPercent": -8.797841939932388,
+      "return20Day": 7.093199063704668,
+      "return60Day": 5.690329070785426,
+      "per": 22.261314,
+      "pbr": 6.6067333,
       "roe": 31.112000000000002,
-      "dividendYield": 283.0,
+      "dividendYield": 2.8093847000000003,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -905,7 +905,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:COST",
@@ -913,16 +913,16 @@
       "name": "코스트코",
       "sector": "Consumer Staples",
       "industry": "Consumer Staples Retail",
-      "price": 980.2000122070312,
-      "changePercent": -0.21885920825965022,
-      "volume": 174600.0,
-      "turnover": 171142922.13134766,
-      "marketCap": 435347619840,
-      "high52WeekPercent": -10.428388376637217,
-      "return20Day": -6.554167707242571,
-      "return60Day": 0.5560211275630845,
-      "per": 49.379528,
-      "pbr": 26.333628,
+      "price": 986.6799926757812,
+      "changePercent": 0.7381673774712009,
+      "volume": 1521400.0,
+      "turnover": 1501134940.8569336,
+      "marketCap": 437571682304,
+      "high52WeekPercent": -9.836241583487354,
+      "return20Day": -8.341150284823556,
+      "return60Day": 1.4758338561722666,
+      "per": 49.756935,
+      "pbr": 26.468159,
       "roe": 29.152,
       "dividendYield": 60.0,
       "dataStatus": "cached",
@@ -932,7 +932,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:JNJ",
@@ -940,18 +940,18 @@
       "name": "존슨 앤 존슨",
       "sector": "Health Care",
       "industry": "Pharmaceuticals",
-      "price": 232.625,
-      "changePercent": -3.423006303950878,
-      "volume": 1258041.0,
-      "turnover": 292651787.625,
-      "marketCap": 560412098560,
-      "high52WeekPercent": -6.410926019918932,
-      "return20Day": 2.609056993941243,
-      "return60Day": -2.0938577338874964,
-      "per": 26.976244,
-      "pbr": 6.900993,
+      "price": 235.17999267578125,
+      "changePercent": -0.20368793128611143,
+      "volume": 7714600.0,
+      "turnover": 1814319571.496582,
+      "marketCap": 566129262592,
+      "high52WeekPercent": -5.383008132536851,
+      "return20Day": 2.7345773881301527,
+      "return60Day": -0.08072500545859738,
+      "per": 27.251448,
+      "pbr": 6.9713945,
       "roe": 26.416,
-      "dividendYield": 227.0,
+      "dividendYield": 2.2065686,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -959,7 +959,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:MA",
@@ -967,18 +967,18 @@
       "name": "마스터카드",
       "sector": "Financials",
       "industry": "Financial Services",
-      "price": 492.6050109863281,
-      "changePercent": 0.5357361404837483,
-      "volume": 599061.0,
-      "turnover": 295100450.4864807,
-      "marketCap": 435553828864,
-      "high52WeekPercent": -15.117863977869419,
-      "return20Day": -0.3227440674434755,
-      "return60Day": 0.29828486667682386,
-      "per": 28.543139,
-      "pbr": 65.065994,
+      "price": 501.3299865722656,
+      "changePercent": 2.1787811031857856,
+      "volume": 4005300.0,
+      "turnover": 2007976995.2178955,
+      "marketCap": 442967097344,
+      "high52WeekPercent": -13.614439229931016,
+      "return20Day": -0.8817932140429247,
+      "return60Day": 1.0094252043267176,
+      "per": 28.978613,
+      "pbr": 66.17344,
       "roe": 232.076,
-      "dividendYield": 71.0,
+      "dividendYield": 69.0,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -986,7 +986,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:HD",
@@ -994,18 +994,18 @@
       "name": "홈디포",
       "sector": "Consumer Discretionary",
       "industry": "Specialty Retail",
-      "price": 337.30999755859375,
-      "changePercent": 2.7162771437206037,
-      "volume": 666924.0,
-      "turnover": 224960132.81176758,
-      "marketCap": 336008478720,
-      "high52WeekPercent": -13.742486104570917,
-      "return20Day": 13.377697047680085,
-      "return60Day": 2.7726170258168805,
-      "per": 23.933247,
-      "pbr": 24.215298,
+      "price": 337.0899963378906,
+      "changePercent": 2.2042292317716647,
+      "volume": 5129200.0,
+      "turnover": 1729002009.2163086,
+      "marketCap": 336118054912,
+      "high52WeekPercent": -13.79874520892348,
+      "return20Day": 12.434541570619576,
+      "return60Day": 5.094309068711029,
+      "per": 23.924059,
+      "pbr": 24.223196,
       "roe": 128.38,
-      "dividendYield": 283.0,
+      "dividendYield": 276.0,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -1013,7 +1013,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     },
     {
       "assetId": "US:MRK",
@@ -1021,18 +1021,18 @@
       "name": "머크",
       "sector": "Health Care",
       "industry": "Pharmaceuticals",
-      "price": 114.43000030517578,
-      "changePercent": -3.8807245931555774,
-      "volume": 1455107.0,
-      "turnover": 166507894.45406342,
-      "marketCap": 282782564352,
-      "high52WeekPercent": -7.665617668527711,
-      "return20Day": 2.73837594448694,
-      "return60Day": 0.20140399569173023,
-      "per": 32.252113,
-      "pbr": 6.163598,
+      "price": 115.16999816894531,
+      "changePercent": 0.23498402043588743,
+      "volume": 10663700.0,
+      "turnover": 1228138309.4741821,
+      "marketCap": 284449669120,
+      "high52WeekPercent": -7.0685081212451335,
+      "return20Day": 2.3187639187651117,
+      "return60Day": 0.8670501498716975,
+      "per": 32.442253,
+      "pbr": 6.1999354,
       "roe": 18.944,
-      "dividendYield": 296.0,
+      "dividendYield": 295.0,
       "dataStatus": "cached",
       "source": "Yahoo Finance via yfinance",
       "sourceTier": "personal_fallback",
@@ -1040,7 +1040,7 @@
         "unofficial",
         "personal_use_only"
       ],
-      "updatedAt": "2026-06-16T14:13:54.000Z"
+      "updatedAt": "2026-06-17T12:48:27.000Z"
     }
   ],
   "missingData": [

@@ -8,6 +8,7 @@ import { MarketBoardToolbar } from "./MarketBoardToolbar";
 import { MarketHeatmap } from "./MarketHeatmap";
 import { MarketScreenerTable } from "./MarketScreenerTable";
 import { MarketBoardDiagnostics } from "./MarketBoardDiagnostics";
+import { MomentumFactorPanel } from "../factors/MomentumFactorPanel";
 import { LocaleToggle } from "../settings/LocaleToggle";
 import { useI18n } from "@/i18n/use-i18n";
 import { LayoutGrid } from "lucide-react";
@@ -30,6 +31,67 @@ export const MarketBoardPage: React.FC<MarketBoardPageProps> = ({ initialSnapsho
   const [snapshot, setSnapshot] = useState<MarketBoardSnapshot>(
     initialSnapshot || getDefaultSnapshot(activeUniverseId)
   );
+
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  const [technicalSnapshot, setTechnicalSnapshot] = useState<any>(null);
+
+  // Reset selected asset when universe changes
+  useEffect(() => {
+    setSelectedAssetId(null);
+  }, [activeUniverseId]);
+
+  // Fetch technical signals snapshot when universe changes
+  useEffect(() => {
+    let active = true;
+    async function fetchTechSnapshot() {
+      try {
+        const res = await fetch(`/api/factors/technical?universeId=${activeUniverseId}`);
+        if (!res.ok) throw new Error("Failed to fetch technical signals");
+        const envelope = await res.json();
+        if (active && envelope?.status === "cached") {
+          setTechnicalSnapshot(envelope.value);
+        }
+      } catch (err) {
+        console.error("Failed to load technical signals snapshot", err);
+      }
+    }
+    fetchTechSnapshot();
+    return () => {
+      active = false;
+    };
+  }, [activeUniverseId]);
+
+  // Compute momentum scores map for screener columns
+  const momentumScores = useMemo(() => {
+    if (!technicalSnapshot?.assets) return undefined;
+    const scores: Record<string, { short: number | null; medium: number | null; long: number | null }> = {};
+    for (const [assetId, assetData] of Object.entries(technicalSnapshot.assets)) {
+      const byHorizon = (assetData as any).momentum?.byHorizon;
+      if (byHorizon) {
+        scores[assetId] = {
+          short: byHorizon.short?.score ?? null,
+          medium: byHorizon.medium?.score ?? null,
+          long: byHorizon.long?.score ?? null,
+        };
+      }
+    }
+    return scores;
+  }, [technicalSnapshot]);
+
+  // Compute selected asset's technical detailed data
+  const selectedAssetData = useMemo(() => {
+    if (!selectedAssetId || !technicalSnapshot?.assets?.[selectedAssetId]) return null;
+    const techAsset = technicalSnapshot.assets[selectedAssetId];
+    const row = snapshot.tableRows.find((r) => r.assetId === selectedAssetId);
+    return {
+      name: row?.name || techAsset.nameKo || techAsset.symbol,
+      symbol: row?.symbol || techAsset.symbol,
+      dataStatus: row?.dataStatus || "cached",
+      sourceTier: row?.sourceTier || "personal_fallback",
+      warnings: row?.warnings || [],
+      ...techAsset,
+    };
+  }, [selectedAssetId, technicalSnapshot, snapshot]);
 
   // Fetch updated snapshot when universeId changes
   useEffect(() => {
@@ -229,15 +291,39 @@ export const MarketBoardPage: React.FC<MarketBoardPageProps> = ({ initialSnapsho
           <MarketHeatmap tiles={filteredTiles} />
         </div>
 
-        {/* Right Side: Diagnostics Panel (Span 1) */}
-        <div className="flex flex-col">
-          <MarketBoardDiagnostics sourceSummary={snapshot.sourceSummary} />
+        {/* Right Side: Diagnostics or Momentum Detail Panel */}
+        <div className="flex flex-col relative min-h-[480px]">
+          {selectedAssetData ? (
+            <>
+              <button
+                onClick={() => setSelectedAssetId(null)}
+                className="absolute top-4 right-4 text-[10px] font-semibold text-kt-text-muted hover:text-kt-text-primary border border-kt-border-panel/40 px-2 py-0.5 rounded-kt-card bg-kt-bg-surface-200 cursor-pointer z-10"
+              >
+                {locale === "ko" ? "닫기" : "Close"}
+              </button>
+              <MomentumFactorPanel
+                assetName={selectedAssetData.name}
+                symbol={selectedAssetData.symbol}
+                momentumResult={selectedAssetData.momentum}
+                atomicSignals={selectedAssetData.atomicSignals}
+                dataStatus={selectedAssetData.dataStatus}
+                sourceTier={selectedAssetData.sourceTier}
+                warnings={selectedAssetData.warnings}
+              />
+            </>
+          ) : (
+            <MarketBoardDiagnostics sourceSummary={snapshot.sourceSummary} />
+          )}
         </div>
       </div>
 
       {/* Bottom Screener Table */}
       <div className="w-full">
-        <MarketScreenerTable rows={filteredRows} />
+        <MarketScreenerTable
+          rows={filteredRows}
+          momentumScores={momentumScores}
+          onRowClick={(row) => setSelectedAssetId(row.assetId)}
+        />
       </div>
     </div>
   );

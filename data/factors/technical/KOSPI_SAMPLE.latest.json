@@ -1,0 +1,4119 @@
+{
+  "universeId": "KOSPI_SAMPLE",
+  "updatedAt": "2026-06-17T12:49:47.677Z",
+  "assets": {
+    "KR:005930": {
+      "assetId": "KR:005930",
+      "symbol": "005930",
+      "nameKo": "삼성전자",
+      "nameEn": "Samsung Electronics",
+      "technicalSignals": {
+        "assetId": "KR:005930",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 317750,
+          "kijunSen": 316000,
+          "senkouSpanA": 236375,
+          "senkouSpanB": 222000,
+          "chikouSpan": null,
+          "cloudPosition": "above",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": 370000,
+          "lowerBound": 287500,
+          "breakout": "none",
+          "boxAge": 1
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 370000,
+          "channelLow": 262000
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 316200,
+          "slope5d": 0.03902078370163477
+        },
+        "returnMomentum": {
+          "return20d": 0.23309608540925267,
+          "return60d": 0.7281795511221946,
+          "return120d": null
+        },
+        "volatilityZScore": 0.7480656299882592,
+        "volumeZScore": -0.9786946760699028
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:005930",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 50,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "cloudPosition": "above",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:005930",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 22,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 1
+          }
+        },
+        {
+          "assetId": "KR:005930",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 28,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:005930",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:005930",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 39,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "slope5d": 0.03902078370163477
+          }
+        },
+        {
+          "assetId": "KR:005930",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 60,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "return20d": 0.23309608540925267,
+            "return60d": 0.7281795511221946,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:005930",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -37,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "zScore": 0.7480656299882592
+          }
+        },
+        {
+          "assetId": "KR:005930",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -29,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "zScore": -0.9786946760699028
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_005930_momentum_2026-06-17",
+          "assetId": "KR:005930",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "rawValue": 30,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": 20,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": 37,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -37,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:000660": {
+      "assetId": "KR:000660",
+      "symbol": "000660",
+      "nameKo": "SK하이닉스",
+      "nameEn": "SK Hynix",
+      "technicalSignals": {
+        "assetId": "KR:000660",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 2189000,
+          "kijunSen": 2106500,
+          "senkouSpanA": 1347250,
+          "senkouSpanB": 1247500,
+          "chikouSpan": null,
+          "cloudPosition": "above",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": 2407000,
+          "lowerBound": 1855000,
+          "breakout": "up",
+          "boxAge": 4
+        },
+        "turtleChannel": {
+          "entryBreakout": "long",
+          "exitBreakout": "short_exit",
+          "channelHigh": 2407000,
+          "channelLow": 1690000
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 2149750,
+          "slope5d": 0.048837606420608394
+        },
+        "returnMomentum": {
+          "return20d": 0.3701086956521739,
+          "return60d": 1.4886475814412636,
+          "return120d": null
+        },
+        "volatilityZScore": 0.7922793853608066,
+        "volumeZScore": -0.48355544185607807
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:000660",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 50,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "cloudPosition": "above",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:000660",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 100,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "breakout": "up",
+            "boxAge": 4
+          }
+        },
+        {
+          "assetId": "KR:000660",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 100,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "entryBreakout": "long",
+            "exitBreakout": "short_exit"
+          }
+        },
+        {
+          "assetId": "KR:000660",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:000660",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 49,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "slope5d": 0.048837606420608394
+          }
+        },
+        {
+          "assetId": "KR:000660",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 100,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "return20d": 0.3701086956521739,
+            "return60d": 1.4886475814412636,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:000660",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -40,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "zScore": 0.7922793853608066
+          }
+        },
+        {
+          "assetId": "KR:000660",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -15,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "metadata": {
+            "zScore": -0.48355544185607807
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_000660_momentum_2026-06-17",
+          "assetId": "KR:000660",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.679Z",
+          "rawValue": 60,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": 62,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": 66,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -40,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": true,
+          "description": "Cross-horizon tension detected: Short-term is bullish (62) while Long-term is bearish (-40)."
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:373220": {
+      "assetId": "KR:373220",
+      "symbol": "373220",
+      "nameKo": "LG에너지솔루션",
+      "nameEn": "LG Energy Solution",
+      "technicalSignals": {
+        "assetId": "KR:373220",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 415000,
+          "kijunSen": 432250,
+          "senkouSpanA": 456750,
+          "senkouSpanB": 419500,
+          "chikouSpan": null,
+          "cloudPosition": "below",
+          "tkCross": "bearish_cross"
+        },
+        "darvasBox": {
+          "upperBound": 480000,
+          "lowerBound": 382000,
+          "breakout": "none",
+          "boxAge": 14
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 497500,
+          "channelLow": 367000
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 410000,
+          "slope5d": -0.02305355334485018
+        },
+        "returnMomentum": {
+          "return20d": -0.002398081534772182,
+          "return60d": 0.0847457627118644,
+          "return120d": null
+        },
+        "volatilityZScore": 1.2106281517059576,
+        "volumeZScore": -0.8221063691260933
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:373220",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -100,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.680Z",
+          "metadata": {
+            "cloudPosition": "below",
+            "tkCross": "bearish_cross"
+          }
+        },
+        {
+          "assetId": "KR:373220",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -15,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.680Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 14
+          }
+        },
+        {
+          "assetId": "KR:373220",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -12,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.680Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:373220",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.680Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:373220",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -23,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.680Z",
+          "metadata": {
+            "slope5d": -0.02305355334485018
+          }
+        },
+        {
+          "assetId": "KR:373220",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 4,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.680Z",
+          "metadata": {
+            "return20d": -0.002398081534772182,
+            "return60d": 0.0847457627118644,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:373220",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -61,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.680Z",
+          "metadata": {
+            "zScore": 1.2106281517059576
+          }
+        },
+        {
+          "assetId": "KR:373220",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 25,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.680Z",
+          "metadata": {
+            "zScore": -0.8221063691260933
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_373220_momentum_2026-06-17",
+          "assetId": "KR:373220",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.680Z",
+          "rawValue": -27,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": 6,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": -46,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -61,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:207940": {
+      "assetId": "KR:207940",
+      "symbol": "207940",
+      "nameKo": "삼성바이오로직스",
+      "nameEn": "Samsung Biologics",
+      "technicalSignals": {
+        "assetId": "KR:207940",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 1318000,
+          "kijunSen": 1352500,
+          "senkouSpanA": 1525750,
+          "senkouSpanB": 1616500,
+          "chikouSpan": null,
+          "cloudPosition": "below",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": null,
+          "lowerBound": null,
+          "breakout": "none",
+          "boxAge": null
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 1444000,
+          "channelLow": 1228000
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 1346250,
+          "slope5d": -0.017909250072950102
+        },
+        "returnMomentum": {
+          "return20d": -0.011544011544011544,
+          "return60d": -0.13564668769716087,
+          "return120d": null
+        },
+        "volatilityZScore": 0.3989228992567033,
+        "volumeZScore": -0.06990421315737179
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:207940",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -50,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "cloudPosition": "below",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:207940",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": null
+          }
+        },
+        {
+          "assetId": "KR:207940",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 16,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:207940",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:207940",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -18,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "slope5d": -0.017909250072950102
+          }
+        },
+        {
+          "assetId": "KR:207940",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -8,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "return20d": -0.011544011544011544,
+            "return60d": -0.13564668769716087,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:207940",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -20,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "zScore": 0.3989228992567033
+          }
+        },
+        {
+          "assetId": "KR:207940",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 2,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "zScore": -0.06990421315737179
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_207940_momentum_2026-06-17",
+          "assetId": "KR:207940",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "rawValue": -15,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 75,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": 3,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": -34,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -20,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 75
+      }
+    },
+    "KR:005380": {
+      "assetId": "KR:005380",
+      "symbol": "005380",
+      "nameKo": "현대차",
+      "nameEn": "Hyundai Motor",
+      "technicalSignals": {
+        "assetId": "KR:005380",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 638000,
+          "kijunSen": 672000,
+          "senkouSpanA": 565250,
+          "senkouSpanB": 566000,
+          "chikouSpan": null,
+          "cloudPosition": "above",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": 774500,
+          "lowerBound": 570000,
+          "breakout": "none",
+          "boxAge": 15
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 783000,
+          "channelLow": 561000
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 657750,
+          "slope5d": -0.02389255769088076
+        },
+        "returnMomentum": {
+          "return20d": -0.06787330316742081,
+          "return60d": 0.1839080459770115,
+          "return120d": null
+        },
+        "volatilityZScore": 0.576125725371408,
+        "volumeZScore": -1.0095080707941748
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:005380",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 50,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "cloudPosition": "above",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:005380",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -27,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 15
+          }
+        },
+        {
+          "assetId": "KR:005380",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -24,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:005380",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:005380",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -24,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "slope5d": -0.02389255769088076
+          }
+        },
+        {
+          "assetId": "KR:005380",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 2,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "return20d": -0.06787330316742081,
+            "return60d": 0.1839080459770115,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:005380",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -29,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "zScore": 0.576125725371408
+          }
+        },
+        {
+          "assetId": "KR:005380",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 30,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "metadata": {
+            "zScore": -1.0095080707941748
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_005380_momentum_2026-06-17",
+          "assetId": "KR:005380",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.681Z",
+          "rawValue": -1,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": 3,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": 0,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -29,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:068270": {
+      "assetId": "KR:068270",
+      "symbol": "068270",
+      "nameKo": "셀트리온",
+      "nameEn": "Celltrion",
+      "technicalSignals": {
+        "assetId": "KR:068270",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 169150,
+          "kijunSen": 175440.4765625,
+          "senkouSpanA": 192928.57421875,
+          "senkouSpanB": 208904.765625,
+          "chikouSpan": null,
+          "cloudPosition": "below",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": null,
+          "lowerBound": null,
+          "breakout": "none",
+          "boxAge": null
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 192380.953125,
+          "channelLow": 158500
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 175975.95078125,
+          "slope5d": -0.011881242653870815
+        },
+        "returnMomentum": {
+          "return20d": 0.0007096240568644933,
+          "return60d": -0.09242574608436825,
+          "return120d": null
+        },
+        "volatilityZScore": 0.49907910531688615,
+        "volumeZScore": -0.6808348496202794
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:068270",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -50,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.682Z",
+          "metadata": {
+            "cloudPosition": "below",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:068270",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.682Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": null
+          }
+        },
+        {
+          "assetId": "KR:068270",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -2,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.682Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:068270",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.682Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:068270",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -12,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.682Z",
+          "metadata": {
+            "slope5d": -0.011881242653870815
+          }
+        },
+        {
+          "assetId": "KR:068270",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -5,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.682Z",
+          "metadata": {
+            "return20d": 0.0007096240568644933,
+            "return60d": -0.09242574608436825,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:068270",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -25,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.682Z",
+          "metadata": {
+            "zScore": 0.49907910531688615
+          }
+        },
+        {
+          "assetId": "KR:068270",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -20,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.682Z",
+          "metadata": {
+            "zScore": -0.6808348496202794
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_068270_momentum_2026-06-17",
+          "assetId": "KR:068270",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.682Z",
+          "rawValue": -18,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 75,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": -9,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": -31,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -25,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 75
+      }
+    },
+    "KR:005490": {
+      "assetId": "KR:005490",
+      "symbol": "005490",
+      "nameKo": "POSCO홀딩스",
+      "nameEn": "POSCO Holdings",
+      "technicalSignals": {
+        "assetId": "KR:005490",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 373750,
+          "kijunSen": 433750,
+          "senkouSpanA": 457000,
+          "senkouSpanB": 430000,
+          "chikouSpan": null,
+          "cloudPosition": "below",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": 416500,
+          "lowerBound": 342500,
+          "breakout": "none",
+          "boxAge": 1
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 467500,
+          "channelLow": 342500
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 402625,
+          "slope5d": -0.0551481372836609
+        },
+        "returnMomentum": {
+          "return20d": -0.1695464362850972,
+          "return60d": 0.13757396449704143,
+          "return120d": null
+        },
+        "volatilityZScore": -0.055650383037439306,
+        "volumeZScore": -0.7919048303287477
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:005490",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -50,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.683Z",
+          "metadata": {
+            "cloudPosition": "below",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:005490",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 7,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.683Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 1
+          }
+        },
+        {
+          "assetId": "KR:005490",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -16,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.683Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:005490",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.683Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:005490",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -55,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.683Z",
+          "metadata": {
+            "slope5d": -0.0551481372836609
+          }
+        },
+        {
+          "assetId": "KR:005490",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -10,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.683Z",
+          "metadata": {
+            "return20d": -0.1695464362850972,
+            "return60d": 0.13757396449704143,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:005490",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": 3,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.683Z",
+          "metadata": {
+            "zScore": -0.055650383037439306
+          }
+        },
+        {
+          "assetId": "KR:005490",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 24,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.683Z",
+          "metadata": {
+            "zScore": -0.7919048303287477
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_005490_momentum_2026-06-17",
+          "assetId": "KR:005490",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.683Z",
+          "rawValue": -20,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": -1,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": -33,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": 3,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:051910": {
+      "assetId": "KR:051910",
+      "symbol": "051910",
+      "nameKo": "LG화학",
+      "nameEn": "LG Chem",
+      "technicalSignals": {
+        "assetId": "KR:051910",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 338250,
+          "kijunSen": 367875,
+          "senkouSpanA": 387500,
+          "senkouSpanB": 362750,
+          "chikouSpan": null,
+          "cloudPosition": "below",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": null,
+          "lowerBound": null,
+          "breakout": "none",
+          "boxAge": null
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 381000,
+          "channelLow": 304000
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 345900,
+          "slope5d": -0.023295213892418468
+        },
+        "returnMomentum": {
+          "return20d": -0.032171581769437,
+          "return60d": 0.18945634266886327,
+          "return120d": null
+        },
+        "volatilityZScore": 0.2268089201040036,
+        "volumeZScore": -1.1345074155661128
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:051910",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -50,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "cloudPosition": "below",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:051910",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": null
+          }
+        },
+        {
+          "assetId": "KR:051910",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 24,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:051910",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:051910",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -23,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "slope5d": -0.023295213892418468
+          }
+        },
+        {
+          "assetId": "KR:051910",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 6,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "return20d": -0.032171581769437,
+            "return60d": 0.18945634266886327,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:051910",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -11,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "zScore": 0.2268089201040036
+          }
+        },
+        {
+          "assetId": "KR:051910",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 34,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "zScore": -1.1345074155661128
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_051910_momentum_2026-06-17",
+          "assetId": "KR:051910",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "rawValue": -7,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 75,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": 21,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": -36,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -11,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 75
+      }
+    },
+    "KR:035420": {
+      "assetId": "KR:035420",
+      "symbol": "035420",
+      "nameKo": "NAVER",
+      "nameEn": "NAVER",
+      "technicalSignals": {
+        "assetId": "KR:035420",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 256250,
+          "kijunSen": 247400,
+          "senkouSpanA": 213800,
+          "senkouSpanB": 230600,
+          "chikouSpan": null,
+          "cloudPosition": "above",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": 304000,
+          "lowerBound": 218500,
+          "breakout": "none",
+          "boxAge": 1
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 304000,
+          "channelLow": 190800
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 233620,
+          "slope5d": 0.04064678500634758
+        },
+        "returnMomentum": {
+          "return20d": 0.2175,
+          "return60d": 0.10430839002267574,
+          "return120d": null
+        },
+        "volatilityZScore": 2.2433640392178913,
+        "volumeZScore": -0.6736534363086065
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:035420",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 50,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "cloudPosition": "above",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:035420",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -21,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 1
+          }
+        },
+        {
+          "assetId": "KR:035420",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -3,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:035420",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:035420",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 41,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "slope5d": 0.04064678500634758
+          }
+        },
+        {
+          "assetId": "KR:035420",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 27,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "return20d": 0.2175,
+            "return60d": 0.10430839002267574,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:035420",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -100,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "zScore": 2.2433640392178913
+          }
+        },
+        {
+          "assetId": "KR:035420",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -20,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "metadata": {
+            "zScore": -0.6736534363086065
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_035420_momentum_2026-06-17",
+          "assetId": "KR:035420",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.684Z",
+          "rawValue": 9,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": 1,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": 23,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -100,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:000270": {
+      "assetId": "KR:000270",
+      "symbol": "000270",
+      "nameKo": "기아",
+      "nameEn": "Kia",
+      "technicalSignals": {
+        "assetId": "KR:000270",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 161350,
+          "kijunSen": 165950,
+          "senkouSpanA": 159500,
+          "senkouSpanB": 178150,
+          "chikouSpan": null,
+          "cloudPosition": "inside",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": 184200,
+          "lowerBound": 147700,
+          "breakout": "none",
+          "boxAge": 15
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 174600,
+          "channelLow": 147700
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 163425,
+          "slope5d": -0.008974864315818199
+        },
+        "returnMomentum": {
+          "return20d": 0.023384615384615386,
+          "return60d": -0.02463343108504399,
+          "return120d": null
+        },
+        "volatilityZScore": 0.6914658443255588,
+        "volumeZScore": -1.332687597213564
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:000270",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 0,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.685Z",
+          "metadata": {
+            "cloudPosition": "inside",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:000270",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 1,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.685Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 15
+          }
+        },
+        {
+          "assetId": "KR:000270",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 19,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.685Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:000270",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.685Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:000270",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -9,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.685Z",
+          "metadata": {
+            "slope5d": -0.008974864315818199
+          }
+        },
+        {
+          "assetId": "KR:000270",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 1,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.685Z",
+          "metadata": {
+            "return20d": 0.023384615384615386,
+            "return60d": -0.02463343108504399,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:000270",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -35,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.685Z",
+          "metadata": {
+            "zScore": 0.6914658443255588
+          }
+        },
+        {
+          "assetId": "KR:000270",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -40,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.685Z",
+          "metadata": {
+            "zScore": -1.332687597213564
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_000270_momentum_2026-06-17",
+          "assetId": "KR:000270",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.685Z",
+          "rawValue": -6,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": -7,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": -3,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -35,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:006400": {
+      "assetId": "KR:006400",
+      "symbol": "006400",
+      "nameKo": "삼성SDI",
+      "nameEn": "Samsung SDI",
+      "technicalSignals": {
+        "assetId": "KR:006400",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 533750,
+          "kijunSen": 586750,
+          "senkouSpanA": 618750,
+          "senkouSpanB": 535750,
+          "chikouSpan": null,
+          "cloudPosition": "inside",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": null,
+          "lowerBound": null,
+          "breakout": "none",
+          "boxAge": null
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 707000,
+          "channelLow": 466500
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 584450,
+          "slope5d": -0.03599851552513299
+        },
+        "returnMomentum": {
+          "return20d": -0.10277324632952692,
+          "return60d": 0.36645962732919257,
+          "return120d": null
+        },
+        "volatilityZScore": 0.6068616370581887,
+        "volumeZScore": -0.9377193396275222
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:006400",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 0,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "cloudPosition": "inside",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:006400",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": null
+          }
+        },
+        {
+          "assetId": "KR:006400",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -15,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:006400",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:006400",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -36,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "slope5d": -0.03599851552513299
+          }
+        },
+        {
+          "assetId": "KR:006400",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 8,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "return20d": -0.10277324632952692,
+            "return60d": 0.36645962732919257,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:006400",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -30,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "zScore": 0.6068616370581887
+          }
+        },
+        {
+          "assetId": "KR:006400",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 28,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "zScore": -0.9377193396275222
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_006400_momentum_2026-06-17",
+          "assetId": "KR:006400",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "rawValue": -7,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 75,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": 7,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": -18,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -30,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 75
+      }
+    },
+    "KR:035720": {
+      "assetId": "KR:035720",
+      "symbol": "035720",
+      "nameKo": "카카오",
+      "nameEn": "Kakao",
+      "technicalSignals": {
+        "assetId": "KR:035720",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 39750,
+          "kijunSen": 42500,
+          "senkouSpanA": 47387.5,
+          "senkouSpanB": 54250,
+          "chikouSpan": null,
+          "cloudPosition": "below",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": null,
+          "lowerBound": null,
+          "breakout": "none",
+          "boxAge": null
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 48500,
+          "channelLow": 36500
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 40785,
+          "slope5d": -0.019650261402559942
+        },
+        "returnMomentum": {
+          "return20d": -0.0447585394581861,
+          "return60d": -0.189,
+          "return120d": null
+        },
+        "volatilityZScore": -0.13316589458504238,
+        "volumeZScore": -0.622403006679402
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:035720",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -50,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "cloudPosition": "below",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:035720",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": null
+          }
+        },
+        {
+          "assetId": "KR:035720",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -16,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:035720",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:035720",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -20,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "slope5d": -0.019650261402559942
+          }
+        },
+        {
+          "assetId": "KR:035720",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -14,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "return20d": -0.0447585394581861,
+            "return60d": -0.189,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:035720",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": 7,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "zScore": -0.13316589458504238
+          }
+        },
+        {
+          "assetId": "KR:035720",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 19,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "metadata": {
+            "zScore": -0.622403006679402
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_035720_momentum_2026-06-17",
+          "assetId": "KR:035720",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.686Z",
+          "rawValue": -17,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 75,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": -4,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": -35,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": 7,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 75
+      }
+    },
+    "KR:105560": {
+      "assetId": "KR:105560",
+      "symbol": "105560",
+      "nameKo": "KB금융",
+      "nameEn": "KB Financial Group",
+      "technicalSignals": {
+        "assetId": "KR:105560",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 165050,
+          "kijunSen": 164700,
+          "senkouSpanA": 157600,
+          "senkouSpanB": 152700,
+          "chikouSpan": null,
+          "cloudPosition": "above",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": 172500,
+          "lowerBound": 132900,
+          "breakout": "none",
+          "boxAge": 65
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 182700,
+          "channelLow": 146700
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 157740,
+          "slope5d": 0.015482666494994688
+        },
+        "returnMomentum": {
+          "return20d": 0.0718954248366013,
+          "return60d": 0.05330764290301863,
+          "return120d": null
+        },
+        "volatilityZScore": 1.7128006598650571,
+        "volumeZScore": 0.018540900116511282
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:105560",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 50,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "cloudPosition": "above",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:105560",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 29,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 65
+          }
+        },
+        {
+          "assetId": "KR:105560",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -2,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:105560",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:105560",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 15,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "slope5d": 0.015482666494994688
+          }
+        },
+        {
+          "assetId": "KR:105560",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 10,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "return20d": 0.0718954248366013,
+            "return60d": 0.05330764290301863,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:105560",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -86,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "zScore": 1.7128006598650571
+          }
+        },
+        {
+          "assetId": "KR:105560",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 1,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "zScore": 0.018540900116511282
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_105560_momentum_2026-06-17",
+          "assetId": "KR:105560",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "rawValue": 10,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": 3,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": 31,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -86,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:055550": {
+      "assetId": "KR:055550",
+      "symbol": "055550",
+      "nameKo": "신한지주",
+      "nameEn": "Shinhan Financial Group",
+      "technicalSignals": {
+        "assetId": "KR:055550",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 102450,
+          "kijunSen": 100900,
+          "senkouSpanA": 97400,
+          "senkouSpanB": 93750,
+          "chikouSpan": null,
+          "cloudPosition": "above",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": null,
+          "lowerBound": null,
+          "breakout": "none",
+          "boxAge": null
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 110800,
+          "channelLow": 91000
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 98165,
+          "slope5d": 0.01815070269148991
+        },
+        "returnMomentum": {
+          "return20d": 0.10741138560687433,
+          "return60d": 0.06839378238341969,
+          "return120d": null
+        },
+        "volatilityZScore": 1.5410715248521347,
+        "volumeZScore": -0.32824917324180786
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:055550",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 50,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "cloudPosition": "above",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:055550",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": null
+          }
+        },
+        {
+          "assetId": "KR:055550",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 11,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:055550",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:055550",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 18,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "slope5d": 0.01815070269148991
+          }
+        },
+        {
+          "assetId": "KR:055550",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 14,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "return20d": 0.10741138560687433,
+            "return60d": 0.06839378238341969,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:055550",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -77,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "zScore": 1.5410715248521347
+          }
+        },
+        {
+          "assetId": "KR:055550",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -10,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "metadata": {
+            "zScore": -0.32824917324180786
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_055550_momentum_2026-06-17",
+          "assetId": "KR:055550",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.687Z",
+          "rawValue": 10,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 75,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": 5,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": 34,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -77,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 75
+      }
+    },
+    "KR:003550": {
+      "assetId": "KR:003550",
+      "symbol": "003550",
+      "nameKo": "LG",
+      "nameEn": "LG Corp",
+      "technicalSignals": {
+        "assetId": "KR:003550",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 112250,
+          "kijunSen": 142750,
+          "senkouSpanA": 99650,
+          "senkouSpanB": 95700,
+          "chikouSpan": null,
+          "cloudPosition": "above",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": 185900,
+          "lowerBound": 99600,
+          "breakout": "none",
+          "boxAge": 1
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 185900,
+          "channelLow": 99600
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 120300,
+          "slope5d": -0.007630439265828006
+        },
+        "returnMomentum": {
+          "return20d": -0.02512998266897747,
+          "return60d": 0.2430939226519337,
+          "return120d": null
+        },
+        "volatilityZScore": 1.7850708871101801,
+        "volumeZScore": -0.6340385982259883
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:003550",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 50,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.688Z",
+          "metadata": {
+            "cloudPosition": "above",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:003550",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -35,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.688Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 1
+          }
+        },
+        {
+          "assetId": "KR:003550",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -35,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.688Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:003550",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.688Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:003550",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -8,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.688Z",
+          "metadata": {
+            "slope5d": -0.007630439265828006
+          }
+        },
+        {
+          "assetId": "KR:003550",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 10,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.688Z",
+          "metadata": {
+            "return20d": -0.02512998266897747,
+            "return60d": 0.2430939226519337,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:003550",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -89,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.688Z",
+          "metadata": {
+            "zScore": 1.7850708871101801
+          }
+        },
+        {
+          "assetId": "KR:003550",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 19,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.688Z",
+          "metadata": {
+            "zScore": -0.6340385982259883
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_003550_momentum_2026-06-17",
+          "assetId": "KR:003550",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.688Z",
+          "rawValue": -5,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": -2,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": 2,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -89,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:012330": {
+      "assetId": "KR:012330",
+      "symbol": "012330",
+      "nameKo": "현대모비스",
+      "nameEn": "Hyundai Mobis",
+      "technicalSignals": {
+        "assetId": "KR:012330",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 628500,
+          "kijunSen": 665500,
+          "senkouSpanA": 474125,
+          "senkouSpanB": 459500,
+          "chikouSpan": null,
+          "cloudPosition": "above",
+          "tkCross": "bearish_cross"
+        },
+        "darvasBox": {
+          "upperBound": 822000,
+          "lowerBound": 534000,
+          "breakout": "none",
+          "boxAge": 1
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 822000,
+          "channelLow": 509000
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 651900,
+          "slope5d": 0.005165368899853519
+        },
+        "returnMomentum": {
+          "return20d": 0.10507880910683012,
+          "return60d": 0.5278450363196125,
+          "return120d": null
+        },
+        "volatilityZScore": 1.0007237075278335,
+        "volumeZScore": -1.371977186950496
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:012330",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 0,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.689Z",
+          "metadata": {
+            "cloudPosition": "above",
+            "tkCross": "bearish_cross"
+          }
+        },
+        {
+          "assetId": "KR:012330",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -16,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.689Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 1
+          }
+        },
+        {
+          "assetId": "KR:012330",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -11,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.689Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:012330",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.689Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:012330",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 5,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.689Z",
+          "metadata": {
+            "slope5d": 0.005165368899853519
+          }
+        },
+        {
+          "assetId": "KR:012330",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 37,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.689Z",
+          "metadata": {
+            "return20d": 0.10507880910683012,
+            "return60d": 0.5278450363196125,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:012330",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -50,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.689Z",
+          "metadata": {
+            "zScore": 1.0007237075278335
+          }
+        },
+        {
+          "assetId": "KR:012330",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -41,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.689Z",
+          "metadata": {
+            "zScore": -1.371977186950496
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_012330_momentum_2026-06-17",
+          "assetId": "KR:012330",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.689Z",
+          "rawValue": -2,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": -5,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": -4,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -50,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:066570": {
+      "assetId": "KR:066570",
+      "symbol": "066570",
+      "nameKo": "LG전자",
+      "nameEn": "LG Electronics",
+      "technicalSignals": {
+        "assetId": "KR:066570",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 271750,
+          "kijunSen": 295000,
+          "senkouSpanA": 136975,
+          "senkouSpanB": 131000,
+          "chikouSpan": null,
+          "cloudPosition": "above",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": 438000,
+          "lowerBound": 207500,
+          "breakout": "none",
+          "boxAge": 1
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 438000,
+          "channelLow": 175300
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 257260,
+          "slope5d": 0.022394436164927967
+        },
+        "returnMomentum": {
+          "return20d": 0.08064516129032258,
+          "return60d": 1.0180722891566265,
+          "return120d": null
+        },
+        "volatilityZScore": 1.7139030426166961,
+        "volumeZScore": -1.2057702895526985
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:066570",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 50,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "cloudPosition": "above",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:066570",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -38,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 1
+          }
+        },
+        {
+          "assetId": "KR:066570",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -27,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:066570",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:066570",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 22,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "slope5d": 0.022394436164927967
+          }
+        },
+        {
+          "assetId": "KR:066570",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 59,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "return20d": 0.08064516129032258,
+            "return60d": 1.0180722891566265,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:066570",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -86,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "zScore": 1.7139030426166961
+          }
+        },
+        {
+          "assetId": "KR:066570",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -36,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "zScore": -1.2057702895526985
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_066570_momentum_2026-06-17",
+          "assetId": "KR:066570",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "rawValue": 8,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": -1,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": 11,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -86,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:096770": {
+      "assetId": "KR:096770",
+      "symbol": "096770",
+      "nameKo": "SK이노베이션",
+      "nameEn": "SK Innovation",
+      "technicalSignals": {
+        "assetId": "KR:096770",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 109500,
+          "kijunSen": 118750,
+          "senkouSpanA": 137575,
+          "senkouSpanB": 130250,
+          "chikouSpan": null,
+          "cloudPosition": "below",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": null,
+          "lowerBound": null,
+          "breakout": "none",
+          "boxAge": null
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 126200,
+          "channelLow": 99500
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 113630,
+          "slope5d": -0.03736021687563538
+        },
+        "returnMomentum": {
+          "return20d": -0.11597729115977291,
+          "return60d": -0.011786038077969175,
+          "return120d": null
+        },
+        "volatilityZScore": -0.2630361867777707,
+        "volumeZScore": -0.2991932125150164
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:096770",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -50,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "cloudPosition": "below",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:096770",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": null
+          }
+        },
+        {
+          "assetId": "KR:096770",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -14,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:096770",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:096770",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": -37,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "slope5d": -0.03736021687563538
+          }
+        },
+        {
+          "assetId": "KR:096770",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -12,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "return20d": -0.11597729115977291,
+            "return60d": -0.011786038077969175,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:096770",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": 13,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "zScore": -0.2630361867777707
+          }
+        },
+        {
+          "assetId": "KR:096770",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 9,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "metadata": {
+            "zScore": -0.2991932125150164
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_096770_momentum_2026-06-17",
+          "assetId": "KR:096770",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.690Z",
+          "rawValue": -20,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 75,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": -6,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": -43,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": 13,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 75
+      }
+    },
+    "KR:000810": {
+      "assetId": "KR:000810",
+      "symbol": "000810",
+      "nameKo": "삼성화재",
+      "nameEn": "Samsung Fire & Marine",
+      "technicalSignals": {
+        "assetId": "KR:000810",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 662000,
+          "kijunSen": 623500,
+          "senkouSpanA": 477375,
+          "senkouSpanB": 532500,
+          "chikouSpan": null,
+          "cloudPosition": "above",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": 757000,
+          "lowerBound": 596000,
+          "breakout": "none",
+          "boxAge": 2
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 757000,
+          "channelLow": 526000
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 623500,
+          "slope5d": 0.05893342391304348
+        },
+        "returnMomentum": {
+          "return20d": 0.22563176895306858,
+          "return60d": 0.41901776384535006,
+          "return120d": null
+        },
+        "volatilityZScore": 1.8247008599411285,
+        "volumeZScore": 0.37425454455721807
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:000810",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 50,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.691Z",
+          "metadata": {
+            "cloudPosition": "above",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:000810",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 2,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.691Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 2
+          }
+        },
+        {
+          "assetId": "KR:000810",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 16,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.691Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:000810",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.691Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:000810",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 59,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.691Z",
+          "metadata": {
+            "slope5d": 0.05893342391304348
+          }
+        },
+        {
+          "assetId": "KR:000810",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 44,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.691Z",
+          "metadata": {
+            "return20d": 0.22563176895306858,
+            "return60d": 0.41901776384535006,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:000810",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -91,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.691Z",
+          "metadata": {
+            "zScore": 1.8247008599411285
+          }
+        },
+        {
+          "assetId": "KR:000810",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 11,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.691Z",
+          "metadata": {
+            "zScore": 0.37425454455721807
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_000810_momentum_2026-06-17",
+          "assetId": "KR:000810",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.691Z",
+          "rawValue": 25,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": 24,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": 37,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -91,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    },
+    "KR:086790": {
+      "assetId": "KR:086790",
+      "symbol": "086790",
+      "nameKo": "하나금융지주",
+      "nameEn": "Hana Financial Group",
+      "technicalSignals": {
+        "assetId": "KR:086790",
+        "date": "2026-06-17",
+        "ichimoku": {
+          "tenkanSen": 123500,
+          "kijunSen": 123500,
+          "senkouSpanA": 122950,
+          "senkouSpanB": 117250,
+          "chikouSpan": null,
+          "cloudPosition": "above",
+          "tkCross": "none"
+        },
+        "darvasBox": {
+          "upperBound": 133700,
+          "lowerBound": 100800,
+          "breakout": "none",
+          "boxAge": 65
+        },
+        "turtleChannel": {
+          "entryBreakout": "none",
+          "exitBreakout": "none",
+          "channelHigh": 136000,
+          "channelLow": 111000
+        },
+        "weinsteinStage": "insufficient_data",
+        "maSlope": {
+          "ma20": 119475,
+          "slope5d": 0.007930147213903067
+        },
+        "returnMomentum": {
+          "return20d": 0.11033274956217162,
+          "return60d": 0.12014134275618374,
+          "return120d": null
+        },
+        "volatilityZScore": 1.4450061890580448,
+        "volumeZScore": -1.990534177964654
+      },
+      "atomicSignals": [
+        {
+          "assetId": "KR:086790",
+          "factorId": "momentum_ichimoku",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 50,
+          "signalLabel": "bullish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.692Z",
+          "metadata": {
+            "cloudPosition": "above",
+            "tkCross": "none"
+          }
+        },
+        {
+          "assetId": "KR:086790",
+          "factorId": "momentum_darvas",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 29,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.692Z",
+          "metadata": {
+            "breakout": "none",
+            "boxAge": 65
+          }
+        },
+        {
+          "assetId": "KR:086790",
+          "factorId": "momentum_turtle",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 13,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.692Z",
+          "metadata": {
+            "entryBreakout": "none",
+            "exitBreakout": "none"
+          }
+        },
+        {
+          "assetId": "KR:086790",
+          "factorId": "momentum_weinstein",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": null,
+          "signalLabel": "insufficient_data",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.692Z",
+          "metadata": {
+            "stage": "insufficient_data"
+          }
+        },
+        {
+          "assetId": "KR:086790",
+          "factorId": "momentum_ma_slope",
+          "date": "2026-06-17",
+          "horizon": "medium",
+          "score": 8,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.692Z",
+          "metadata": {
+            "slope5d": 0.007930147213903067
+          }
+        },
+        {
+          "assetId": "KR:086790",
+          "factorId": "momentum_return",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": 17,
+          "signalLabel": "neutral",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.692Z",
+          "metadata": {
+            "return20d": 0.11033274956217162,
+            "return60d": 0.12014134275618374,
+            "return120d": null
+          }
+        },
+        {
+          "assetId": "KR:086790",
+          "factorId": "momentum_volatility",
+          "date": "2026-06-17",
+          "horizon": "long",
+          "score": -72,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.692Z",
+          "metadata": {
+            "zScore": 1.4450061890580448
+          }
+        },
+        {
+          "assetId": "KR:086790",
+          "factorId": "momentum_volume",
+          "date": "2026-06-17",
+          "horizon": "short",
+          "score": -60,
+          "signalLabel": "bearish",
+          "dataStatus": "cached",
+          "calculatedAt": "2026-06-17T12:49:47.692Z",
+          "metadata": {
+            "zScore": -1.990534177964654
+          }
+        }
+      ],
+      "momentum": {
+        "factorValue": {
+          "id": "KOSPI_SAMPLE_KR_086790_momentum_2026-06-17",
+          "assetId": "KR:086790",
+          "factorId": "momentum",
+          "fiscalPeriodEnd": null,
+          "dataAvailableAt": "2026-06-17",
+          "calculatedAt": "2026-06-17T12:49:47.692Z",
+          "rawValue": 8,
+          "zScore": null,
+          "percentile": null,
+          "rank": null,
+          "universeId": "KOSPI_SAMPLE",
+          "sectorId": null,
+          "sourceIds": [
+            "yfinance"
+          ],
+          "dataStatus": "cached",
+          "dataQualityScore": 88,
+          "factorVersion": "v1",
+          "engineVersion": "1.0.0"
+        },
+        "byHorizon": {
+          "short": {
+            "score": -10,
+            "participatingSignals": [
+              "momentum_turtle",
+              "momentum_return",
+              "momentum_volume"
+            ]
+          },
+          "medium": {
+            "score": 29,
+            "participatingSignals": [
+              "momentum_ichimoku",
+              "momentum_darvas",
+              "momentum_ma_slope"
+            ]
+          },
+          "long": {
+            "score": -72,
+            "participatingSignals": [
+              "momentum_volatility"
+            ]
+          }
+        },
+        "crossHorizonTension": {
+          "detected": false,
+          "description": null
+        },
+        "dataQualityScore": 88
+      }
+    }
+  }
+}

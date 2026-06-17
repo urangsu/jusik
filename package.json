@@ -14,7 +14,8 @@
     "alerts:evaluate": "tsx scripts/alerts/evaluate-alerts.ts",
     "reports:daily": "tsx scripts/reports/generate-daily-report.ts",
     "docs:check": "tsx scripts/docs/check-required-docs.ts",
-    "docs:quant": "tsx scripts/docs/check-quant-docs.ts"
+    "docs:quant": "tsx scripts/docs/check-quant-docs.ts",
+    "factors:technical": "tsx scripts/factors/calculate-technical-factors.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
