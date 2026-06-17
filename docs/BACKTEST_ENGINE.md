@@ -69,3 +69,14 @@
 
 로컬 팩터 스토어에 저장된 신호 값과 백테스트 실행 시점에 실시간으로 재산출된 신호 값 간의 오차를 검증합니다.
 오차가 $0.5$ 점을 초과하는 불일치가 발견되는 경우 일관성 실패 경고가 발생하며, 일관성 검사 API(`/api/backtest/consistency-check`)를 통해 전체 검증 현황을 확인할 수 있습니다.
+
+---
+
+## 7. 신호 신뢰도 평가 엔진과의 연동 (Integration with Signal Reliability Engine)
+
+WO-010에서 구현된 신호 신뢰도 평가 엔진(Signal Reliability Engine)은 백테스트 엔진의 Out-of-Sample(OOS) 검증 원칙과 통계 집계 기법(Spearman IC, Hit Rate, Excess Return)을 활용하여 다음과 같이 연동됩니다.
+
+- **역사적 OOS 성과 연산**: 백테스트 시뮬레이션 과정에서 도출된 개별 자산의 forward return과 해당 시점의 원자 신호 점수(Signal Score) 간의 관계를 시계열/단면적으로 집계합니다.
+- **베이지안 축소(Bayesian Shrinkage)**: 표본 크기(`sampleSize`)가 작을 경우, 관찰된 IC 및 Hit Rate를 사전 분포(Prior: IC = 0, Hit Rate = 0.5)로 수축시켜 통계적 노이즈를 제어합니다.
+- **가중치 보정 프리뷰(Weight Multiplier Preview)**: 백테스트를 통해 검증된 신뢰도 점수를 기반으로 `weightMultiplier`를 계산하여 모멘텀 팩터(Momentum Factor v1)의 가중치 보정 프리뷰를 제공합니다. 단, 백테스트의 기능 검증 특성에 따라 기본 데이터베이스 값은 자동으로 변경되지 않고 프리뷰 화면에서만 제공됩니다.
+

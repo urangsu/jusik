@@ -67,3 +67,10 @@ export type ViewReliabilityRecord = {
   calculatedAt: string;
 };
 ```
+
+## WO-010 Implementation Status
+
+- **Signal Reliability Engine Integration**: Completed. The engine walks through the historical OHLCV data on-the-fly, calculates atomic signals and Momentum Factor v1, and generates `ForwardReturnRecord`s to evaluate statistical metrics (Spearman IC, ICIR, hit rate, and average excess return).
+- **Bayesian Shrinkage & Calibrations**: Observed metrics are shrunk towards conservative priors (strength=30, hit rate=0.5, IC=0.0). Heuristic reliability scores are mapped to output weight multipliers.
+- **Preview Only**: The `weightMultiplier` calculations and adjusted scores are strictly for preview (`RELIABILITY_WEIGHTING_ENABLED=false` by default) and do not overwrite base Momentum Factor v1 database values.
+- **Downstream Connection**: These reliability results will serve as inputs to the WO-011 Horizon-Segmented Agreement system to scale signal fusion.

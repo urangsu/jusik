@@ -58,3 +58,14 @@ Factor normalization must receive a `UniverseSnapshot`. Market-only normalizatio
 - **Spearman Rank IC**: IC calculations for factor validation must strictly use Spearman rank correlation (converting scores and future returns to cross-sectional ranks before Pearson correlation). Pearson correlation on raw values is prohibited to avoid outlier distortion.
 - **Backtest Veto Integration**: Any factor execution or backtest run that violates the minimum data constraints (average quality score < 50%, universe size < 3, or OOS windows < 2) will set veto reasons in the result. In such cases, UI components must suppress/placeholder the numeric metrics to prevent false trust.
 
+---
+
+## Signal Reliability Integration (WO-010)
+
+The Signal Reliability Engine evaluates individual technical atomic signals (Ichimoku, Darvas, Turtle, Weinstein) and composite factors (Momentum Factor v1) to establish their statistical validity:
+
+- **Atomic Signal Validation**: Computes historical Spearman Rank IC, Hit Rate, and Excess Returns for each atomic signal across horizons.
+- **Dynamic Weight Adjustments (Preview)**: Reliability scores determine a preview multiplier (`weightMultiplier`) ranging from `0.5` to `1.5` (constrained to `[0.8, 1.1]` under cold start where $10 \le \text{sampleSize} < 30$, and masked below $10$).
+- **No Direct Mutation**: Reliability-derived weights do not modify base database values of factors (`RELIABILITY_WEIGHTING_ENABLED=false` by default). The UI presents these weights side-by-side with original factor weights to maintain transparency and stability.
+
+

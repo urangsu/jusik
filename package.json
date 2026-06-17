@@ -17,7 +17,9 @@
     "docs:quant": "tsx scripts/docs/check-quant-docs.ts",
     "factors:technical": "tsx scripts/factors/calculate-technical-factors.ts",
     "backtest:run": "tsx scripts/backtest/run-backtest.ts",
-    "backtest:consistency": "tsx scripts/backtest/check-consistency.ts"
+    "backtest:consistency": "tsx scripts/backtest/check-consistency.ts",
+    "reliability:calculate": "tsx scripts/reliability/calculate-signal-reliability.ts",
+    "reliability:inspect": "tsx scripts/reliability/inspect-signal-reliability.ts"
 
   },
   "dependencies": {

@@ -9,6 +9,7 @@ export type ForwardReturnRecord = {
   symbol: string;
 
   signalId: string;
+  signalScore: number | null;
   /** 신호 발생일 (T) — YYYY-MM-DD */
   signalDate: string;
   /** 진입일 (T+1 이후 첫 사용 가능 bar) — YYYY-MM-DD. 반드시 signalDate보다 이후여야 함 */

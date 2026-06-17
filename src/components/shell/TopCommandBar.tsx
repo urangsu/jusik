@@ -27,6 +27,7 @@ export const TopCommandBar: React.FC<TopCommandBarProps> = ({
     { id: "financials", label: locale === "ko" ? "재무분석" : "Financials" },
     { id: "strategy", label: locale === "ko" ? "전략 점수" : "Strategy" },
     { id: "backtest", label: locale === "ko" ? "백테스트" : "Backtest" },
+    { id: "reliability", label: locale === "ko" ? "신호 신뢰도" : "Signal Reliability" },
     { id: "alerts", label: locale === "ko" ? "알림 설정" : "Alerts" },
     { id: "portfolio", label: locale === "ko" ? "포트폴리오" : "Portfolio" },
     { id: "research", label: locale === "ko" ? "리서치" : "Research" },
