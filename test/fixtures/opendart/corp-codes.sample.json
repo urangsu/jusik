@@ -1,0 +1,20 @@
+[
+  {
+    "corpCode": "00126380",
+    "corpName": "삼성전자",
+    "stockCode": "005930",
+    "modifyDate": "20260101",
+    "source": "OpenDART",
+    "sourceTier": "official",
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "corpCode": "00164779",
+    "corpName": "SK하이닉스",
+    "stockCode": "000660",
+    "modifyDate": "20260101",
+    "source": "OpenDART",
+    "sourceTier": "official",
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  }
+]

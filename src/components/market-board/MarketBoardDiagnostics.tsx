@@ -1,9 +1,9 @@
-import React from "react";
-import { SourceSummary } from "@/domain/source/source-summary";
+import React, { useState, useEffect } from "react";
+import { SourceSummary } from "../../domain/source/source-summary";
 import { ProviderBudgetBadge } from "./ProviderBudgetBadge";
 import { Panel } from "../ui/Panel";
-import { useI18n } from "@/i18n/use-i18n";
-import { getProviderPolicyLabel } from "@/i18n/provider-labels";
+import { useI18n } from "../../i18n/use-i18n";
+import { getProviderPolicyLabel, getProviderStatusLabel } from "../../i18n/provider-labels";
 import { ShieldAlert, CheckCircle, XCircle } from "lucide-react";
 
 interface MarketBoardDiagnosticsProps {
@@ -14,8 +14,34 @@ export const MarketBoardDiagnostics: React.FC<MarketBoardDiagnosticsProps> = ({
   sourceSummary,
 }) => {
   const { t, locale } = useI18n();
+  const [liveProviders, setLiveProviders] = useState<any[]>([]);
 
-  const isPersonalFallbackActive = sourceSummary.some(
+  useEffect(() => {
+    fetch("/api/providers/health")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.providers) {
+          setLiveProviders(data.providers);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const mergedSources = sourceSummary.map((src) => {
+    const live = liveProviders.find((p) => p.id === src.providerId);
+    if (live) {
+      return {
+        ...src,
+        enabled: live.isEnabled,
+        status: live.status,
+        used: live.budget?.used ?? src.used,
+        limit: live.budget?.limit ?? src.limit,
+      };
+    }
+    return src;
+  });
+
+  const isPersonalFallbackActive = mergedSources.some(
     (s) => s.tier === "personal_fallback" && s.enabled
   );
 
@@ -37,9 +63,8 @@ export const MarketBoardDiagnostics: React.FC<MarketBoardDiagnosticsProps> = ({
 
         {/* Source grid */}
         <div className="flex flex-col gap-1.5">
-          {sourceSummary.map((src) => {
-            const isActive = src.enabled;
-            const isHealthy = src.status === "healthy" && isActive;
+          {mergedSources.map((src) => {
+            const isHealthy = (src.status === "healthy" || src.status === "configured") && src.enabled;
             return (
               <div
                 key={src.providerId}
@@ -56,7 +81,7 @@ export const MarketBoardDiagnostics: React.FC<MarketBoardDiagnosticsProps> = ({
                       {src.displayName}
                     </span>
                     <span className="text-[9px] text-kt-text-muted">
-                      {getProviderPolicyLabel(src.tier, locale)}
+                      {getProviderPolicyLabel(src.tier, locale)} • {getProviderStatusLabel(src.status, locale)}
                     </span>
                   </div>
                 </div>

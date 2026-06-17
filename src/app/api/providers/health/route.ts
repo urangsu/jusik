@@ -19,6 +19,17 @@ export async function GET(request: NextRequest) {
         if (dailyB) subBudgets.push(dailyB);
       }
 
+      let status = isEnabled ? "healthy" : "disabled";
+      if (profile.id === "opendart") {
+        if (!process.env.OPENDART_API_KEY) {
+          status = "api_required";
+        } else if (process.env.OPENDART_ENABLED !== "true") {
+          status = "disabled";
+        } else {
+          status = "configured";
+        }
+      }
+
       return {
         id: profile.id,
         displayName: profile.displayName,
@@ -27,6 +38,7 @@ export async function GET(request: NextRequest) {
         capabilities: profile.capabilities,
         requiresApiKey: profile.requiresApiKey,
         isEnabled,
+        status,
         budget,
         subBudgets: subBudgets.length > 0 ? subBudgets : undefined,
       };

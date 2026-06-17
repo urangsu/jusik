@@ -1,10 +1,11 @@
 import React from "react";
-import { MomentumFactorResult } from "@/server/factors/momentum-factor-v1";
-import { AtomicSignal } from "@/domain/factors/atomic-signal";
+import { MomentumFactorResult } from "../../server/factors/momentum-factor-v1";
+import { AtomicSignal } from "../../domain/factors/atomic-signal";
 import { FactorDataStatusBadge } from "./FactorDataStatusBadge";
 import { TechnicalSignalList } from "./TechnicalSignalList";
-import { useI18n } from "@/i18n/use-i18n";
+import { useI18n } from "../../i18n/use-i18n";
 import { AlertTriangle, TrendingUp, TrendingDown, Gauge } from "lucide-react";
+import { RecentFilingsList } from "../filings/RecentFilingsList";
 
 interface MomentumFactorPanelProps {
   assetName: string;
@@ -146,6 +147,16 @@ export const MomentumFactorPanel: React.FC<MomentumFactorPanelProps> = ({
 
         {/* Embedded Atomic List */}
         <TechnicalSignalList atomicSignals={atomicSignals} />
+
+        {/* Recent Filings Section for KR Stocks */}
+        {/^\d{6}$/.test(symbol) && (
+          <div className="space-y-2 pt-4 border-t border-kt-border-panel/40">
+            <h3 className="text-xs font-semibold text-kt-text-primary">
+              {locale === "ko" ? "최근 공시 (최근 5건)" : "Recent Filings (Latest 5)"}
+            </h3>
+            <RecentFilingsList stockCode={symbol} />
+          </div>
+        )}
       </div>
     </div>
   );
