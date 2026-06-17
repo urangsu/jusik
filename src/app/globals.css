@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* ============================================================
+   K-Terminal Design Tokens
+   Theme is controlled by data-theme on <html>.
+   Default (SSR before script runs) = dark.
+   ============================================================ */
+
+/* --- Base fallback = dark (applies before ThemeScript fires) --- */
 :root {
   --kt-bg-surface-100: #101013;
   --kt-bg-body: rgb(23, 23, 28);
@@ -23,6 +30,56 @@
   --kt-radius-pill: 32px;
 }
 
+/* --- Dark theme --- */
+:root[data-theme="dark"] {
+  --kt-bg-surface-100: #101013;
+  --kt-bg-body: rgb(23, 23, 28);
+  --kt-bg-overlay-300: #202025;
+
+  --kt-border-panel: rgba(239, 215, 215, 0.09);
+
+  --kt-text-primary: rgba(255, 240, 240, 0.9);
+  --kt-text-secondary: rgb(195, 195, 198);
+  --kt-text-muted: rgba(255, 240, 240, 0.47);
+
+  --kt-positive: #dc2e47;
+  --kt-positive-text: #f5445a;
+  --kt-positive-weak: rgba(219, 81, 87, 0.2);
+
+  --kt-negative: #171717;
+  --kt-negative-text: #4391ff;
+  --kt-negative-weak: rgba(67, 145, 255, 0.16);
+
+  --kt-scrollbar-thumb: rgba(239, 215, 215, 0.15);
+}
+
+/* --- Light theme --- */
+:root[data-theme="light"] {
+  --kt-bg-surface-100: #f0f2f5;
+  --kt-bg-body: #ffffff;
+  --kt-bg-overlay-300: #f7f8fa;
+
+  --kt-border-panel: rgba(0, 0, 0, 0.08);
+
+  --kt-text-primary: #171717;
+  --kt-text-secondary: #4e5968;
+  --kt-text-muted: rgba(0, 0, 0, 0.4);
+
+  /* KR finance convention: up=red, down=blue — unchanged in light mode */
+  --kt-positive: #d91e35;
+  --kt-positive-text: #c8182e;
+  --kt-positive-weak: rgba(201, 24, 46, 0.1);
+
+  --kt-negative: #f0f5ff;
+  --kt-negative-text: #1a5fdb;
+  --kt-negative-weak: rgba(26, 95, 219, 0.08);
+
+  --kt-scrollbar-thumb: rgba(0, 0, 0, 0.18);
+}
+
+/* ============================================================
+   Tailwind v4 theme tokens
+   ============================================================ */
 @theme {
   --color-kt-bg-surface-100: var(--kt-bg-surface-100);
   --color-kt-bg-body: var(--kt-bg-body);
@@ -46,6 +103,9 @@
   --radius-kt-pill: var(--kt-radius-pill);
 }
 
+/* ============================================================
+   Global base styles
+   ============================================================ */
 body {
   background-color: var(--kt-bg-body);
   color: var(--kt-text-primary);
@@ -60,14 +120,17 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.15s ease;
 }
 
-/* Numeric columns should be strictly tabular numbers */
+/* Numeric columns — strictly tabular numbers */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* Custom scrollbars matching the dark theme */
+/* ============================================================
+   Custom scrollbars
+   ============================================================ */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -78,7 +141,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--kt-border-panel);
+  background: var(--kt-scrollbar-thumb, var(--kt-border-panel));
   border-radius: var(--kt-radius-card);
 }
 
@@ -86,8 +149,13 @@ body {
   background: var(--kt-text-muted);
 }
 
-/* Custom dashed border for unofficial fallback metrics */
+/* ============================================================
+   Utility classes
+   ============================================================ */
+
+/* Dashed border for personal-fallback / unofficial metrics */
 .border-unofficial {
   border-style: dashed !important;
-  border-color: rgba(255, 240, 240, 0.25) !important;
+  border-color: var(--kt-border-panel) !important;
+  opacity: 0.7;
 }

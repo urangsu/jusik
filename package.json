@@ -12,7 +12,9 @@
     "check:wording": "node scripts/check-forbidden-ui-text.mjs",
     "check:alpha-ui": "node scripts/check-alpha-ui-exposure.mjs",
     "alerts:evaluate": "tsx scripts/alerts/evaluate-alerts.ts",
-    "reports:daily": "tsx scripts/reports/generate-daily-report.ts"
+    "reports:daily": "tsx scripts/reports/generate-daily-report.ts",
+    "docs:check": "tsx scripts/docs/check-required-docs.ts",
+    "docs:quant": "tsx scripts/docs/check-quant-docs.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
@@ -35,6 +37,7 @@
     "eslint-config-next": "16.2.9",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5",
     "vitest": "^4.1.9"
   }

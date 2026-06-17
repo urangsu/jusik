@@ -4,6 +4,8 @@ import React from "react";
 import { AssetSearchBox } from "../search/AssetSearchBox";
 import { Asset } from "@/domain/market/asset";
 import { useI18n } from "@/i18n/use-i18n";
+import { LocaleToggle } from "../settings/LocaleToggle";
+import { AppPreferencesButton } from "../settings/AppPreferencesButton";
 import { Activity } from "lucide-react";
 
 interface TopCommandBarProps {
@@ -31,23 +33,33 @@ export const TopCommandBar: React.FC<TopCommandBarProps> = ({
   ];
 
   return (
-    <header className="flex items-center justify-between gap-4 px-6 py-3 bg-kt-bg-overlay-300/40 backdrop-blur-md border-b border-kt-border-panel sticky top-0 z-40 max-lg:flex-wrap max-sm:px-3">
-      <div className="flex items-center gap-2">
+    <header className="flex items-center justify-between gap-3 px-4 py-2.5 bg-kt-bg-overlay-300/40 backdrop-blur-md border-b border-kt-border-panel sticky top-0 z-40 max-lg:flex-wrap max-sm:px-3">
+      {/* Logo */}
+      <div className="flex items-center gap-2 flex-shrink-0">
         <Activity className="w-5 h-5 text-kt-positive-text flex-shrink-0" />
-        <span className="text-md font-bold tracking-tight text-kt-text-primary tabular-nums">K-Terminal</span>
+        <span className="text-md font-bold tracking-tight text-kt-text-primary tabular-nums">
+          K-Terminal
+        </span>
       </div>
 
-      <div className="flex-1 max-w-sm max-lg:order-3 max-lg:max-w-none max-lg:basis-full">
+      {/* Search */}
+      <div className="flex-1 max-w-xs max-lg:order-3 max-lg:max-w-none max-lg:basis-full">
         <AssetSearchBox onSelectAsset={onSelectAsset} />
       </div>
 
-      <nav className="flex items-center gap-1.5 overflow-x-auto bg-kt-bg-surface-100 p-1 rounded-kt-pill border border-kt-border-panel">
+      {/* Nav tabs */}
+      <nav
+        className="flex items-center gap-1 overflow-x-auto bg-kt-bg-surface-100 p-0.5 rounded-kt-pill border border-kt-border-panel"
+        aria-label={locale === "ko" ? "주요 메뉴" : "Main navigation"}
+      >
         {tabs.map((tab) => {
           const isActive = tab.id === activeTab;
           return (
             <button
               key={tab.id}
+              id={`nav-tab-${tab.id}`}
               onClick={() => onTabChange(tab.id)}
+              aria-current={isActive ? "page" : undefined}
               className={`whitespace-nowrap px-3 py-1 text-xs font-medium rounded-kt-pill transition-colors cursor-pointer ${
                 isActive
                   ? "bg-kt-bg-body text-kt-text-primary border border-kt-border-panel"
@@ -59,6 +71,12 @@ export const TopCommandBar: React.FC<TopCommandBarProps> = ({
           );
         })}
       </nav>
+
+      {/* Right controls: Locale toggle + Preferences */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <LocaleToggle />
+        <AppPreferencesButton />
+      </div>
     </header>
   );
 };

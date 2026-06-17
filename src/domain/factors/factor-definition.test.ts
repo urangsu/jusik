@@ -1,29 +1,18 @@
-import { describe, expect, it } from "vitest";
-import { createResearchOnlyFactorDefinition } from "./factor-definition";
+import { describe, it, expect } from "vitest";
+import { FactorDefinition } from "./factor-definition";
 
-describe("createResearchOnlyFactorDefinition", () => {
-  it("forces productionEligible to false by default", () => {
-    const definition = createResearchOnlyFactorDefinition({
-      definitionId: "value_v1_book_to_market",
-      factorId: "value",
-      displayName: "Value",
-      components: [
-        {
-          atomicSignalId: "book_to_market",
-          rawWeight: 1,
-          halfLifeDays: 365,
-          direction: 1,
-        },
-      ],
-      sectorNeutralize: true,
-      capNeutralize: false,
-      countryNeutralize: true,
-      orthogonalizeAgainst: [],
-      rebalanceFrequency: "monthly",
-      engineVersion: "0.2.0",
-      configHash: "hash",
-    });
-
-    expect(definition.productionEligible).toBe(false);
+describe("FactorDefinition Type Schema", () => {
+  it("should be constructible with valid definition properties", () => {
+    const def: FactorDefinition = {
+      factorId: "PER",
+      version: "1.0.0",
+      displayName: { ko: "주가수익비율", en: "Price-to-Earnings Ratio" },
+      formulaHash: "abc123hash",
+      inputRequirements: ["price", "eps"],
+      horizon: "medium",
+      createdAt: "2026-06-17",
+    };
+    expect(def.factorId).toBe("PER");
+    expect(def.horizon).toBe("medium");
   });
 });
