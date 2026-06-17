@@ -1,22 +1,35 @@
+import { resolveProviderConfigSync } from "../../settings/provider-config-resolver";
+
 export class KisConfig {
+  private get config() {
+    return resolveProviderConfigSync("kis");
+  }
+
   public get appKey(): string {
-    return process.env.KIS_APP_KEY || "";
+    return (this.config["KIS_APP_KEY"] as string) || "";
   }
 
   public get appSecret(): string {
-    return process.env.KIS_APP_SECRET || "";
+    return (this.config["KIS_APP_SECRET"] as string) || "";
   }
 
   public get accountNo(): string {
-    return process.env.KIS_ACCOUNT_NO || "";
+    return (this.config["KIS_ACCOUNT_NO"] as string) || "";
   }
 
   public get appType(): "paper" | "real" {
-    return (process.env.KIS_APP_TYPE as "paper" | "real") || "paper";
+    if (process.env.KIS_APP_TYPE === "real") {
+      return "real";
+    }
+    if (process.env.KIS_APP_TYPE === "paper") {
+      return "paper";
+    }
+    const isPaper = this.config["KIS_IS_PAPER"] !== false;
+    return isPaper ? "paper" : "real";
   }
 
   public get restUrl(): string {
-    return process.env.KIS_REST_URL || "https://openapivts.koreainvestment.com";
+    return (this.config["KIS_BASE_URL"] as string) || "https://openapivts.koreainvestment.com";
   }
 
   public get isTradingEnabled(): boolean {

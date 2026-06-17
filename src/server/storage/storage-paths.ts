@@ -1,7 +1,7 @@
 import path from "path";
 
 export function getDataDir(): string {
-  return path.join(process.cwd(), "data");
+  return path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
 }
 
 export function getOhlcvHistoryDir(universeId: string): string {

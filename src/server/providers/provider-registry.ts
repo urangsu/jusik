@@ -1,4 +1,6 @@
 import { PROVIDERS, ProviderProfile } from "@/domain/source/provider-profile";
+import { resolveProviderConfigSync } from "../settings/provider-config-resolver";
+import { ProviderId } from "@/domain/settings/provider-id";
 
 export class ProviderRegistry {
   private profiles: Map<string, ProviderProfile> = new Map();
@@ -41,7 +43,20 @@ export class ProviderRegistry {
     if (profile.requiresApiKey) {
       const apiKeyVar = this.getApiKeyVarName(id);
       const key = process.env[apiKeyVar];
-      if (!key) return false;
+      if (!key) {
+        let providerId: ProviderId;
+        if (id === "kis") providerId = "kis";
+        else if (id === "opendart") providerId = "opendart";
+        else if (id === "fmp_free") providerId = "fmp";
+        else if (id === "finnhub_free") providerId = "finnhub";
+        else if (id === "alpha_vantage_free") providerId = "alpha_vantage";
+        else return false;
+
+        const resolvedConfig = resolveProviderConfigSync(providerId);
+        if (!resolvedConfig[apiKeyVar]) {
+          return false;
+        }
+      }
     }
 
     return profile.enabledByDefault;

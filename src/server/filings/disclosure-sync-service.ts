@@ -42,7 +42,7 @@ export async function syncRecentDisclosures(params: {
   let savedCount = 0;
   let skippedCount = 0;
 
-  const fetchAndProcess = async (corpCode: string, stockCode: string | null) => {
+  const fetchAndProcess = async (corpCode: string, stockCode: string | null): Promise<string> => {
     const searchRes = await searchOpenDartDisclosures({
       corpCode,
       beginDate,
@@ -52,7 +52,7 @@ export async function syncRecentDisclosures(params: {
       pageCount: 100,
     });
 
-    if (searchRes.status === "eod" && searchRes.value) {
+    if ((searchRes.status === "eod" || searchRes.status === "not_found") && searchRes.value) {
       const items = searchRes.value.list || [];
       fetchedCount += items.length;
 
@@ -74,11 +74,10 @@ export async function syncRecentDisclosures(params: {
         }
         eventsToSave.push(ev);
       }
-    } else if (searchRes.status === "rate_limited") {
-      throw new Error("OpenDART API 한도 초과(Rate Limited)");
-    } else if (searchRes.status === "api_required") {
-      throw new Error("OpenDART API Key가 설정되지 않았습니다.");
+      return searchRes.status;
     }
+
+    return searchRes.status;
   };
 
   try {
@@ -95,14 +94,47 @@ export async function syncRecentDisclosures(params: {
           message: `종목코드 [${params.stockCode}]에 해당하는 DART 고유번호를 찾을 수 없습니다. 고유번호를 먼저 가져오세요.`,
         };
       }
-      await fetchAndProcess(corpRecord.corpCode, params.stockCode);
+      const fetchStatus = await fetchAndProcess(corpRecord.corpCode, params.stockCode);
+      if (fetchStatus !== "eod" && fetchStatus !== "not_found") {
+        return {
+          value: null,
+          status: fetchStatus as any,
+          source: "OpenDART Sync Service",
+          sourceTier: "official",
+          warnings: [],
+          updatedAt: new Date().toISOString(),
+          message: `OpenDART 동기화 실패: status=${fetchStatus}`,
+        };
+      }
     } else if (params.corpCode) {
-      await fetchAndProcess(params.corpCode, null);
+      const fetchStatus = await fetchAndProcess(params.corpCode, null);
+      if (fetchStatus !== "eod" && fetchStatus !== "not_found") {
+        return {
+          value: null,
+          status: fetchStatus as any,
+          source: "OpenDART Sync Service",
+          sourceTier: "official",
+          warnings: [],
+          updatedAt: new Date().toISOString(),
+          message: `OpenDART 동기화 실패: status=${fetchStatus}`,
+        };
+      }
     } else if (universeId === "KOSPI_SAMPLE") {
       for (const constituent of KOSPI_SAMPLE_CONSTITUENTS) {
         const corpRecord = await getCorpCodeByStockCode(constituent.symbol);
         if (corpRecord) {
-          await fetchAndProcess(corpRecord.corpCode, constituent.symbol);
+          const fetchStatus = await fetchAndProcess(corpRecord.corpCode, constituent.symbol);
+          if (fetchStatus !== "eod" && fetchStatus !== "not_found") {
+            return {
+              value: null,
+              status: fetchStatus as any,
+              source: "OpenDART Sync Service",
+              sourceTier: "official",
+              warnings: [],
+              updatedAt: new Date().toISOString(),
+              message: `OpenDART 동기화 실패 (${constituent.symbol}): status=${fetchStatus}`,
+            };
+          }
         }
       }
     } else {
@@ -124,7 +156,7 @@ export async function syncRecentDisclosures(params: {
         pageCount: 100,
       });
 
-      if (searchRes.status === "eod" && searchRes.value) {
+      if ((searchRes.status === "eod" || searchRes.status === "not_found") && searchRes.value) {
         const items = searchRes.value.list || [];
         fetchedCount += items.length;
 
@@ -141,10 +173,16 @@ export async function syncRecentDisclosures(params: {
           }
           eventsToSave.push(ev);
         }
-      } else if (searchRes.status === "rate_limited") {
-        throw new Error("OpenDART API 한도 초과(Rate Limited)");
-      } else if (searchRes.status === "api_required") {
-        throw new Error("OpenDART API Key가 설정되지 않았습니다.");
+      } else {
+        return {
+          value: null,
+          status: searchRes.status as any,
+          source: "OpenDART Sync Service",
+          sourceTier: "official",
+          warnings: [],
+          updatedAt: new Date().toISOString(),
+          message: `OpenDART 동기화 실패: status=${searchRes.status}`,
+        };
       }
     }
 

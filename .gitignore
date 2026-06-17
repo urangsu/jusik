@@ -55,6 +55,7 @@ data/snapshots/
 data/reliability/
 data/opendart/
 data/filings/
+data/secrets/
 
 # Keep directory structure placeholders
 !data/.gitkeep
@@ -66,6 +67,7 @@ data/filings/
 !data/reliability/.gitkeep
 !data/opendart/.gitkeep
 !data/filings/.gitkeep
+!data/secrets/.gitkeep
 
 # Test fixtures are allowed to be committed (keep small & synthetic)
 !test/fixtures/**

@@ -4,8 +4,9 @@
 
 ## 1. Zero Credential Leakage (자격 증명 유출 방지)
 
-OpenDART API 인증에 사용되는 `OPENDART_API_KEY`는 엄격하게 서버 사이드 환경 변수로만 관리되어야 합니다.
-- **클라이언트 번들 격리**: 브라우저나 클라이언트 사이드 코드에서 `process.env.OPENDART_API_KEY`가 직접 혹은 간접적으로 참조되거나 노출되는 일이 없어야 합니다.
+OpenDART API 인증에 사용되는 `OPENDART_API_KEY`는 엄격하게 서버 사이드 환경 변수 또는 서버 격리형 보안 저장소(Secret Store)로만 관리되어야 합니다.
+- **클라이언트 번들 격리**: 브라우저나 클라이언트 사이드 코드에서 `OPENDART_API_KEY`가 직접 혹은 간접적으로 참조되거나 노출되는 일이 없어야 합니다.
+- **Secret Store 및 API 설정 센터 연동**: 사용자는 API 설정 센터를 통해 브라우저에서 간편하게 API Key를 기입할 수 있으나, 브라우저에는 마스킹된 보안 상태(`configured` 및 마스킹된 키)만 응답으로 노출됩니다.
 - **로그 및 에러 마스킹**: API 호출 중에 에러가 발생하여 콘솔 로그나 예외 스택에 에러 메시지가 출력될 때, API Key가 포함된 전체 URL 파라미터(`crtfc_key=...`)가 그대로 출력되지 않도록 [opendart-http-client.ts](file:///Volumes/무제/jusik/src/server/opendart/opendart-http-client.ts) 내에서 정규식을 이용해 API Key를 `[REDACTED_API_KEY]`로 강제 치환 및 마스킹합니다.
 - **API 응답 격리**: 외부 프록시 API 응답이나 데이터베이스 저장 데이터에 `crtfc_key`가 포함되지 않도록 보장합니다.
 

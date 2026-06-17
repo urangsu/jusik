@@ -10,6 +10,7 @@ import { StrategyWorkspace } from "../strategy/StrategyWorkspace";
 import { AlertSettingsPage } from "../alerts/AlertSettingsPage";
 import { BacktestWorkspace } from "../backtest/BacktestWorkspace";
 import { ReliabilityWorkspace } from "../reliability/ReliabilityWorkspace";
+import { ProviderApiSettingsPanel } from "../settings/ProviderApiSettingsPanel";
 import { Panel } from "../ui/Panel";
 import { MetricCell } from "../ui/MetricCell";
 import { Asset } from "@/domain/market/asset";
@@ -68,6 +69,8 @@ export const TerminalShell: React.FC = () => {
             <BacktestWorkspace />
           ) : activeTab === "reliability" ? (
             <ReliabilityWorkspace />
+          ) : activeTab === "settings" ? (
+            <ProviderApiSettingsPanel />
           ) : (
             <>
               {/* Active Asset Info Block */}

@@ -11,7 +11,7 @@ export class JsonFileStore<T> {
   constructor(filePath: string, defaultData: T) {
     this.filePath = path.isAbsolute(filePath)
       ? filePath
-      : path.join(process.cwd(), filePath);
+      : path.join(/*turbopackIgnore: true*/ process.cwd(), filePath);
     this.defaultData = defaultData;
     this.lock = new FileLock(this.filePath);
   }
