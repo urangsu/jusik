@@ -13,6 +13,7 @@ import { detectNewFilingEvents } from "./detectors/filing-event-detector";
 import { detectProviderHealthAlerts } from "./detectors/provider-health-detector";
 import { detectTechnicalSignalChanges } from "./detectors/technical-signal-change-detector";
 import { detectReliabilityDeterioration } from "./detectors/reliability-deterioration-detector";
+import { detectMacroRegimeAlerts } from "./detectors/macro-regime-detector";
 import { sendConsoleNotification } from "../notifications/channels/console-notification-channel";
 import { volatilityAlertEngine } from "./volatility-alert-engine";
 import { volumeAlertEngine } from "./volume-alert-engine";
@@ -79,6 +80,21 @@ export class AlertEvaluator {
         rawEvents.push(...healthEvents);
       } catch (err) {
         console.error("[AlertEvaluator] Error running provider health detector:", err);
+      }
+    }
+
+    if (
+      activeRuleTypes.includes("macro_regime_change") ||
+      activeRuleTypes.includes("macro_risk_off") ||
+      activeRuleTypes.includes("macro_panic") ||
+      activeRuleTypes.includes("sentiment_extreme_fear") ||
+      activeRuleTypes.includes("sentiment_extreme_greed")
+    ) {
+      try {
+        const macroEvents = await detectMacroRegimeAlerts();
+        rawEvents.push(...macroEvents);
+      } catch (err) {
+        console.error("[AlertEvaluator] Error running macro regime detector:", err);
       }
     }
 

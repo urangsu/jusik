@@ -1,6 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { getOpenDartConfig } from "./opendart-config";
 
+vi.mock("../settings/provider-settings-store", () => ({
+  getProviderSettingsSync: vi.fn(() => null),
+}));
+
+vi.mock("../settings/provider-secret-store", () => ({
+  getProviderSecretSync: vi.fn(() => null),
+}));
+
 describe("getOpenDartConfig", () => {
   const originalEnv = { ...process.env };
 

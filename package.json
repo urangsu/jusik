@@ -22,7 +22,9 @@
     "reliability:inspect": "tsx scripts/reliability/inspect-signal-reliability.ts",
     "opendart:import-corp-codes": "tsx scripts/opendart/import-corp-codes.ts",
     "opendart:search": "tsx scripts/opendart/search-disclosures.ts",
-    "opendart:sync": "tsx scripts/opendart/sync-disclosures.ts"
+    "opendart:sync": "tsx scripts/opendart/sync-disclosures.ts",
+    "macro:evaluate": "tsx scripts/macro/evaluate-regime.ts",
+    "sentiment:refresh": "tsx scripts/sentiment/refresh-sentiment-references.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",

@@ -36,3 +36,7 @@ LLM은 점수, current label, position size, expected return을 생성하지 않
 ## Strong Label Ban
 
 Influencer overlay는 `strong_watch`를 출력할 수 없습니다. 최대 역할은 explanation, caution, risk review, data required입니다.
+
+## Macro Note Approvals
+
+Macro Playbook 수동 정리 메모는 `userReviewStatus`가 `reviewed` 상태로 승인된 분석 내용만 레짐과 결합하여 전략에 영향(감쇄 조절)을 미치도록 격리 조치해야 합니다. `draft` 및 `rejected` 상태의 메모는 어떠한 전략 적합도 계산에서도 제외됩니다.

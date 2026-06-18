@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { MarketUniverseId } from "@/domain/universe/market-universe";
 import { MarketBoardSnapshot, getDefaultSnapshot } from "@/domain/market-board/market-board-snapshot";
 import { UniverseToggle } from "./UniverseToggle";
+import { MarketBoardHeader } from "./MarketBoardHeader";
 import { MarketBoardToolbar } from "./MarketBoardToolbar";
 import { MarketHeatmap } from "./MarketHeatmap";
 import { MarketScreenerTable } from "./MarketScreenerTable";
@@ -269,6 +270,9 @@ export const MarketBoardPage: React.FC<MarketBoardPageProps> = ({ initialSnapsho
           </div>
         </div>
       )}
+
+      {/* Macro Regime & Sentiment Panels */}
+      <MarketBoardHeader />
 
       {/* Toolbar */}
       <MarketBoardToolbar

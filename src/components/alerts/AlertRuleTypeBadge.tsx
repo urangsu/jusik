@@ -31,6 +31,11 @@ export const AlertRuleTypeBadge: React.FC<AlertRuleTypeBadgeProps> = ({
     data_quality: { ko: "데이터 품질", en: "Data Quality" },
     strategy_score_change: { ko: "전략 점수 변화", en: "Strategy Change" },
     portfolio_risk: { ko: "포트폴리오 리스크", en: "Portfolio Risk" },
+    macro_regime_change: { ko: "거시 레짐 변경", en: "Macro Regime Change" },
+    macro_risk_off: { ko: "거시 리스크 오프", en: "Macro Risk Off" },
+    macro_panic: { ko: "거시 패닉", en: "Macro Panic" },
+    sentiment_extreme_fear: { ko: "극단적 공포", en: "Extreme Fear" },
+    sentiment_extreme_greed: { ko: "극단적 탐욕", en: "Extreme Greed" },
   };
 
   const currentLabel = labels[ruleType] || { ko: ruleType, en: ruleType };

@@ -57,6 +57,9 @@ data/opendart/
 data/filings/
 data/secrets/
 data/alerts/
+data/regime/
+data/sentiment/
+data/settings/
 
 # Keep directory structure placeholders
 !data/.gitkeep
@@ -70,6 +73,9 @@ data/alerts/
 !data/filings/.gitkeep
 !data/secrets/.gitkeep
 !data/alerts/.gitkeep
+!data/regime/.gitkeep
+!data/sentiment/.gitkeep
+!data/settings/.gitkeep
 
 # Test fixtures are allowed to be committed (keep small & synthetic)
 !test/fixtures/**

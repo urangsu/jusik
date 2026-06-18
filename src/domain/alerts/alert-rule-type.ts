@@ -14,4 +14,9 @@ export type AlertRuleType =
   | "backtest_job_failed"
   | "data_quality"
   | "strategy_score_change"
-  | "portfolio_risk";
+  | "portfolio_risk"
+  | "macro_regime_change"
+  | "macro_risk_off"
+  | "macro_panic"
+  | "sentiment_extreme_fear"
+  | "sentiment_extreme_greed";

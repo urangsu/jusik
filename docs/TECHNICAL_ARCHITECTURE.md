@@ -18,4 +18,8 @@ The `Data Safety Layer` wraps every outgoing network response inside a standardi
 5. Strict parameters clamping (e.g., limiting OpenDART page size to 100, and date range to 3 months for broad searches).
 6. Segregation of sensitive keys into a local `Secret Store` (stored under `data/secrets/` and git-ignored).
 
+### Macro Regime Gate & Sentiment Isolation Layer
+The `Macro Regime Gate` enforces market environment safety restrictions on strategy suitability. During `risk_off` or `panic` regimes, suitability scores and watch labels are automatically downgraded or blocked to prevent overtrading. The `Sentiment Isolation Layer` completely decouples CNN and Crypto Fear & Greed indices from the core suitability logic and order execution, treating them strictly as auxiliary client-side references.
+
+
 
