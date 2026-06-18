@@ -14,6 +14,11 @@ export const MacroPlaybookPanel: React.FC = () => {
   const [memo, setMemo] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -37,6 +42,7 @@ export const MacroPlaybookPanel: React.FC = () => {
       active = false;
     };
   }, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,7 +135,7 @@ export const MacroPlaybookPanel: React.FC = () => {
               >
                 <div className="flex items-center justify-between border-b border-kt-border-panel/30 pb-1.5">
                   <span className="text-kt-text-muted tabular-nums">
-                    {new Date(n.createdAt).toLocaleDateString()}
+                    {mounted ? new Date(n.createdAt).toLocaleDateString(locale === "ko" ? "ko-KR" : "en-US") : ""}
                   </span>
                   <div className="flex items-center gap-1.5">
                     <span
