@@ -25,6 +25,15 @@ Backtests must use `knownAt` and cannot read records ingested after that timesta
 - Old records may be marked `superseded`, but must not be deleted.
 - Every record must have `dataVersionId` and `hash`.
 
-## Seed Data
-
 `seed_demo` is only for local contract and UI state checks. It is not production data and cannot feed production signals.
+
+## Canonical Timestamp Format Policy
+
+To ensure exact lexicographical comparisons (using `localeCompare`) in `getAsOf` queries, PIT records must strictly conform to the following canonical string formats:
+
+- **`asOfDate`**: Strict date-only format: `YYYY-MM-DD`
+- **`effectiveAt`**: Canonical UTC datetime format with millisecond resolution: `YYYY-MM-DDTHH:mm:ss.sssZ`
+- **`ingestedAt`**: Canonical UTC datetime format with millisecond resolution: `YYYY-MM-DDTHH:mm:ss.sssZ`
+
+*Timezone offsets other than UTC (`Z`) are strictly forbidden inside the database storage.* Raw input values from providers that contain timezone offsets or lack milliseconds must be normalized to this canonical format before ingestion and persistence.
+

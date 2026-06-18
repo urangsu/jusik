@@ -277,4 +277,7 @@ PR #2 Codex Review:
 - PIT getAsOf ordering issue: fixed (Updated sort logic to check `asOfDate desc` -> `ingestedAt desc` -> `effectiveAt desc` -> `pitRecordId desc`)
 - OHLCV strict timestamp validation: fixed (Replaced `isValidIsoLike` using Date.parse with strict regex and calendar validations)
 - PR #2 closed but changes applied directly to main
+- WO016-B Hardening:
+  - Strict ISO datetime component/overflow checks (month/day/hour/minute/second bounds) added to `validate-ohlcv.ts`.
+  - Canonical format requirements (`YYYY-MM-DD` and `YYYY-MM-DDTHH:mm:ss.sssZ` only) added to `createPitRecord` validation inside `pit-record.ts`.
 

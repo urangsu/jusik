@@ -80,6 +80,13 @@ describe("validateOhlcvCandle", () => {
       "2026-06-07 09:30:00",
       "2026/06/07",
       "20260607",
+      "2026-02-30T00:00:00Z",
+      "2026-13-01T00:00:00Z",
+      "2026-00-01T00:00:00Z",
+      "2026-06-07T24:00:00Z",
+      "2026-06-07T99:00:00Z",
+      "2026-06-07T09:99:00Z",
+      "2026-06-07T09:30:99Z",
     ];
     for (const ts of blocked) {
       const res = validateOhlcvCandle({ ...validCandle, timestamp: ts });

@@ -156,7 +156,7 @@ describe("InMemoryPitStore", () => {
       value: { close: 70000 },
       asOfDate: "2026-06-14",
       effectiveAt: "2026-06-14T15:30:00.000Z",
-      ingestedAt: "2026-06-16T00:00:00Z",
+      ingestedAt: "2026-06-16T00:00:00.000Z",
       dataVersionId: "dv-a",
       status: "valid",
       source: "seed",
@@ -170,7 +170,7 @@ describe("InMemoryPitStore", () => {
       value: { close: 71000 },
       asOfDate: "2026-06-15",
       effectiveAt: "2026-06-15T15:30:00.000Z",
-      ingestedAt: "2026-06-15T00:00:00Z",
+      ingestedAt: "2026-06-15T00:00:00.000Z",
       dataVersionId: "dv-b",
       status: "valid",
       source: "seed",
@@ -181,7 +181,7 @@ describe("InMemoryPitStore", () => {
       assetId: "KR:005930",
       sourceKind: "market_price",
       asOfDate: "2026-06-15",
-      knownAt: "2026-06-16T12:00:00Z",
+      knownAt: "2026-06-16T12:00:00.000Z",
     });
     expect(record?.pitRecordId).toBe("record-B");
   });
@@ -195,8 +195,8 @@ describe("InMemoryPitStore", () => {
       sourceKind: "market_price",
       value: { close: 70000 },
       asOfDate: "2026-06-15",
-      effectiveAt: "2026-06-15T12:00:00Z",
-      ingestedAt: "2026-06-15T13:00:00Z",
+      effectiveAt: "2026-06-15T12:00:00.000Z",
+      ingestedAt: "2026-06-15T13:00:00.000Z",
       dataVersionId: "dv-a",
       status: "valid",
       source: "seed",
@@ -209,8 +209,8 @@ describe("InMemoryPitStore", () => {
       sourceKind: "market_price",
       value: { close: 71000 },
       asOfDate: "2026-06-15",
-      effectiveAt: "2026-06-15T09:00:00Z",
-      ingestedAt: "2026-06-15T15:00:00Z",
+      effectiveAt: "2026-06-15T09:00:00.000Z",
+      ingestedAt: "2026-06-15T15:00:00.000Z",
       dataVersionId: "dv-b",
       status: "valid",
       source: "seed",
@@ -221,7 +221,7 @@ describe("InMemoryPitStore", () => {
       assetId: "KR:005930",
       sourceKind: "market_price",
       asOfDate: "2026-06-15",
-      knownAt: "2026-06-15T16:00:00Z",
+      knownAt: "2026-06-15T16:00:00.000Z",
     });
     expect(record?.pitRecordId).toBe("record-B");
   });
@@ -236,7 +236,7 @@ describe("InMemoryPitStore", () => {
       value: { close: 70000 },
       asOfDate: "2026-06-15",
       effectiveAt: "2026-06-15T15:30:00.000Z",
-      ingestedAt: "2026-06-15T10:00:00Z",
+      ingestedAt: "2026-06-15T10:00:00.000Z",
       dataVersionId: "dv-a",
       status: "valid",
       source: "seed",
@@ -250,7 +250,7 @@ describe("InMemoryPitStore", () => {
       value: { close: 71000 },
       asOfDate: "2026-06-15",
       effectiveAt: "2026-06-15T15:30:00.000Z",
-      ingestedAt: "2026-06-16T10:00:00Z",
+      ingestedAt: "2026-06-16T10:00:00.000Z",
       dataVersionId: "dv-b",
       status: "valid",
       source: "seed",
@@ -261,7 +261,7 @@ describe("InMemoryPitStore", () => {
       assetId: "KR:005930",
       sourceKind: "market_price",
       asOfDate: "2026-06-15",
-      knownAt: "2026-06-15T12:00:00Z",
+      knownAt: "2026-06-15T12:00:00.000Z",
     });
     expect(record?.pitRecordId).toBe("record-A");
   });
