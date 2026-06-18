@@ -145,4 +145,124 @@ describe("InMemoryPitStore", () => {
     expect(await store.getById("pit-original")).toEqual(original);
     expect(await store.getById("pit-revision")).toEqual(revision);
   });
+
+  it("3.1: prefers latest eligible asOfDate even if older asOf is ingested later", async () => {
+    const store = new InMemoryPitStore();
+    await store.put(createPitRecord({
+      pitRecordId: "record-A",
+      assetId: "KR:005930",
+      market: "KR",
+      sourceKind: "market_price",
+      value: { close: 70000 },
+      asOfDate: "2026-06-14",
+      effectiveAt: "2026-06-14T15:30:00.000Z",
+      ingestedAt: "2026-06-16T00:00:00Z",
+      dataVersionId: "dv-a",
+      status: "valid",
+      source: "seed",
+      hash: "a",
+    }));
+    await store.put(createPitRecord({
+      pitRecordId: "record-B",
+      assetId: "KR:005930",
+      market: "KR",
+      sourceKind: "market_price",
+      value: { close: 71000 },
+      asOfDate: "2026-06-15",
+      effectiveAt: "2026-06-15T15:30:00.000Z",
+      ingestedAt: "2026-06-15T00:00:00Z",
+      dataVersionId: "dv-b",
+      status: "valid",
+      source: "seed",
+      hash: "b",
+    }));
+
+    const record = await store.getAsOf({
+      assetId: "KR:005930",
+      sourceKind: "market_price",
+      asOfDate: "2026-06-15",
+      knownAt: "2026-06-16T12:00:00Z",
+    });
+    expect(record?.pitRecordId).toBe("record-B");
+  });
+
+  it("3.2: prefers latest ingested revision for the same asOfDate even if effectiveAt is earlier", async () => {
+    const store = new InMemoryPitStore();
+    await store.put(createPitRecord({
+      pitRecordId: "record-A",
+      assetId: "KR:005930",
+      market: "KR",
+      sourceKind: "market_price",
+      value: { close: 70000 },
+      asOfDate: "2026-06-15",
+      effectiveAt: "2026-06-15T12:00:00Z",
+      ingestedAt: "2026-06-15T13:00:00Z",
+      dataVersionId: "dv-a",
+      status: "valid",
+      source: "seed",
+      hash: "a",
+    }));
+    await store.put(createPitRecord({
+      pitRecordId: "record-B",
+      assetId: "KR:005930",
+      market: "KR",
+      sourceKind: "market_price",
+      value: { close: 71000 },
+      asOfDate: "2026-06-15",
+      effectiveAt: "2026-06-15T09:00:00Z",
+      ingestedAt: "2026-06-15T15:00:00Z",
+      dataVersionId: "dv-b",
+      status: "valid",
+      source: "seed",
+      hash: "b",
+    }));
+
+    const record = await store.getAsOf({
+      assetId: "KR:005930",
+      sourceKind: "market_price",
+      asOfDate: "2026-06-15",
+      knownAt: "2026-06-15T16:00:00Z",
+    });
+    expect(record?.pitRecordId).toBe("record-B");
+  });
+
+  it("3.3: excludes records ingested after query knownAt", async () => {
+    const store = new InMemoryPitStore();
+    await store.put(createPitRecord({
+      pitRecordId: "record-A",
+      assetId: "KR:005930",
+      market: "KR",
+      sourceKind: "market_price",
+      value: { close: 70000 },
+      asOfDate: "2026-06-15",
+      effectiveAt: "2026-06-15T15:30:00.000Z",
+      ingestedAt: "2026-06-15T10:00:00Z",
+      dataVersionId: "dv-a",
+      status: "valid",
+      source: "seed",
+      hash: "a",
+    }));
+    await store.put(createPitRecord({
+      pitRecordId: "record-B",
+      assetId: "KR:005930",
+      market: "KR",
+      sourceKind: "market_price",
+      value: { close: 71000 },
+      asOfDate: "2026-06-15",
+      effectiveAt: "2026-06-15T15:30:00.000Z",
+      ingestedAt: "2026-06-16T10:00:00Z",
+      dataVersionId: "dv-b",
+      status: "valid",
+      source: "seed",
+      hash: "b",
+    }));
+
+    const record = await store.getAsOf({
+      assetId: "KR:005930",
+      sourceKind: "market_price",
+      asOfDate: "2026-06-15",
+      knownAt: "2026-06-15T12:00:00Z",
+    });
+    expect(record?.pitRecordId).toBe("record-A");
+  });
 });

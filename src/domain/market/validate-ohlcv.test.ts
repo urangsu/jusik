@@ -52,7 +52,39 @@ describe("validateOhlcvCandle", () => {
     });
 
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain("timestamp must be a valid ISO-like datetime string.");
+    expect(result.errors).toContain("timestamp must be a strict ISO date or datetime string.");
     expect(result.errors).toContain("assetId prefix must match market.");
+  });
+
+  it("5.1: accepts valid strict ISO timestamps", () => {
+    const allowed = [
+      "2026-06-07",
+      "2026-06-07T00:00:00Z",
+      "2026-06-07T00:00:00.000Z",
+      "2026-06-07T09:30:00+09:00",
+      "2026-06-07T09:30:00-04:00",
+    ];
+    for (const ts of allowed) {
+      const res = validateOhlcvCandle({ ...validCandle, timestamp: ts });
+      expect(res.valid).toBe(true);
+      expect(res.errors).toEqual([]);
+    }
+  });
+
+  it("5.2: rejects invalid and non-strict ISO timestamps", () => {
+    const blocked = [
+      "06/07/2026",
+      "1",
+      "2026-02-30",
+      "2026-13-01",
+      "2026-06-07 09:30:00",
+      "2026/06/07",
+      "20260607",
+    ];
+    for (const ts of blocked) {
+      const res = validateOhlcvCandle({ ...validCandle, timestamp: ts });
+      expect(res.valid).toBe(false);
+      expect(res.errors).toContain("timestamp must be a strict ISO date or datetime string.");
+    }
   });
 });

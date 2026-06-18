@@ -270,3 +270,11 @@ GPT Vision          : ✗ 코드 없음
 | `npm run docs:quant` | ✓ PASS |
 | `npm run check:wording` | ✓ PASS (docs 내 정책 설명 warn-only) |
 | `npm run check:alpha-ui` | ✓ PASS |
+
+## 10. PR #2 Codex Review Feedback
+
+PR #2 Codex Review:
+- PIT getAsOf ordering issue: fixed (Updated sort logic to check `asOfDate desc` -> `ingestedAt desc` -> `effectiveAt desc` -> `pitRecordId desc`)
+- OHLCV strict timestamp validation: fixed (Replaced `isValidIsoLike` using Date.parse with strict regex and calendar validations)
+- PR #2 closed but changes applied directly to main
+

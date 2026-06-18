@@ -28,10 +28,13 @@ export class InMemoryPitStore implements PitStore {
     matches.sort((a, b) => {
       const asOfCompare = b.asOfDate.localeCompare(a.asOfDate);
       if (asOfCompare !== 0) return asOfCompare;
-      const effectiveCompare = b.effectiveAt.localeCompare(a.effectiveAt);
-      if (effectiveCompare !== 0) return effectiveCompare;
+
       const ingestedCompare = b.ingestedAt.localeCompare(a.ingestedAt);
       if (ingestedCompare !== 0) return ingestedCompare;
+
+      const effectiveCompare = b.effectiveAt.localeCompare(a.effectiveAt);
+      if (effectiveCompare !== 0) return effectiveCompare;
+
       return b.pitRecordId.localeCompare(a.pitRecordId);
     });
     return (matches[0] as PitRecord<T> | undefined) ?? null;
