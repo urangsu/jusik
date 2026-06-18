@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useI18n } from "@/i18n/use-i18n";
-import { BacktestResult } from "@/domain/backtest/backtest-result";
+import { BacktestResult, BacktestValidityReport } from "@/domain/backtest/backtest-result";
 import { BacktestWarningBanner } from "./BacktestWarningBanner";
 import { BacktestRunPanel } from "./BacktestRunPanel";
 import { BacktestVetoReasons } from "./BacktestVetoReasons";
@@ -11,6 +11,80 @@ import { IcChart } from "./IcChart";
 import { OosSummaryTable } from "./OosSummaryTable";
 import { BarChart3, Loader2, BookOpen } from "lucide-react";
 import { StrategyResearchPanel } from "@/components/strategy/StrategyResearchPanel";
+
+// ─── Validity Badge ───────────────────────────────────────────────────────────
+
+const VALIDITY_LEVEL_STYLES: Record<
+  BacktestValidityReport["level"],
+  { border: string; bg: string; badge: string; text: string }
+> = {
+  invalid: {
+    border: "border-kt-negative-text/40",
+    bg: "bg-kt-bg-surface-100",
+    badge: "bg-kt-negative-text/10 text-kt-negative-text border border-kt-negative-text/30",
+    text: "text-kt-negative-text",
+  },
+  insufficient_data: {
+    border: "border-kt-text-muted/30",
+    bg: "bg-kt-bg-surface-100",
+    badge: "bg-kt-bg-overlay-300/30 text-kt-text-muted border border-kt-text-muted/30",
+    text: "text-kt-text-muted",
+  },
+  functional_check_only: {
+    border: "border-kt-text-secondary/30",
+    bg: "bg-kt-bg-surface-100",
+    badge: "bg-kt-bg-overlay-300/30 text-kt-text-secondary border border-kt-text-secondary/30",
+    text: "text-kt-text-secondary",
+  },
+  research_candidate: {
+    border: "border-kt-positive-text/40",
+    bg: "bg-kt-bg-surface-100",
+    badge: "bg-kt-positive-text/10 text-kt-positive-text border border-kt-positive-text/30",
+    text: "text-kt-positive-text",
+  },
+};
+
+const VALIDITY_LEVEL_LABEL: Record<
+  BacktestValidityReport["level"],
+  { ko: string; en: string }
+> = {
+  invalid: { ko: "무효", en: "INVALID" },
+  insufficient_data: { ko: "데이터 부족", en: "INSUFFICIENT DATA" },
+  functional_check_only: { ko: "기능 검증용", en: "FUNCTIONAL CHECK ONLY" },
+  research_candidate: { ko: "연구 후보", en: "RESEARCH CANDIDATE" },
+};
+
+interface ValidityReportBadgeProps {
+  validityReport: BacktestValidityReport;
+  locale: string;
+}
+
+const ValidityReportBadge: React.FC<ValidityReportBadgeProps> = ({ validityReport, locale }) => {
+  const styles = VALIDITY_LEVEL_STYLES[validityReport.level];
+  const label = VALIDITY_LEVEL_LABEL[validityReport.level];
+  return (
+    <div className={`border ${styles.border} ${styles.bg} rounded-kt-card p-3 flex flex-col gap-1.5`}>
+      <div className="flex items-center gap-2">
+        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold font-mono tracking-wider ${styles.badge}`}>
+          {locale === "ko" ? label.ko : label.en}
+        </span>
+        <span className={`text-xs ${styles.text}`}>{validityReport.messageKo}</span>
+      </div>
+      {validityReport.reasons.length > 0 && (
+        <div className="flex flex-wrap gap-1 pt-0.5">
+          {validityReport.reasons.map((r) => (
+            <span
+              key={r}
+              className="px-1.5 py-0.5 rounded text-[9px] font-mono text-kt-text-muted border border-kt-border-panel bg-kt-bg-overlay-300/20"
+            >
+              {r}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const BacktestWorkspace: React.FC = () => {
   const { locale } = useI18n();
@@ -91,6 +165,9 @@ export const BacktestWorkspace: React.FC = () => {
               warnings={result.warnings}
             />
 
+            {/* Validity Report Badge */}
+            <ValidityReportBadge validityReport={result.validityReport} locale={locale} />
+
             {/* Summary Metrics Cards Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <BacktestMetricCard
@@ -152,7 +229,7 @@ export const BacktestWorkspace: React.FC = () => {
                     ? "negative"
                     : "neutral"
                 }
-                description={locale === "ko" ? "비용 차감 후 순수익률" : "Net of fees and slippage"}
+                description={locale === "ko" ? "비용 차감 후 순수익률 (복리)" : "Net compounded return after costs"}
                 hasVeto={hasVeto}
               />
 
@@ -179,6 +256,56 @@ export const BacktestWorkspace: React.FC = () => {
                 formatter={(v) => `${Math.round(v)} bps`}
                 description={locale === "ko" ? "수수료+세금+슬리피지 합산" : "Commissions + taxes + slippage"}
                 hasVeto={hasVeto}
+              />
+            </div>
+
+            {/* Benchmark & Excess Return + Turnover Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <BacktestMetricCard
+                label={locale === "ko" ? "벤치마크 누적 수익률" : "Benchmark Return"}
+                value={result.aggregated.benchmarkTotalReturn}
+                status={result.aggregated.benchmarkTotalReturn !== null ? "cached" : "insufficient_data"}
+                formatter={(v) => (v >= 0 ? "+" : "") + (v * 100).toFixed(2) + "%"}
+                changeType={
+                  result.aggregated.benchmarkTotalReturn === null
+                    ? "neutral"
+                    : result.aggregated.benchmarkTotalReturn > 0
+                    ? "positive"
+                    : result.aggregated.benchmarkTotalReturn < 0
+                    ? "negative"
+                    : "neutral"
+                }
+                description={
+                  locale === "ko"
+                    ? `${result.oosSummaries[0]?.benchmarkAssetId ?? "벤치마크"} 복리 기준`
+                    : `${result.oosSummaries[0]?.benchmarkAssetId ?? "Benchmark"} compounded`
+                }
+                hasVeto={hasVeto}
+              />
+              <BacktestMetricCard
+                label={locale === "ko" ? "초과 수익률 (Excess)" : "Excess Return"}
+                value={result.aggregated.excessTotalReturn}
+                status={result.aggregated.excessTotalReturn !== null ? "cached" : "insufficient_data"}
+                formatter={(v) => (v >= 0 ? "+" : "") + (v * 100).toFixed(2) + "%"}
+                changeType={
+                  result.aggregated.excessTotalReturn === null
+                    ? "neutral"
+                    : result.aggregated.excessTotalReturn > 0
+                    ? "positive"
+                    : result.aggregated.excessTotalReturn < 0
+                    ? "negative"
+                    : "neutral"
+                }
+                description={locale === "ko" ? "전략 수익률 - 벤치마크 수익률" : "Strategy return minus benchmark"}
+                hasVeto={hasVeto}
+              />
+              <BacktestMetricCard
+                label={locale === "ko" ? "평균 포트폴리오 교체율" : "Avg Turnover"}
+                value={result.aggregated.turnover}
+                status={result.aggregated.turnover !== null ? "cached" : "insufficient_data"}
+                formatter={(v) => `${(v * 100).toFixed(1)}%`}
+                description={locale === "ko" ? "구간 간 포트폴리오 교체 비율" : "Portfolio weight change per period"}
+                hasVeto={false}
               />
             </div>
 

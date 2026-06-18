@@ -13,6 +13,8 @@ const VETO_LABELS: Record<BacktestWarningCode, { ko: string; en: string }> = {
   insufficient_universe: { ko: "유니버스 자산 부족", en: "Insufficient universe" },
   low_data_quality: { ko: "데이터 품질 낮음", en: "Low data quality" },
   insufficient_oos_windows: { ko: "OOS 구간 부족", en: "Insufficient OOS windows" },
+  missing_benchmark: { ko: "벤치마크 데이터 유실", en: "Missing benchmark data" },
+  insufficient_ic_pairs: { ko: "유효 IC 페어 부족", en: "Insufficient IC pairs" },
 };
 
 interface BacktestVetoReasonsProps {

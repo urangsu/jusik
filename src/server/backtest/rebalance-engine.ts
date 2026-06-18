@@ -4,6 +4,8 @@ import { getFactorValues } from "@/server/factors/factor-store";
 import { PortfolioPosition } from "@/domain/backtest/portfolio-position";
 import { KOSPI_SAMPLE_CONSTITUENTS, SP500_SAMPLE_CONSTITUENTS } from "@/domain/universe/market-universe";
 import { PriceBar } from "@/domain/prices/price-bar";
+import { PROVIDERS } from "@/domain/source/provider-profile";
+import { SourceUsagePolicy } from "@/domain/source/provider-tier";
 
 export type RebalanceParams = {
   universeId: "KOSPI_SAMPLE" | "SP500_SAMPLE";
@@ -51,6 +53,11 @@ export async function selectMomentumTopN(
     symbol: string;
     score: number;
     entryPrice: number | null;
+    factorAsOfDate: string;
+    sourceSignalIds: string[];
+    dataStatus: any;
+    sourceTier: SourceUsagePolicy;
+    warnings: string[];
   }> = [];
 
   for (const c of constituents) {
@@ -63,7 +70,19 @@ export async function selectMomentumTopN(
     if (factorValue.rawValue < minScore) continue;
 
     // personal_fallback 필터
-    if (!allowPersonalFallback && factorValue.sourceIds?.includes("yfinance")) {
+    let sourceTier: SourceUsagePolicy = "official";
+    if (factorValue.sourceIds && factorValue.sourceIds.length > 0) {
+      const match = PROVIDERS.find((p) => factorValue.sourceIds.includes(p.id));
+      if (match) {
+        sourceTier = match.tier;
+      } else {
+        if (factorValue.sourceIds.some((id) => id.includes("yfinance") || id.includes("stooq"))) {
+          sourceTier = "personal_fallback";
+        }
+      }
+    }
+
+    if (!allowPersonalFallback && sourceTier === "personal_fallback") {
       // yfinance는 personal fallback tier — allowPersonalFallback=false이면 제외
       // 단, SAMPLE universe에서는 허용하는 것이 현실적
       // 이 체크는 설정에 맡김
@@ -74,11 +93,24 @@ export async function selectMomentumTopN(
     const bars: PriceBar[] = ohlcvEnv.value || [];
     const entryBar = findBarOnOrAfter(bars, entryDate);
 
+    const warnings: string[] = [];
+    if (sourceTier === "personal_fallback") {
+      warnings.push("personal_fallback_used");
+    }
+    if (factorValue.dataStatus === "stale") {
+      warnings.push("stale_data");
+    }
+
     candidates.push({
       assetId,
       symbol,
       score: factorValue.rawValue,
       entryPrice: entryBar?.close ?? null,
+      factorAsOfDate: factorValue.dataAvailableAt,
+      sourceSignalIds: factorValue.sourceIds || [],
+      dataStatus: factorValue.dataStatus,
+      sourceTier,
+      warnings,
     });
   }
 
@@ -90,7 +122,7 @@ export async function selectMomentumTopN(
 
   const weight = 1 / topN.length;
 
-  return topN.map((c) => ({
+  return topN.map((c, index) => ({
     assetId: c.assetId,
     symbol: c.symbol,
     weight,
@@ -102,7 +134,16 @@ export async function selectMomentumTopN(
     netReturn: null,
     entryCostBps: 0,
     exitCostBps: 0,
-    sourceSignalIds: [],
+    sourceSignalIds: c.sourceSignalIds,
+    
+    // WO-017-A additions:
+    rank: index + 1,
+    signalScore: c.score,
+    factorId: "momentum_v1",
+    factorAsOfDate: c.factorAsOfDate,
+    dataStatus: c.dataStatus,
+    sourceTier: c.sourceTier,
+    warnings: c.warnings,
   }));
 }
 

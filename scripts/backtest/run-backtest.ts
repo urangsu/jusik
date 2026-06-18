@@ -25,11 +25,24 @@ function parseArgs(): {
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--universe" && args[i + 1]) {
       const u = args[i + 1];
-      if (u === "SP500_SAMPLE") universe = "SP500_SAMPLE";
-      else universe = "KOSPI_SAMPLE";
+      if (u === "SP500_SAMPLE") {
+        universe = "SP500_SAMPLE";
+      } else if (u === "KOSPI_SAMPLE") {
+        universe = "KOSPI_SAMPLE";
+      } else {
+        console.error(`Unsupported universe: ${u}`);
+        console.error(`Supported universes: KOSPI_SAMPLE, SP500_SAMPLE`);
+        process.exit(1);
+      }
     }
     if (args[i] === "--strategy" && args[i + 1]) {
-      strategy = "momentum_v1_long_only";
+      const s = args[i + 1];
+      if (s !== "momentum_v1_long_only") {
+        console.error(`Unsupported strategy: ${s}`);
+        console.error(`Supported strategies: momentum_v1_long_only`);
+        process.exit(1);
+      }
+      strategy = s as BacktestStrategy;
     }
   }
 
@@ -71,23 +84,32 @@ async function main() {
     console.log(`  IC 평균:          ${result.aggregated.icMean ?? "N/A"}`);
     console.log(`  ICIR:             ${result.aggregated.icir ?? "N/A"}`);
     console.log(`  Hit Rate 평균:    ${result.aggregated.hitRateMean ?? "N/A"}`);
-    console.log(`  총 수익률:        ${result.aggregated.totalReturn ?? "N/A"}`);
+    console.log(`  총 수익률 (compounded): ${result.aggregated.totalReturn ?? "N/A"}`);
     console.log(`  최대 낙폭:        ${result.aggregated.maxDrawdown ?? "N/A"}`);
+    console.log(`  평균 Turnover:    ${result.aggregated.turnover ?? "N/A"}`);
+    console.log(`  벤치마크 총수익:  ${result.aggregated.benchmarkTotalReturn ?? "N/A"}`);
+    console.log(`  초과 수익률:      ${result.aggregated.excessTotalReturn ?? "N/A"}`);
     console.log(`  데이터 품질:      ${result.dataQualityScore}%`);
     console.log(`  거부 사유:        ${result.vetoReasons.join(", ") || "없음"}`);
     console.log(`  경고:             ${result.warnings.join(", ")}`);
+    console.log(`  Validity Level:   ${result.validityReport.level}`);
+    console.log(`  Validity Reasons: ${result.validityReport.reasons.join(", ") || "none"}`);
+    console.log(`  Valid IC Windows: ${result.aggregated.nValidIcWindows}`);
     console.log("\n[OOS 구간별]");
     for (const s of result.oosSummaries) {
       console.log(
         `  [${s.windowIndex}] ${s.testStart}~${s.testEnd} ` +
           `IC=${s.ic ?? "N/A"} Hit=${s.hitRate ?? "N/A"} ` +
-          `Return=${s.longOnlyReturn ?? "N/A"} N=${s.nAssets}`
+          `Return=${s.longOnlyReturn ?? "N/A"} N=${s.nAssets} ` +
+          `BenchReturn=${s.benchmarkReturn ?? "N/A"} ExcessReturn=${s.excessReturn ?? "N/A"} ` +
+          `Turnover=${s.turnover ?? "N/A"} IC Pairs=${s.validIcPairCount}`
       );
     }
 
     console.log("\n[경고]");
     console.log("  이 결과는 기능 검증용 시뮬레이션입니다.");
     console.log("  미조정 가격 기준이며, 투자 조언이 아닙니다.");
+    console.log("  수정주가와 과거 유니버스 멤버십이 필요합니다.");
     console.log(`\n결과 저장: data/backtest/${runId}.json`);
   } catch (err) {
     console.error("[Backtest CLI] 오류:", err);

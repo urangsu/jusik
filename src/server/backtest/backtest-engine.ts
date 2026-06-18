@@ -78,7 +78,7 @@ export async function runPriceOnlyBacktest(
     const costConfig = getCostConfigForUniverse(universeId);
 
     // 3. 시뮬레이션 실행
-    const { oosSummaries, aggregated, usedPersonalFallback } =
+    const { oosSummaries, aggregated, usedPersonalFallback, validityReport } =
       await simulateLongOnlyPortfolio({
         universeId,
         windows,
@@ -126,6 +126,7 @@ export async function runPriceOnlyBacktest(
           assetCount: nAssets,
         },
       ],
+      validityReport,
       createdAt,
       engineVersion: ENGINE_VERSION,
     };
@@ -146,11 +147,21 @@ export async function runPriceOnlyBacktest(
         turnover: null,
         transactionCostTotalBps: 0,
         slippageCostTotalBps: 0,
+        nOosWindows: 0,
+        nValidReturnWindows: 0,
+        nValidIcWindows: 0,
+        benchmarkTotalReturn: null,
+        excessTotalReturn: null,
       },
       dataQualityScore: 0,
       vetoReasons: ["insufficient_universe", "low_data_quality"],
       warnings,
       sourceSummary: [],
+      validityReport: {
+        level: "invalid",
+        reasons: ["insufficient_oos_windows"],
+        messageKo: "백테스트 실행 중 오류가 발생했습니다.",
+      },
       createdAt,
       engineVersion: ENGINE_VERSION,
     };

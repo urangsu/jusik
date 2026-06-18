@@ -80,3 +80,53 @@ WO-010에서 구현된 신호 신뢰도 평가 엔진(Signal Reliability Engine)
 - **베이지안 축소(Bayesian Shrinkage)**: 표본 크기(`sampleSize`)가 작을 경우, 관찰된 IC 및 Hit Rate를 사전 분포(Prior: IC = 0, Hit Rate = 0.5)로 수축시켜 통계적 노이즈를 제어합니다.
 - **가중치 보정 프리뷰(Weight Multiplier Preview)**: 백테스트를 통해 검증된 신뢰도 점수를 기반으로 `weightMultiplier`를 계산하여 모멘텀 팩터(Momentum Factor v1)의 가중치 보정 프리뷰를 제공합니다. 단, 백테스트의 기능 검증 특성에 따라 기본 데이터베이스 값은 자동으로 변경되지 않고 프리뷰 화면에서만 제공됩니다.
 
+---
+
+## 8. WO-017-A 하드닝: 백테스트 신뢰도 강화 (Validity Hardening)
+
+WO-017-A에서 다음 항목들이 추가되었습니다. 자세한 정책은 [`docs/BACKTEST_VALIDITY_POLICY.md`](./BACKTEST_VALIDITY_POLICY.md)를 참고하십시오.
+
+### 8.1 복리 수익률 (Compounded Total Return)
+
+기존의 단순 합산 방식에서 `equity * (1 + r_t) - 1` 복리 방식으로 변경되었습니다.
+
+### 8.2 포트폴리오 교체율 (Turnover)
+
+연속 OOS 구간 간의 포트폴리오 가중치 변화를 측정합니다.
+
+```
+turnover_t = 0.5 * Σ |w_t(asset) - w_{t-1}(asset)|
+```
+
+첫 번째 구간은 `null`이며, 이후 평균을 `aggregated.turnover`로 보고합니다.
+
+### 8.3 벤치마크 및 초과 수익률 (Benchmark & Excess Return)
+
+| 유니버스 | 벤치마크 |
+|---|---|
+| KOSPI_SAMPLE | KR:KOSPI |
+| SP500_SAMPLE | US:SPX |
+
+벤치마크 가격이 없으면 `null`로 처리하고 `missing_benchmark` 경고를 발생시킵니다.
+
+### 8.4 Backtest Validity Report
+
+모든 결과에 유효성 등급(`BacktestValidityLevel`)이 부여됩니다.
+
+- `invalid`: OOS 없음 또는 품질 < 30%
+- `insufficient_data`: 유효 구간 < 2개 또는 품질 < 50%
+- `functional_check_only`: SAMPLE 또는 수정주가 미적용 (현재 최대 등급)
+- `research_candidate`: 실 유니버스 + 벤치마크 + OOS ≥ 3개
+
+### 8.5 Selected Positions 상세
+
+각 OOS 구간의 `selectedPositions` 배열에 포지션별 순위, 팩터 스코어, gross/net 수익률, 비용 상세, 데이터 소스 경고가 포함됩니다.
+
+### 8.6 팩터 스코어 → IC 연결
+
+`icPairs`에 실제 `signalScore`를 전달하고, null이 아닌 유효 페어만 Spearman IC 계산에 사용합니다.
+유효 페어 수는 `validIcPairCount`로 각 OOS 구간에 기록됩니다.
+
+### 8.7 CLI 전략 유효성 검사
+
+`scripts/backtest/run-backtest.ts`에서 `--strategy`가 `momentum_v1_long_only`가 아닌 경우 명시적 에러로 실패 처리합니다.

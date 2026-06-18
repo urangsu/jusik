@@ -1,6 +1,7 @@
 import { SourceUsagePolicy, SourceWarning } from "@/domain/source/provider-tier";
 import { WalkForwardWindow } from "./walk-forward-window";
 import { BacktestStrategy } from "./backtest-run";
+import { DataStatus } from "@/domain/common/data-status";
 
 export type BacktestWarningCode =
   | "sample_universe_only"
@@ -10,7 +11,40 @@ export type BacktestWarningCode =
   | "not_for_investment_decision"
   | "insufficient_universe"
   | "low_data_quality"
-  | "insufficient_oos_windows";
+  | "insufficient_oos_windows"
+  | "missing_benchmark"
+  | "insufficient_ic_pairs";
+
+export type BacktestSelectedPosition = {
+  assetId: string;
+  symbol: string;
+
+  rank: number;
+  signalScore: number;
+
+  weight: number;
+
+  entryDate: string;
+  entryPrice: number | null;
+
+  exitDate: string | null;
+  exitPrice: number | null;
+
+  grossReturn: number | null;
+  netReturn: number | null;
+
+  entryCostBps: number;
+  exitCostBps: number;
+
+  factorId: "momentum_v1";
+  factorAsOfDate: string;
+
+  sourceSignalIds: string[];
+
+  dataStatus: DataStatus;
+  sourceTier: SourceUsagePolicy;
+  warnings: string[];
+};
 
 export type OosPeriodSummary = {
   windowIndex: number;
@@ -33,17 +67,32 @@ export type OosPeriodSummary = {
   dataQualityScore: number;
   /** 이 구간 결과를 신뢰할 수 없는 사유 */
   vetoReasons: string[];
+
+  // WO-017-A additions:
+  validIcPairCount: number;
+  selectedPositions: BacktestSelectedPosition[];
+  benchmarkAssetId: "KR:KOSPI" | "US:SPX" | null;
+  benchmarkReturn: number | null;
+  excessReturn: number | null;
+  turnover: number | null;
 };
 
 export type BacktestAggregatedMetrics = {
   icMean: number | null;
   icir: number | null;
   hitRateMean: number | null;
-  totalReturn: number | null;
+  totalReturn: number | null; // compounded return
   maxDrawdown: number | null;
-  turnover: number | null;
+  turnover: number | null; // average turnover
   transactionCostTotalBps: number;
   slippageCostTotalBps: number;
+
+  // WO-017-A additions:
+  nOosWindows: number;
+  nValidReturnWindows: number;
+  nValidIcWindows: number;
+  benchmarkTotalReturn: number | null;
+  excessTotalReturn: number | null;
 };
 
 export type BacktestSourceSummary = {
@@ -51,6 +100,29 @@ export type BacktestSourceSummary = {
   sourceTier: SourceUsagePolicy;
   warnings: SourceWarning[];
   assetCount: number;
+};
+
+export type BacktestValidityLevel =
+  | "functional_check_only"
+  | "research_candidate"
+  | "insufficient_data"
+  | "invalid";
+
+export type BacktestValidityReport = {
+  level: BacktestValidityLevel;
+
+  reasons: (
+    | "sample_universe_only"
+    | "missing_adjusted_price"
+    | "no_historical_universe_membership"
+    | "personal_fallback_used"
+    | "insufficient_oos_windows"
+    | "insufficient_ic_pairs"
+    | "missing_benchmark"
+    | "low_data_quality"
+  )[];
+
+  messageKo: string;
 };
 
 export type BacktestResult = {
@@ -80,6 +152,8 @@ export type BacktestResult = {
   warnings: BacktestWarningCode[];
 
   sourceSummary: BacktestSourceSummary[];
+
+  validityReport: BacktestValidityReport;
 
   createdAt: string;
   engineVersion: string;

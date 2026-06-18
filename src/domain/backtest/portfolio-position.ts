@@ -1,3 +1,6 @@
+import { DataStatus } from "@/domain/common/data-status";
+import { SourceUsagePolicy } from "@/domain/source/provider-tier";
+
 export type PortfolioPosition = {
   assetId: string;
   symbol: string;
@@ -27,4 +30,13 @@ export type PortfolioPosition = {
 
   /** 이 포지션의 근거가 된 신호 ID 목록 */
   sourceSignalIds: string[];
+
+  // WO-017-A additions:
+  rank: number;
+  signalScore: number;
+  factorId: "momentum_v1";
+  factorAsOfDate: string;
+  dataStatus: DataStatus;
+  sourceTier: SourceUsagePolicy;
+  warnings: string[];
 };

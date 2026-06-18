@@ -51,10 +51,22 @@ export const OosSummaryTable: React.FC<OosSummaryTableProps> = ({
                 {locale === "ko" ? "Rank IC" : "Rank IC"}
               </th>
               <th className="px-4 py-2 font-medium text-right">
+                {locale === "ko" ? "IC 페어" : "IC Pairs"}
+              </th>
+              <th className="px-4 py-2 font-medium text-right">
                 {locale === "ko" ? "Hit Rate" : "Hit Rate"}
               </th>
               <th className="px-4 py-2 font-medium text-right">
                 {locale === "ko" ? "Long-only 수익률" : "Long-only Return"}
+              </th>
+              <th className="px-4 py-2 font-medium text-right">
+                {locale === "ko" ? "벤치마크" : "Benchmark"}
+              </th>
+              <th className="px-4 py-2 font-medium text-right">
+                {locale === "ko" ? "초과 수익" : "Excess"}
+              </th>
+              <th className="px-4 py-2 font-medium text-right">
+                {locale === "ko" ? "교체율" : "Turnover"}
               </th>
               <th className="px-4 py-2 font-medium text-center">
                 {locale === "ko" ? "데이터 품질" : "Data Quality"}
@@ -73,7 +85,7 @@ export const OosSummaryTable: React.FC<OosSummaryTableProps> = ({
                   <td className="px-4 py-3 font-mono text-kt-text-primary">
                     W{summary.windowIndex + 1}
                   </td>
-                  <td className="px-4 py-3 font-mono text-kt-text-secondary">
+                  <td className="px-4 py-3 font-mono text-kt-text-secondary whitespace-nowrap">
                     {summary.testStart} ~ {summary.testEnd}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-kt-text-secondary">
@@ -94,6 +106,9 @@ export const OosSummaryTable: React.FC<OosSummaryTableProps> = ({
                           : "neutral"
                       }
                     />
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-kt-text-muted">
+                    {summary.validIcPairCount}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <MetricCell
@@ -117,6 +132,43 @@ export const OosSummaryTable: React.FC<OosSummaryTableProps> = ({
                           : "neutral"
                       }
                     />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <MetricCell
+                      value={summary.benchmarkReturn}
+                      status={summary.benchmarkReturn === null ? "insufficient_data" : "cached"}
+                      formatter={(v) => `${(Number(v) * 100).toFixed(2)}%`}
+                      changeType={
+                        summary.benchmarkReturn === null
+                          ? "neutral"
+                          : summary.benchmarkReturn > 0
+                          ? "positive"
+                          : summary.benchmarkReturn < 0
+                          ? "negative"
+                          : "neutral"
+                      }
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <MetricCell
+                      value={summary.excessReturn}
+                      status={summary.excessReturn === null ? "insufficient_data" : "cached"}
+                      formatter={(v) => (Number(v) >= 0 ? "+" : "") + `${(Number(v) * 100).toFixed(2)}%`}
+                      changeType={
+                        summary.excessReturn === null
+                          ? "neutral"
+                          : summary.excessReturn > 0
+                          ? "positive"
+                          : summary.excessReturn < 0
+                          ? "negative"
+                          : "neutral"
+                      }
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-kt-text-muted">
+                    {summary.turnover !== null
+                      ? `${(summary.turnover * 100).toFixed(1)}%`
+                      : "—"}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex flex-col items-center justify-center">
