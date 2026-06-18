@@ -13,7 +13,7 @@ K-Terminal은 시장 참여자들의 과열 및 공포 심리를 객관적으로
 * **`usedForCoreSignal: false`**
   * 개별 종목의 기술적 지표 계산이나 모멘텀 팩터(Momentum Factor v1) 스코어 계산에 절대 참여하지 않습니다.
 * **`usedForRegimeGate: false`**
-  * Regime Gate v1의 국가별 시장 레짐 판정(Trend, FX, Volatility, Credit 등)의 핵심 결정 인자로 직접 작용하지 않습니다. (Base Score의 가중치로 10~15% 반영될 수 있으나 강제 조절 조건이나 게이팅 여부를 결정하지 못합니다.)
+  * Regime Gate v1의 국가별 시장 레짐 판정(Trend, FX, Volatility, Credit 등) 및 종합 점수 계산에 일절 반영되지 않고 완전히 배제됩니다.
 * **`usedForOrderDecision: false`**
   * 주문 시스템이나 주문 의사결정 시뮬레이터에 연결되지 않습니다.
 

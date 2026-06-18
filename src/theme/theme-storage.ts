@@ -4,11 +4,31 @@ import {
   ResolvedTheme,
   THEME_COOKIE_NAME,
   THEME_STORAGE_KEY,
+  ThemePreference,
 } from "./theme-types";
 
 // ---------------------------------------------------------------------------
 // Server-side helpers (no DOM access)
 // ---------------------------------------------------------------------------
+
+/**
+ * Normalizes any value to a valid ThemePreference.
+ */
+export function normalizeThemePreference(value: unknown): ThemePreference {
+  if (value === "light" || value === "dark" || value === "system") {
+    return value;
+  }
+  return "dark";
+}
+
+/**
+ * Resolves the theme to be set on the server ("light" or "dark", never "system").
+ */
+export function resolveThemeForServer(preference: ThemePreference): ResolvedTheme {
+  if (preference === "light") return "light";
+  if (preference === "dark") return "dark";
+  return "dark"; // "system" defaults to "dark" on the server
+}
 
 /**
  * Parse AppTheme from a raw cookie string (e.g. document.cookie on server).
@@ -63,11 +83,12 @@ export function resolveTheme(theme: AppTheme): ResolvedTheme {
   return theme;
 }
 
-/** Applies the resolved theme to <html data-theme="...">. */
+/** Applies the resolved theme and preference to <html> dataset. */
 export function applyTheme(theme: AppTheme): void {
   if (typeof document === "undefined") return;
   const resolved = resolveTheme(theme);
   document.documentElement.dataset.theme = resolved;
+  document.documentElement.dataset.themePreference = theme;
 }
 
 /** Persists theme to cookie + localStorage. */

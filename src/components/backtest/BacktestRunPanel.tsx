@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useI18n } from "@/i18n/use-i18n";
 import { BacktestResult } from "@/domain/backtest/backtest-result";
 import { DataEnvelope } from "@/domain/common/data-status";
@@ -21,14 +21,18 @@ export const BacktestRunPanel: React.FC<BacktestRunPanelProps> = ({
   const [universeId, setUniverseId] = useState<"KOSPI_SAMPLE" | "SP500_SAMPLE">("KOSPI_SAMPLE");
   const [strategy] = useState<"momentum_v1_long_only">("momentum_v1_long_only");
 
-  // Dates default: 1 year ago to today
-  const today = new Date().toISOString().split("T")[0];
-  const oneYearAgo = new Date(new Date().setFullYear(new Date().getFullYear() - 1))
-    .toISOString()
-    .split("T")[0];
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  const [startDate, setStartDate] = useState(oneYearAgo);
-  const [endDate, setEndDate] = useState(today);
+  // Initialize dates after mounting on client to prevent timezone / date boundary hydration mismatches
+  useEffect(() => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    const oneYearAgoStr = new Date(new Date().setFullYear(new Date().getFullYear() - 1))
+      .toISOString()
+      .split("T")[0];
+    setStartDate(oneYearAgoStr);
+    setEndDate(todayStr);
+  }, []);
 
   // Walk-forward params
   const [trainDays, setTrainDays] = useState(90);

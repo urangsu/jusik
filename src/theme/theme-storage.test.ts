@@ -4,6 +4,8 @@ import {
   resolveServerTheme,
   resolveTheme,
   getThemeFromStorage,
+  normalizeThemePreference,
+  resolveThemeForServer,
 } from "./theme-storage";
 
 describe("getThemeFromCookieString", () => {
@@ -88,5 +90,28 @@ describe("getThemeFromStorage", () => {
   it("returns null for invalid stored value", () => {
     localStorage.setItem("kt-theme", "blue");
     expect(getThemeFromStorage()).toBeNull();
+  });
+});
+
+describe("normalizeThemePreference & resolveThemeForServer", () => {
+  it("normalizeThemePreference should parse values or default to dark", () => {
+    expect(normalizeThemePreference("system")).toBe("system");
+    expect(normalizeThemePreference("light")).toBe("light");
+    expect(normalizeThemePreference("dark")).toBe("dark");
+    expect(normalizeThemePreference("invalid")).toBe("dark");
+    expect(normalizeThemePreference(null)).toBe("dark");
+  });
+
+  it("resolveThemeForServer should resolve preferences to dark/light only", () => {
+    expect(resolveThemeForServer("light")).toBe("light");
+    expect(resolveThemeForServer("dark")).toBe("dark");
+    expect(resolveThemeForServer("system")).toBe("dark");
+  });
+
+  it("resolveThemeForServer must never return 'system'", () => {
+    const preferences: ("light" | "dark" | "system")[] = ["light", "dark", "system"];
+    for (const pref of preferences) {
+      expect(resolveThemeForServer(pref)).not.toBe("system");
+    }
   });
 });

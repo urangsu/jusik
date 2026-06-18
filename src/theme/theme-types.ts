@@ -1,12 +1,7 @@
-/**
- * K-Terminal App Theme
- *
- * "system" resolves to dark or light based on OS preference.
- * Default is "dark" — K-Terminal is a financial terminal.
- */
-export type AppTheme = "dark" | "light" | "system";
+export type ThemePreference = "dark" | "light" | "system";
+export type AppTheme = ThemePreference;
 
-export const DEFAULT_THEME: AppTheme = "dark";
+export const DEFAULT_THEME: ThemePreference = "dark";
 
 /** Cookie name for persisting theme across SSR/CSR */
 export const THEME_COOKIE_NAME = "kt-theme";

@@ -35,6 +35,11 @@ export const MarketBoardPage: React.FC<MarketBoardPageProps> = ({ initialSnapsho
 
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [technicalSnapshot, setTechnicalSnapshot] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Reset selected asset when universe changes
   useEffect(() => {
@@ -261,7 +266,7 @@ export const MarketBoardPage: React.FC<MarketBoardPageProps> = ({ initialSnapsho
               <span className="mx-2 text-kt-border-panel">|</span>
               <span className="font-bold text-kt-text-primary">{t("generatedAt")}</span>
               <span className="tabular-nums">
-                {new Date(snapshot.generatedAt).toLocaleString(locale === "ko" ? "ko-KR" : "en-US")}
+                {mounted ? new Date(snapshot.generatedAt).toLocaleString(locale === "ko" ? "ko-KR" : "en-US") : ""}
               </span>
             </div>
           </div>

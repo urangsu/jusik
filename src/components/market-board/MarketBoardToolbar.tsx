@@ -29,10 +29,17 @@ export const MarketBoardToolbar: React.FC<MarketBoardToolbarProps> = ({
 }) => {
   const { t, tSector, locale } = useI18n();
 
-  const formattedTime = new Date(generatedAt).toLocaleTimeString(
-    locale === "ko" ? "ko-KR" : "en-US",
-    { hour: "2-digit", minute: "2-digit", second: "2-digit" }
-  );
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const formattedTime = mounted
+    ? new Date(generatedAt).toLocaleTimeString(
+        locale === "ko" ? "ko-KR" : "en-US",
+        { hour: "2-digit", minute: "2-digit", second: "2-digit" }
+      )
+    : "";
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-kt-bg-surface-100 border border-kt-border-panel rounded-kt-card">

@@ -26,17 +26,15 @@ Regime Gate v1은 거시지표와 지수 추세를 종합하여 현재 시장이
 ### 2.1 가중치 배분 (Base Score 계산)
 
 * **US Regime Score (총 100점)**:
-  * 지수 추세 (Trend): 35%
-  * 변동성 (Volatility): 25%
+  * 지수 추세 (Trend): 40%
+  * 변동성 (Volatility): 30%
   * 신용 스프레드 (Credit): 20%
   * 금리 환경 (Rate): 10%
-  * 참고 시장심리 (Sentiment Reference): 10% (CNN Fear & Greed 값을 0~100 스케일로 단순 반영)
 
 * **KR Regime Score (총 100점)**:
-  * 지수 추세 (Trend): 40%
-  * 환율 동향 (FX): 25%
-  * 금리 환경 (Rate): 20%
-  * 참고 시장심리 (Sentiment Reference): 15% (Crypto Fear & Greed 값을 0~100 스케일로 단순 반영)
+  * 지수 추세 (Trend): 45%
+  * 환율 동향 (FX): 30%
+  * 금리 환경 (Rate): 25%
 
 ### 2.2 구간 분류 임계값
 

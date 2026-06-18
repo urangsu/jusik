@@ -173,22 +173,20 @@ export class RegimeEngine {
     // 6. Sentiment Reference Score (0-100)
     const sentimentReferenceScore = market === "US" ? indicators.cnnFearGreed : indicators.cryptoFearGreed;
 
-    // Calculate weighted score
+    // Calculate weighted score (excluding sentiment reference per policy isolation rules)
     let score = 50;
     if (market === "US") {
       score = Math.round(
-        trendScore * 0.35 +
-        volatilityScore * 0.25 +
+        trendScore * 0.40 +
+        volatilityScore * 0.30 +
         creditScore * 0.20 +
-        rateScore * 0.10 +
-        sentimentReferenceScore * 0.10
+        rateScore * 0.10
       );
     } else {
       score = Math.round(
-        trendScore * 0.40 +
-        (fxScore ?? 50) * 0.25 +
-        rateScore * 0.20 +
-        sentimentReferenceScore * 0.15
+        trendScore * 0.45 +
+        (fxScore ?? 50) * 0.30 +
+        rateScore * 0.25
       );
     }
 

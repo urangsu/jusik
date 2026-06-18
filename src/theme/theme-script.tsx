@@ -12,7 +12,7 @@ import { THEME_COOKIE_NAME, DEFAULT_THEME } from "./theme-types";
  *
  * This component must be placed inside <head> in layout.tsx.
  */
-export function ThemeScript({ initialTheme }: { initialTheme?: string }) {
+export function ThemeScript({ initialThemePreference }: { initialThemePreference?: string }) {
   // Build a small, inline script. We embed cookieName and default statically.
   const script = `(function(){
   var c='${THEME_COOKIE_NAME}';
@@ -23,17 +23,22 @@ export function ThemeScript({ initialTheme }: { initialTheme?: string }) {
     }
     return (t==='dark'||t==='light')?t:d;
   }
+  function apply(t) {
+    var resolved = resolve(t);
+    document.documentElement.dataset.theme = resolved;
+    document.documentElement.dataset.themePreference = t;
+  }
   // 1. URL query
   var u=new URLSearchParams(window.location.search).get('theme');
-  if(u==='dark'||u==='light'||u==='system'){document.documentElement.dataset.theme=resolve(u);return;}
+  if(u==='dark'||u==='light'||u==='system'){apply(u);return;}
   // 2. Cookie
   var m=document.cookie.match(new RegExp('(?:^|;)\\\\s*'+c+'\\\\s*=\\\\s*([^;]+)'));
-  if(m&&(m[1]==='dark'||m[1]==='light'||m[1]==='system')){document.documentElement.dataset.theme=resolve(m[1]);return;}
+  if(m&&(m[1]==='dark'||m[1]==='light'||m[1]==='system')){apply(m[1]);return;}
   // 3. localStorage
-  try{var s=localStorage.getItem(c);if(s==='dark'||s==='light'||s==='system'){document.documentElement.dataset.theme=resolve(s);return;}}catch(e){}
+  try{var s=localStorage.getItem(c);if(s==='dark'||s==='light'||s==='system'){apply(s);return;}}catch(e){}
   // 4. SSR value passed in
-  var i='${initialTheme || DEFAULT_THEME}';
-  document.documentElement.dataset.theme=resolve(i);
+  var i='${initialThemePreference || DEFAULT_THEME}';
+  apply(i);
 })();`;
 
   return (

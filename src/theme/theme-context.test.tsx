@@ -27,7 +27,9 @@ const ThemeDisplay = () => {
 describe("ThemeProvider", () => {
   beforeEach(() => {
     document.documentElement.removeAttribute("data-theme");
+    document.documentElement.removeAttribute("data-theme-preference");
     localStorage.clear();
+    document.cookie = "kt-theme=; path=/; max-age=0";
   });
 
   it("initializes with initialTheme prop", () => {
@@ -37,6 +39,16 @@ describe("ThemeProvider", () => {
       </ThemeProvider>
     );
     expect(screen.getByTestId("theme").textContent).toBe("light");
+  });
+
+  it("initializes with initialThemePreference and initialResolvedTheme", () => {
+    render(
+      <ThemeProvider initialThemePreference="system" initialResolvedTheme="light">
+        <ThemeDisplay />
+      </ThemeProvider>
+    );
+    expect(screen.getByTestId("theme").textContent).toBe("system");
+    expect(screen.getByTestId("resolved").textContent).toBe("light");
   });
 
   it("defaults to dark when no prop given", () => {
@@ -61,7 +73,7 @@ describe("ThemeProvider", () => {
     expect(screen.getByTestId("resolved").textContent).toBe("light");
   });
 
-  it("setTheme applies data-theme to document.documentElement", async () => {
+  it("setTheme applies data-theme and data-theme-preference to document.documentElement", async () => {
     render(
       <ThemeProvider initialTheme="dark">
         <ThemeDisplay />
@@ -71,6 +83,14 @@ describe("ThemeProvider", () => {
       screen.getByTestId("set-light").click();
     });
     expect(document.documentElement.dataset.theme).toBe("light");
+    expect(document.documentElement.dataset.themePreference).toBe("light");
+
+    await act(async () => {
+      screen.getByTestId("set-system").click();
+    });
+    // resolved theme should be light or dark (never "system")
+    expect(document.documentElement.dataset.theme).toMatch(/^(dark|light)$/);
+    expect(document.documentElement.dataset.themePreference).toBe("system");
   });
 
   it("useTheme outside provider returns default dark fallback", () => {
