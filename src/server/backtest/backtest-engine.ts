@@ -106,7 +106,7 @@ export async function runPriceOnlyBacktest(
     if (oosSummaries.length < 2) vetoReasons.push("insufficient_oos_windows");
 
     const hasMissingBenchmark = oosSummaries.some(
-      (s) => s.benchmarkReturn === null && s.nAssets > 0
+      (s) => s.benchmarkReturn === null
     );
     if (hasMissingBenchmark) {
       warnings.push("missing_benchmark");
@@ -130,14 +130,23 @@ export async function runPriceOnlyBacktest(
       dataQualityScore,
       vetoReasons,
       warnings,
-      sourceSummary: [
-        {
-          source: "yfinance (personal fallback)",
-          sourceTier: "personal_fallback",
-          warnings: ["unofficial", "personal_use_only"],
-          assetCount: nAssets,
-        },
-      ],
+      sourceSummary: usedPersonalFallback
+        ? [
+            {
+              source: "mixed/unknown",
+              sourceTier: "personal_fallback",
+              warnings: ["unofficial", "personal_use_only"],
+              assetCount: nAssets,
+            },
+          ]
+        : [
+            {
+              source: "mixed/unknown",
+              sourceTier: "official",
+              warnings: [],
+              assetCount: nAssets,
+            },
+          ],
       validityReport,
       createdAt,
       engineVersion: ENGINE_VERSION,

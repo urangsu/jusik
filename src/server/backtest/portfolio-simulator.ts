@@ -170,7 +170,7 @@ export async function simulateLongOnlyPortfolio(
     }
 
     if (positions.length === 0) {
-      if (!hasBenchmark) vetoReasons.push("missing_benchmark");
+      if (!hasBenchmark || benchmarkReturn === null) vetoReasons.push("missing_benchmark");
       oosSummaries.push({
         windowIndex: window.windowIndex,
         testStart: window.testStart,
@@ -203,6 +203,19 @@ export async function simulateLongOnlyPortfolio(
 
       if (ohlcvEnv.sourceTier === "personal_fallback") {
         usedPersonalFallback = true;
+      }
+
+      // Compute price-specific warnings separate from factor warnings
+      const priceWarnings = [...pos.warnings];
+      if (ohlcvEnv.sourceTier === "personal_fallback") {
+        priceWarnings.push("price_personal_fallback_used");
+      }
+      if (ohlcvEnv.status === "stale") {
+        priceWarnings.push("price_stale");
+      } else if (ohlcvEnv.status === "error") {
+        priceWarnings.push("price_error");
+      } else if (ohlcvEnv.status === "insufficient_data" || !ohlcvEnv.value || ohlcvEnv.value.length === 0) {
+        priceWarnings.push("price_not_found");
       }
 
       const exitBar = findBarOnOrBefore(bars, window.testEnd);
@@ -248,7 +261,7 @@ export async function simulateLongOnlyPortfolio(
         sourceSignalIds: pos.sourceSignalIds,
         dataStatus: pos.dataStatus,
         sourceTier: pos.sourceTier,
-        warnings: pos.warnings,
+        warnings: priceWarnings,
       });
     }
 
@@ -315,12 +328,17 @@ export async function simulateLongOnlyPortfolio(
 
   const hasInsufficientIcPairs = oosSummaries.some((s) => s.validIcPairCount < 3);
 
+  const allBenchmarkReturnsValid =
+    hasBenchmark &&
+    oosSummaries.length > 0 &&
+    oosSummaries.every((s) => s.benchmarkReturn !== null);
+
   const validityReport = generateValidityReport(
     universeId,
     windows.length,
     periodReturns.length,
     Math.round(avgDataQuality),
-    hasBenchmark,
+    allBenchmarkReturnsValid,
     usedPersonalFallback,
     hasInsufficientIcPairs
   );

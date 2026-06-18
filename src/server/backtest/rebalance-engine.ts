@@ -28,6 +28,15 @@ export type RebalanceParams = {
  * - personal_fallback 소스이고 allowPersonalFallback=false → 제외
  * - Top N을 equal weight로 배정
  */
+/**
+ * Backtest strategy factor version mapping to raw Factor Store ID.
+ * The Factor Store uses generic factor group IDs (e.g. "momentum"),
+ * while backtest results and positions designate the specific strategy version ("momentum_v1").
+ */
+const FACTOR_STORE_ID_MAP: Record<string, string> = {
+  "momentum_v1": "momentum",
+};
+
 export async function selectMomentumTopN(
   params: RebalanceParams
 ): Promise<PortfolioPosition[]> {
@@ -60,11 +69,13 @@ export async function selectMomentumTopN(
     warnings: string[];
   }> = [];
 
+  const targetFactorId = FACTOR_STORE_ID_MAP["momentum_v1"] || "momentum";
+
   for (const c of constituents) {
     const { assetId, symbol } = c;
 
     // PIT 기준 factor 조회 (asOfDate 이전 마지막 값)
-    const factorValue = getFactorAsOf(allFactorValues, assetId, "momentum", asOfDate);
+    const factorValue = getFactorAsOf(allFactorValues, assetId, targetFactorId, asOfDate);
 
     if (!factorValue || factorValue.rawValue === null) continue;
     if (factorValue.rawValue < minScore) continue;
@@ -83,9 +94,7 @@ export async function selectMomentumTopN(
     }
 
     if (!allowPersonalFallback && sourceTier === "personal_fallback") {
-      // yfinance는 personal fallback tier — allowPersonalFallback=false이면 제외
-      // 단, SAMPLE universe에서는 허용하는 것이 현실적
-      // 이 체크는 설정에 맡김
+      continue;
     }
 
     // 진입 가격 조회 (entryDate의 bar)

@@ -138,4 +138,12 @@ turnover_t = 0.5 * Σ |w_t(asset) - w_{t-1}(asset)|
 
 ## 10. 다음 후보 (미구현)
 
-- **Parameter Plateau**: 파라미터 plateau 분석은 아직 구현하지 않으며, WO017-B 이후 Signal Postmortem과 함께 검토합니다.
+- **Parameter Plateau**: 파라미터 민감도/고원(plateau) 분석은 아직 구현하지 않으며, WO017-B 이후 Signal Postmortem과 함께 검토합니다.
+
+---
+
+## 11. 팩터 식별자 불일치 및 매핑 정책 (Factor ID Mapping Policy)
+
+- **상황**: Factor Store에 저장/관리되는 원자 팩터의 식별자는 `"momentum"`인 반면, 백테스트 결과 및 선택 포지션(`BacktestSelectedPosition`, `PortfolioPosition`)의 `factorId` 타입은 `"momentum_v1"`으로 정의되어 있습니다.
+- **의도**: 데이터베이스 및 팩터 스토어 수준에서는 범용 그룹 식별자(`"momentum"`)를 사용하여 스코어를 영속화하지만, 백테스트 실행 및 성과 분석 수준에서는 특정 버전을 명시하여 추적성(Traceability)을 확보하기 위해 구체적인 버전 식별자(`"momentum_v1"`)를 부여합니다.
+- **해결 방식**: `src/server/backtest/rebalance-engine.ts` 내에 `FACTOR_STORE_ID_MAP`을 선언하여 상호 간 매핑 관계를 명시적으로 코드로 관리하고 조회합니다.

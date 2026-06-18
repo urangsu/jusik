@@ -73,4 +73,46 @@ describe("selectMomentumTopN", () => {
     expect(positions[1].signalScore).toBe(80);
     expect(positions[0].factorId).toBe("momentum_v1");
   });
+
+  it("excludes personal fallback candidates when allowPersonalFallback is false", async () => {
+    mockedGetFactorValues.mockResolvedValue([
+      {
+        assetId: "KR:005930",
+        factorId: "momentum",
+        rawValue: 90,
+        dataAvailableAt: "2025-01-10",
+        dataStatus: "cached",
+        sourceIds: ["yfinance"], // personal fallback
+      },
+      {
+        assetId: "KR:000660",
+        factorId: "momentum",
+        rawValue: 80,
+        dataAvailableAt: "2025-01-10",
+        dataStatus: "cached",
+        sourceIds: ["kis"], // official
+      },
+    ] as any);
+
+    mockedLoadOhlcvHistory.mockResolvedValue({
+      value: [{ date: "2025-01-11", close: 100, open: 99, high: 101, low: 98, volume: 1000 }],
+      status: "cached",
+      source: "test",
+      sourceTier: "official",
+      warnings: [],
+      updatedAt: null,
+    } as any);
+
+    const positions = await selectMomentumTopN({
+      universeId: "KOSPI_SAMPLE",
+      asOfDate: "2025-01-10",
+      entryDate: "2025-01-11",
+      maxPositions: 2,
+      minScore: 0,
+      allowPersonalFallback: false, // strictly exclude personal fallback
+    });
+
+    expect(positions).toHaveLength(1);
+    expect(positions[0].assetId).toBe("KR:000660");
+  });
 });
