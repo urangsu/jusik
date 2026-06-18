@@ -9,6 +9,8 @@
 
 ## 1. Walk-Forward 방법론
 
+> **현재 전략 범위**: `momentum_v1_long_only` 단일 전략 후보만 지원합니다.
+
 과거 성과 분석 시 흔히 발생하는 과적합(Overfitting)을 방지하기 위해 **Walk-Forward 교차 검증** 구조를 강제합니다.
 
 - **훈련 구간 (Train Period)**: 기술적 지표 및 팩터 값을 생성하는 구간입니다. (최소 60 영업일)
@@ -90,6 +92,8 @@ WO-017-A에서 다음 항목들이 추가되었습니다. 자세한 정책은 [`
 
 기존의 단순 합산 방식에서 `equity * (1 + r_t) - 1` 복리 방식으로 변경되었습니다.
 
+> `totalReturn`은 OOS 구간 수익률의 복리 누적이며, `maxDrawdown`은 동일 equity curve에서 peak-to-trough로 계산합니다. 두 지표는 같은 equity curve를 공유하지만 집계 방식이 다릅니다.
+
 ### 8.2 포트폴리오 교체율 (Turnover)
 
 연속 OOS 구간 간의 포트폴리오 가중치 변화를 측정합니다.
@@ -130,3 +134,10 @@ turnover_t = 0.5 * Σ |w_t(asset) - w_{t-1}(asset)|
 ### 8.7 CLI 전략 유효성 검사
 
 `scripts/backtest/run-backtest.ts`에서 `--strategy`가 `momentum_v1_long_only`가 아닌 경우 명시적 에러로 실패 처리합니다.
+
+---
+
+## 9. 다음 후보 (미구현)
+
+- **Parameter Plateau**: 파라미터 민감도/고원(plateau) 분석은 WO017-A 범위 밖이며, Signal Postmortem과 함께 후속 작업 후보로 남깁니다.
+- **selectedPositions**: 각 OOS 구간의 선택 종목 상세는 향후 Signal Postmortem 입력으로 사용합니다.

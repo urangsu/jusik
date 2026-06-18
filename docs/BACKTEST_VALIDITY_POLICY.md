@@ -133,3 +133,9 @@ turnover_t = 0.5 * Σ |w_t(asset) - w_{t-1}(asset)|
 > 이 백테스트 결과는 전략 연구를 위한 **진단 신호**이며 **투자 조언이 아닙니다**.  
 > K-Terminal은 매수·매도 추천을 절대 제공하지 않습니다.  
 > `not_for_investment_decision` 경고는 항상 포함되며 제거할 수 없습니다.
+
+---
+
+## 10. 다음 후보 (미구현)
+
+- **Parameter Plateau**: 파라미터 plateau 분석은 아직 구현하지 않으며, WO017-B 이후 Signal Postmortem과 함께 검토합니다.

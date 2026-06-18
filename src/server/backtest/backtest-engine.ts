@@ -105,6 +105,18 @@ export async function runPriceOnlyBacktest(
     if (avgDataQuality < 50) vetoReasons.push("low_data_quality");
     if (oosSummaries.length < 2) vetoReasons.push("insufficient_oos_windows");
 
+    const hasMissingBenchmark = oosSummaries.some(
+      (s) => s.benchmarkReturn === null && s.nAssets > 0
+    );
+    if (hasMissingBenchmark) {
+      warnings.push("missing_benchmark");
+    }
+
+    const hasInsufficientIcPairs = oosSummaries.some((s) => s.validIcPairCount < 3 && s.nAssets > 0);
+    if (hasInsufficientIcPairs) {
+      vetoReasons.push("insufficient_ic_pairs");
+    }
+
     const dataQualityScore = Math.round(avgDataQuality);
 
     return {

@@ -14,6 +14,11 @@ import { applyTransactionCost, bpsToFraction } from "./transaction-cost-model";
 import { selectMomentumTopN, findBarOnOrAfter, findBarOnOrBefore } from "./rebalance-engine";
 import { calculateSpearmanIC } from "./backtest-ic-calculator";
 import { assertNoLookAheadBias } from "@/domain/backtest/forward-return";
+import { calculateTurnover } from "@/domain/backtest/turnover";
+import {
+  compoundPeriodReturns,
+  calculateMaxDrawdownFromReturns,
+} from "@/domain/backtest/return-metrics";
 
 export type PortfolioSimulatorParams = {
   universeId: "KOSPI_SAMPLE" | "SP500_SAMPLE";
@@ -37,7 +42,8 @@ export function generateValidityReport(
   nValidReturnWindows: number,
   dataQualityScore: number,
   hasBenchmark: boolean,
-  usedPersonalFallback: boolean
+  usedPersonalFallback: boolean,
+  hasInsufficientIcPairs: boolean
 ): BacktestValidityReport {
   const reasons: BacktestValidityReport["reasons"] = [];
 
@@ -60,12 +66,17 @@ export function generateValidityReport(
     reasons.push("missing_benchmark");
   }
 
+  if (hasInsufficientIcPairs) {
+    reasons.push("insufficient_ic_pairs");
+  }
+
   if (dataQualityScore < 50) {
     reasons.push("low_data_quality");
   }
 
   let level: BacktestValidityLevel = "functional_check_only";
-  let messageKo = "기능 검증용 백테스트입니다. 실전 적용이 불가합니다.";
+  let messageKo =
+    "기능 검증용 백테스트입니다. 운용 검증에는 수정주가와 과거 유니버스 멤버십이 필요합니다.";
 
   if (nOosWindows === 0 || dataQualityScore < 30) {
     level = "invalid";
@@ -86,7 +97,8 @@ export function generateValidityReport(
       messageKo = "연구 후보 등급의 백테스트 결과입니다. 추가 분석이 가능합니다.";
     } else {
       level = "functional_check_only";
-      messageKo = "기능 검증용 백테스트입니다. 수정주가 및 과거 유니버스 미반영 상태입니다.";
+      messageKo =
+        "기능 검증용 백테스트입니다. 현재 결과는 전략 후보 검토용이며 운용 검증에는 수정주가와 과거 유니버스 멤버십이 필요합니다.";
     }
   }
 
@@ -105,7 +117,8 @@ export async function simulateLongOnlyPortfolio(
   let usedPersonalFallback = false;
 
   const periodReturns: number[] = [];
-  const prevWeights: Map<string, number> = new Map();
+  let prevWeights: Map<string, number> = new Map();
+  let hasPreviousWindow = false;
 
   const benchmarkAssetId = universeId === "KOSPI_SAMPLE" ? "KR:KOSPI" : "US:SPX";
   let hasBenchmark = false;
@@ -138,24 +151,13 @@ export async function simulateLongOnlyPortfolio(
     const vetoReasons: string[] = [];
 
     // Calculate turnover
-    let windowTurnover: number | null = null;
-    if (prevWeights.size > 0) {
-      const allAssetIds = new Set([...prevWeights.keys(), ...positions.map((p) => p.assetId)]);
-      let sumDiff = 0;
-      for (const aid of allAssetIds) {
-        const wPrev = prevWeights.get(aid) ?? 0;
-        const posCurrent = positions.find((p) => p.assetId === aid);
-        const wCurr = posCurrent ? posCurrent.weight : 0;
-        sumDiff += Math.abs(wCurr - wPrev);
-      }
-      windowTurnover = 0.5 * sumDiff;
-    }
+    const currentWeights = new Map(positions.map((p) => [p.assetId, p.weight]));
+    const windowTurnover = hasPreviousWindow
+      ? calculateTurnover(prevWeights, currentWeights)
+      : null;
 
-    // Update prevWeights
-    prevWeights.clear();
-    for (const pos of positions) {
-      prevWeights.set(pos.assetId, pos.weight);
-    }
+    prevWeights = new Map(currentWeights);
+    hasPreviousWindow = true;
 
     // Benchmark return
     let benchmarkReturn: number | null = null;
@@ -182,7 +184,7 @@ export async function simulateLongOnlyPortfolio(
         vetoReasons: [...vetoReasons, "insufficient_universe"],
         validIcPairCount: 0,
         selectedPositions: [],
-        benchmarkAssetId: hasBenchmark ? benchmarkAssetId : null,
+        benchmarkAssetId,
         benchmarkReturn,
         excessReturn: null,
         turnover: windowTurnover,
@@ -263,7 +265,7 @@ export async function simulateLongOnlyPortfolio(
     );
     const validIcPairCount = validPairs.length;
 
-    const icResult = calculateSpearmanIC(icPairs);
+    const icResult = calculateSpearmanIC(validPairs);
 
     const dataQualityScore =
       positionCount > 0 ? Math.round((positionCount / positions.length) * 100) : 0;
@@ -289,17 +291,14 @@ export async function simulateLongOnlyPortfolio(
       vetoReasons,
       validIcPairCount,
       selectedPositions: selectedPositionsInPeriod,
-      benchmarkAssetId: hasBenchmark ? benchmarkAssetId : null,
+      benchmarkAssetId,
       benchmarkReturn: benchmarkReturn !== null ? Math.round(benchmarkReturn * 10000) / 10000 : null,
       excessReturn: excessReturn !== null ? Math.round(excessReturn * 10000) / 10000 : null,
       turnover: windowTurnover !== null ? Math.round(windowTurnover * 10000) / 10000 : null,
     });
   }
 
-  const compoundedTotalReturn =
-    periodReturns.length > 0
-      ? periodReturns.reduce((equity, r) => equity * (1 + r), 1) - 1
-      : null;
+  const compoundedTotalReturn = compoundPeriodReturns(periodReturns);
 
   const aggregated = aggregateMetrics(
     oosSummaries,
@@ -309,13 +308,21 @@ export async function simulateLongOnlyPortfolio(
     compoundedTotalReturn
   );
 
+  const avgDataQuality =
+    oosSummaries.length > 0
+      ? oosSummaries.reduce((sum, s) => sum + s.dataQualityScore, 0) / oosSummaries.length
+      : 0;
+
+  const hasInsufficientIcPairs = oosSummaries.some((s) => s.validIcPairCount < 3);
+
   const validityReport = generateValidityReport(
     universeId,
     windows.length,
     periodReturns.length,
-    aggregated.totalReturn !== null ? 100 : 0, // simple proxy for aggregate score
+    Math.round(avgDataQuality),
     hasBenchmark,
-    usedPersonalFallback
+    usedPersonalFallback,
+    hasInsufficientIcPairs
   );
 
   return { oosSummaries, aggregated, usedPersonalFallback, validityReport };
@@ -366,19 +373,7 @@ function aggregateMetrics(
   }
 
   // Max Drawdown
-  let maxDrawdown: number | null = null;
-  if (periodReturns.length > 0) {
-    let peak = 1;
-    let equity = 1;
-    let drawdown = 0;
-    for (const r of periodReturns) {
-      equity *= 1 + r;
-      if (equity > peak) peak = equity;
-      const dd = (peak - equity) / peak;
-      if (dd > drawdown) drawdown = dd;
-    }
-    maxDrawdown = -drawdown;
-  }
+  const maxDrawdown = calculateMaxDrawdownFromReturns(periodReturns);
 
   return {
     icMean: icMean !== null ? Math.round(icMean * 10000) / 10000 : null,

@@ -71,7 +71,11 @@ const MIN_SAMPLE_SIZE = 5;
  */
 export function calculateSpearmanIC(pairs: IcInputPair[]): IcResult {
   const validPairs = pairs.filter(
-    (p) => p.score !== null && p.forwardReturn !== null
+    (p) =>
+      p.score !== null &&
+      p.forwardReturn !== null &&
+      Number.isFinite(p.score) &&
+      Number.isFinite(p.forwardReturn)
   ) as Array<{ score: number; forwardReturn: number }>;
 
   const sampleSize = pairs.length;

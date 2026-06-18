@@ -12,45 +12,26 @@
 
 import { runPriceOnlyBacktest } from "@/server/backtest/backtest-engine";
 import { saveBacktestResult } from "@/server/backtest/backtest-result-store";
-import { BacktestStrategy } from "@/domain/backtest/backtest-run";
+import { parseBacktestArgs, BacktestCliError } from "./parse-backtest-args";
 
-function parseArgs(): {
-  universe: "KOSPI_SAMPLE" | "SP500_SAMPLE";
-  strategy: BacktestStrategy;
-} {
-  const args = process.argv.slice(2);
-  let universe: "KOSPI_SAMPLE" | "SP500_SAMPLE" = "KOSPI_SAMPLE";
-  let strategy: BacktestStrategy = "momentum_v1_long_only";
-
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--universe" && args[i + 1]) {
-      const u = args[i + 1];
-      if (u === "SP500_SAMPLE") {
-        universe = "SP500_SAMPLE";
-      } else if (u === "KOSPI_SAMPLE") {
-        universe = "KOSPI_SAMPLE";
-      } else {
-        console.error(`Unsupported universe: ${u}`);
-        console.error(`Supported universes: KOSPI_SAMPLE, SP500_SAMPLE`);
-        process.exit(1);
-      }
-    }
-    if (args[i] === "--strategy" && args[i + 1]) {
-      const s = args[i + 1];
-      if (s !== "momentum_v1_long_only") {
-        console.error(`Unsupported strategy: ${s}`);
-        console.error(`Supported strategies: momentum_v1_long_only`);
-        process.exit(1);
-      }
-      strategy = s as BacktestStrategy;
-    }
-  }
-
-  return { universe, strategy };
+function parseArgs() {
+  return parseBacktestArgs(process.argv.slice(2));
 }
 
 async function main() {
-  const { universe, strategy } = parseArgs();
+  let universe: "KOSPI_SAMPLE" | "SP500_SAMPLE";
+  let strategy: ReturnType<typeof parseArgs>["strategy"];
+
+  try {
+    ({ universe, strategy } = parseArgs());
+  } catch (error) {
+    if (error instanceof BacktestCliError) {
+      console.error(error.message);
+      process.exit(1);
+    }
+    throw error;
+  }
+
   const runId = Math.random().toString(36).substring(2, 10);
 
   const now = new Date();
@@ -95,6 +76,8 @@ async function main() {
     console.log(`  Validity Level:   ${result.validityReport.level}`);
     console.log(`  Validity Reasons: ${result.validityReport.reasons.join(", ") || "none"}`);
     console.log(`  Valid IC Windows: ${result.aggregated.nValidIcWindows}`);
+    const totalValidIcPairs = result.oosSummaries.reduce((sum, s) => sum + s.validIcPairCount, 0);
+    console.log(`  Valid IC Pair Count: ${totalValidIcPairs}`);
     console.log("\n[OOS 구간별]");
     for (const s of result.oosSummaries) {
       console.log(

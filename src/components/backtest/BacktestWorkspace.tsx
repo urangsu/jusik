@@ -9,6 +9,7 @@ import { BacktestVetoReasons } from "./BacktestVetoReasons";
 import { BacktestMetricCard } from "./BacktestMetricCard";
 import { IcChart } from "./IcChart";
 import { OosSummaryTable } from "./OosSummaryTable";
+import { SelectedPositionsTable } from "./SelectedPositionsTable";
 import { BarChart3, Loader2, BookOpen } from "lucide-react";
 import { StrategyResearchPanel } from "@/components/strategy/StrategyResearchPanel";
 
@@ -121,8 +122,8 @@ export const BacktestWorkspace: React.FC = () => {
               </span>
               <p className="text-xs text-kt-text-muted max-w-sm">
                 {locale === "ko"
-                  ? "지정된 기간 동안 Walk-forward 창을 생성하고, 모멘텀 기술적 팩터를 로드하여 최적 포트폴리오의 OOS 성과를 계산하고 있습니다."
-                  : "Generating walk-forward windows, loading technical factor values, and calculating OOS portfolio returns over the specified period."}
+                  ? "지정된 기간 동안 Walk-forward 창을 생성하고, 모멘텀 팩터를 로드하여 OOS 구간 성과를 계산하고 있습니다."
+                  : "Generating walk-forward windows, loading momentum factor values, and calculating OOS period returns."}
               </p>
             </div>
           </div>
@@ -314,6 +315,9 @@ export const BacktestWorkspace: React.FC = () => {
 
             {/* Detailed Table */}
             <OosSummaryTable oosSummaries={result.oosSummaries} hasVeto={hasVeto} />
+
+            {/* Selected Positions Detail */}
+            <SelectedPositionsTable oosSummaries={result.oosSummaries} />
           </div>
         ) : (
           <div className="border border-dashed border-kt-border-panel/80 rounded-kt-card p-12 bg-kt-bg-overlay-300/10 flex flex-col items-center justify-center text-center gap-3">

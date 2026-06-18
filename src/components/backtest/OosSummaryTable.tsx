@@ -48,6 +48,9 @@ export const OosSummaryTable: React.FC<OosSummaryTableProps> = ({
                 {locale === "ko" ? "자산 수" : "Assets"}
               </th>
               <th className="px-4 py-2 font-medium text-right">
+                {locale === "ko" ? "선택 종목" : "Selected"}
+              </th>
+              <th className="px-4 py-2 font-medium text-right">
                 {locale === "ko" ? "Rank IC" : "Rank IC"}
               </th>
               <th className="px-4 py-2 font-medium text-right">
@@ -90,6 +93,9 @@ export const OosSummaryTable: React.FC<OosSummaryTableProps> = ({
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-kt-text-secondary">
                     {summary.nAssets}
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-kt-text-muted">
+                    {summary.selectedPositions.length}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <MetricCell
