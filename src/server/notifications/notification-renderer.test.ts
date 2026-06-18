@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import { alertEvaluator } from "../alerts/alert-evaluator";
 import { AlertRule } from "@/domain/alerts/alert-rule";
 
+import { notificationRenderer } from "./notification-renderer";
+
 describe("Notification Wording/Translation checks", () => {
   const ruleTemplate: AlertRule = {
     id: "preset-return-2s",
@@ -54,17 +56,18 @@ describe("Notification Wording/Translation checks", () => {
     };
 
     const event = (alertEvaluator as any).createAssetEvent(ruleTemplate, target, volResult);
+    const rendered = notificationRenderer.render(event, "ko");
 
-    expect(event.title).toContain("이상 등락 감지");
-    expect(event.body).toContain("변동성");
-    expect(event.body).toContain("표준편차");
-    expect(event.body).toContain("출처");
+    expect(rendered.title).toContain("이상 등락 감지");
+    expect(rendered.body).toContain("변동성");
+    expect(rendered.body).toContain("표준편차");
+    expect(rendered.body).toContain("출처");
 
     // Check blacklist words
     const blacklist = ["Price", "Volume", "Warning", "Provider", "Source", "Timestamp"];
     blacklist.forEach((word) => {
-      const match = new RegExp(`\\b${word}\\b`, "i").test(event.body) ||
-                    new RegExp(`\\b${word}\\b`, "i").test(event.title);
+      const match = new RegExp(`\\b${word}\\b`, "i").test(rendered.body) ||
+                    new RegExp(`\\b${word}\\b`, "i").test(rendered.title);
       expect(match).toBe(false);
     });
   });
@@ -88,7 +91,8 @@ describe("Notification Wording/Translation checks", () => {
     };
 
     const event = (alertEvaluator as any).createAssetEvent(ruleWithFallback, target, fallbackResult);
+    const rendered = notificationRenderer.render(event, "ko");
 
-    expect(event.body).toContain("주의: 이 알림은 개인용 비공식 fallback 데이터를 포함합니다.");
+    expect(rendered.body).toContain("주의: 이 알림은 개인용 비공식 fallback 데이터를 포함합니다.");
   });
 });

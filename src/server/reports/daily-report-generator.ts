@@ -148,17 +148,21 @@ export class DailyReportGenerator {
   private async triggerSystemErrorAlert(message: string): Promise<void> {
     const event: AlertEvent = {
       id: `evt-sys-${Math.random().toString(36).substr(2, 9)}`,
-      ruleId: "preset-snapshot-failure",
-      ruleName: "System Integrity Error",
       ruleType: "data_quality",
       severity: "critical",
-      title: "[시스템 오류] 일일 리포트 무결성 검증 실패",
-      body: `일일 리포트 생성 중 무결성 검증에 실패했습니다. 상세 내용: ${message}`,
+      titleKo: "[시스템 오류] 일일 리포트 무결성 검증 실패",
+      titleEn: "[System Error] Daily Report Integrity Verification Failed",
+      messageKo: `일일 리포트 생성 중 무결성 검증에 실패했습니다. 상세 내용: ${message}`,
+      messageEn: `Daily report generation failed integrity verification. Details: ${message}`,
       dataStatus: "error",
       source: "DailyReportGenerator",
       sourceTier: "official",
-      warnings: [message],
+      warnings: [],
+      dedupeKey: `sys:integrity:failed:${Math.random().toString(36).substr(2, 9)}`,
+      occurredAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
+      readAt: null,
+      dismissedAt: null,
     };
     await alertEventStore.addEvent(event);
     await notificationHub.dispatchNotification(event);

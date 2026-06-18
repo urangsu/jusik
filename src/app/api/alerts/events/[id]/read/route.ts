@@ -3,23 +3,16 @@ import { createSafeResponse } from "@/server/security/safe-api-response";
 import { alertEventStore } from "@/server/alerts/alert-event-store";
 import { DataEnvelope } from "@/domain/common/data-status";
 
-export async function GET(request: NextRequest) {
+export async function POST(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { searchParams } = new URL(request.url);
-    const limit = searchParams.get("limit") ? parseInt(searchParams.get("limit")!, 10) : undefined;
-    const unreadOnly = searchParams.get("unreadOnly") === "true";
-    const ruleType = searchParams.get("ruleType") || undefined;
-    const severity = searchParams.get("severity") || undefined;
+    const { id } = await params;
+    await alertEventStore.markAlertRead(id);
 
-    const list = await alertEventStore.getAlertEvents({
-      limit,
-      unreadOnly,
-      ruleType: ruleType as any,
-      severity: severity as any,
-    });
-
-    const envelope: DataEnvelope<typeof list> = {
-      value: list,
+    const envelope: DataEnvelope<boolean> = {
+      value: true,
       status: "cached",
       source: "Alert Event Store",
       sourceTier: "official",

@@ -45,7 +45,9 @@ export class DailyReportRenderer {
           const warnText = e.sourceTier === "personal_fallback" 
             ? (isKo ? " [개인용 비공식]" : " [Personal Fallback]")
             : "";
-          return `* **${e.symbol || "Global"}**: ${e.title} - ${e.body.split("\n")[0]}${warnText}`;
+          const title = isKo ? e.titleKo : e.titleEn;
+          const msg = isKo ? e.messageKo : e.messageEn;
+          return `* **${e.symbol || "Global"}**: ${title} - ${msg.split("\n")[0]}${warnText}`;
         })
         .join("\n");
     };

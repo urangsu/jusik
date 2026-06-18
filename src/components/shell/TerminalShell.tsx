@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TopCommandBar } from "./TopCommandBar";
 import { MarketStrip } from "./MarketStrip";
 import { LeftRail } from "./LeftRail";
@@ -33,6 +33,27 @@ export const TerminalShell: React.FC = () => {
     industry: "반도체 및 반도체 장비",
   });
 
+  const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await fetch("/api/alerts/events?unreadOnly=true&limit=100");
+      if (res.ok) {
+        const data = await res.json();
+        const count = Array.isArray(data.value) ? data.value.length : 0;
+        setUnreadAlertsCount(count);
+      }
+    } catch {
+      // Ignore
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleSelectAsset = (asset: Asset) => {
     setSelectedAsset(asset);
   };
@@ -49,6 +70,7 @@ export const TerminalShell: React.FC = () => {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onSelectAsset={handleSelectAsset}
+        unreadAlertsCount={unreadAlertsCount}
       />
 
       {/* Market Indices Strip */}

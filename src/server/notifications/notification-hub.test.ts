@@ -37,30 +37,34 @@ describe("NotificationHub", () => {
 
     mockEvent = {
       id: "evt1",
-      ruleId: "rule1",
-      ruleName: "Test Volatility",
       ruleType: "return_zscore",
+      ruleId: "rule1",
       severity: "warning",
-      title: "[이상 등락 감지] 삼성전자(005930)",
-      body: "삼성전자(005930)가 최근 60거래일 변동성 기준 2.0σ 수준의 상승을 보였습니다.\n현재 등락률: 3.5%",
+      titleKo: "[이상 등락 감지] 삼성전자(005930)",
+      titleEn: "[Abnormal Price Move] Samsung Electronics(005930)",
+      messageKo: "삼성전자(005930)가 최근 60거래일 변동성 기준 2.0σ 수준의 상승을 보였습니다.\n현재 등락률: 3.5%",
+      messageEn: "Samsung Electronics(005930) moved 2.0σ versus its baseline. Return: 3.5%",
       dataStatus: "real_time",
       source: "KIS Open API",
       sourceTier: "official",
       warnings: [],
+      dedupeKey: "rule:1:005930:standard",
+      occurredAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
+      readAt: null,
+      dismissedAt: null,
     };
 
     // Mock preferences store
     const mockPref = {
-      globalEnabled: true,
-      locale: "ko" as const,
-      channelPreferences: {
-        web_inbox: true,
+      enabled: true,
+      enabledRuleTypes: ["return_zscore"],
+      minSeverity: "info",
+      channels: {
+        webInbox: true,
         console: true,
         telegram: true,
-        kakao: false,
         email: false,
-        web_push: false,
       },
       quietHours: {
         enabled: true,
@@ -68,6 +72,8 @@ describe("NotificationHub", () => {
         end: "07:00",
         timezone: "Asia/Seoul",
       },
+      cooldownMinutes: 60,
+      locale: "ko" as const,
     };
 
     hub["preferenceStore"] = {

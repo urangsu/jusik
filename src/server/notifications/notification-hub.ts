@@ -1,6 +1,6 @@
 import { AlertEvent } from "@/domain/alerts/alert-event";
 import { NotificationDelivery } from "@/domain/alerts/alert-delivery";
-import { NotificationPreference } from "@/domain/alerts/alert-preference";
+import { AlertPreference } from "@/domain/alerts/alert-preference";
 import { NotificationChannelAdapter } from "./notification-channel";
 import { JsonFileStore } from "../storage/json-file-store";
 import { consoleChannel } from "./channels/console-channel";
@@ -12,31 +12,47 @@ import { notificationDeliveryStore } from "./notification-delivery-store";
 import { alertRuleEngine } from "../alerts/alert-rule-engine";
 import { isInQuietHours } from "../alerts/alert-quiet-hours";
 
-export const DEFAULT_PREFERENCE: NotificationPreference = {
-  globalEnabled: true,
-  locale: "ko",
-  channelPreferences: {
-    web_inbox: true,
-    console: true,
-    telegram: false,
-    kakao: false,
-    email: false,
-    web_push: false,
-  },
+export const DEFAULT_PREFERENCE: AlertPreference = {
+  enabled: true,
+  enabledRuleTypes: [
+    "price_cross",
+    "return_zscore",
+    "volume_zscore",
+    "gap_move",
+    "intraday_reversal",
+    "new_filing",
+    "provider_error",
+    "provider_rate_limited",
+    "provider_invalid_key",
+    "technical_signal_change",
+    "momentum_score_change",
+    "reliability_deterioration",
+    "backtest_job_failed",
+    "data_quality",
+  ],
+  minSeverity: "info",
   quietHours: {
     enabled: true,
     start: "23:00",
     end: "07:00",
     timezone: "Asia/Seoul",
   },
+  channels: {
+    webInbox: true,
+    console: true,
+    telegram: false,
+    email: false,
+  },
+  cooldownMinutes: 60,
+  locale: "ko",
 };
 
 export class NotificationHub {
-  private preferenceStore: JsonFileStore<NotificationPreference>;
+  private preferenceStore: JsonFileStore<AlertPreference>;
   private adapters: Map<string, NotificationChannelAdapter> = new Map();
 
   constructor() {
-    this.preferenceStore = new JsonFileStore<NotificationPreference>(
+    this.preferenceStore = new JsonFileStore<AlertPreference>(
       "data/alerts/preferences.json",
       DEFAULT_PREFERENCE
     );
@@ -49,18 +65,18 @@ export class NotificationHub {
     this.adapters.set(emailChannelSkeleton.id, emailChannelSkeleton);
   }
 
-  async getPreference(): Promise<NotificationPreference> {
+  async getPreference(): Promise<AlertPreference> {
     return this.preferenceStore.read();
   }
 
-  async updatePreference(updates: Partial<NotificationPreference>): Promise<NotificationPreference> {
+  async updatePreference(updates: Partial<AlertPreference>): Promise<AlertPreference> {
     const current = await this.getPreference();
     const updated = {
       ...current,
       ...updates,
-      channelPreferences: {
-        ...current.channelPreferences,
-        ...updates.channelPreferences,
+      channels: {
+        ...current.channels,
+        ...updates.channels,
       },
       quietHours: {
         ...current.quietHours,
@@ -76,28 +92,39 @@ export class NotificationHub {
     const deliveries: NotificationDelivery[] = [];
 
     // Find the rule to get target channels
-    const rule = await alertRuleEngine.getRule(event.ruleId);
-    if (!rule) {
-      console.warn(`[NotificationHub] Rule ${event.ruleId} not found for event ${event.id}`);
-      return [];
-    }
+    const ruleId = (event as any).ruleId || "";
+    const rule = ruleId ? await alertRuleEngine.getRule(ruleId) : null;
+    const targetChannels = rule?.channels || ["web_inbox", "console"];
 
-    const isGlobalDisabled = !preference.globalEnabled;
+    const isGlobalDisabled = !preference.enabled;
     const quietActive = isInQuietHours(new Date(), preference.quietHours);
 
-    for (const channelId of rule.channels) {
+    for (const channelId of targetChannels) {
       const adapter = this.adapters.get(channelId);
-      const userEnabled = preference.channelPreferences[channelId];
+      
+      let userEnabled = false;
+      if (channelId === "web_inbox" || (channelId as string) === "webInbox") {
+        userEnabled = preference.channels.webInbox;
+      } else if (channelId === "console") {
+        userEnabled = preference.channels.console;
+      } else if (channelId === "telegram") {
+        userEnabled = preference.channels.telegram;
+      } else if (channelId === "email") {
+        userEnabled = preference.channels.email;
+      }
 
       const deliveryId = `del-${Math.random().toString(36).substr(2, 9)}`;
+      const title = event.titleKo || event.titleEn;
+      const body = event.messageKo || event.messageEn;
+
       const delivery: NotificationDelivery = {
         id: deliveryId,
         alertEventId: event.id,
         channelId,
         status: "pending",
-        title: event.title,
-        body: event.body,
-        locale: preference.locale,
+        title,
+        body,
+        locale: preference.locale || "ko",
         sentAt: null,
         failedAt: null,
         createdAt: new Date().toISOString(),
@@ -131,7 +158,7 @@ export class NotificationHub {
       }
 
       // 4. Check quiet hours for external channels (console and web_inbox are local and bypass quiet hours)
-      const isExternal = !["console", "web_inbox"].includes(channelId);
+      const isExternal = !["console", "web_inbox", "webInbox"].includes(channelId as string);
       if (quietActive && isExternal) {
         // Critical alerts are saved in web_inbox but external delivery is held/skipped
         delivery.status = "skipped";
@@ -143,7 +170,7 @@ export class NotificationHub {
 
       // 5. Send notification
       try {
-        const result = await adapter.send(event, event.title, event.body);
+        const result = await adapter.send(event, title, body);
         delivery.status = result.status;
         delivery.providerResponse = result.providerResponse;
         if (result.status === "sent") {

@@ -28,7 +28,7 @@ export const AlertEventList: React.FC<AlertEventListProps> = ({ events }) => {
               <div className="flex items-center gap-2">
                 <AlertSeverityBadge severity={evt.severity} />
                 <span className="text-xs font-bold text-kt-text-secondary">
-                  {evt.ruleName}
+                  {evt.ruleType}
                 </span>
                 {evt.symbol && (
                   <span className="text-[10px] text-kt-text-muted border border-kt-border-panel px-1.5 py-0.5 rounded">
@@ -43,10 +43,10 @@ export const AlertEventList: React.FC<AlertEventListProps> = ({ events }) => {
 
             <div className="flex flex-col gap-1">
               <h4 className="text-sm font-semibold text-kt-text-primary">
-                {evt.title}
+                {evt.titleKo}
               </h4>
               <p className="text-xs text-kt-text-secondary whitespace-pre-wrap leading-relaxed">
-                {evt.body}
+                {evt.messageKo}
               </p>
             </div>
 

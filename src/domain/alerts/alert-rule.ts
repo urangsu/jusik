@@ -1,18 +1,9 @@
 import { NotificationChannelId } from "./alert-channel";
 import { AlertCondition } from "./alert-condition";
 import { AlertSeverity } from "./alert-severity";
+import { AlertRuleType } from "./alert-rule-type";
 
-export type AlertRuleType =
-  | "price_cross"
-  | "return_zscore"
-  | "volume_zscore"
-  | "gap_move"
-  | "intraday_reversal"
-  | "new_filing"
-  | "provider_error"
-  | "data_quality"
-  | "strategy_score_change"
-  | "portfolio_risk";
+export type { AlertRuleType };
 
 export type AlertRuleScope =
   | "asset"

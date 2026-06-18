@@ -128,4 +128,22 @@ export const en = {
   filingExternalAudit: "External Audit",
   filingExchange: "Exchange Filing",
   filingFairTrade: "Fair Trade Filing",
+  
+  // Alerts
+  alertInbox: "Alert Inbox",
+  newFiling: "New Filing",
+  providerError: "Provider Error",
+  rateLimited: "Rate Limited",
+  invalidKey: "Invalid Key",
+  technicalSignalChange: "Technical Signal Change",
+  momentumScoreChange: "Momentum Change",
+  reliabilityDeterioration: "Reliability Deterioration",
+  backtestJobFailed: "Backtest Failed",
+  dataQuality: "Data Quality",
+  markAsRead: "Mark as Read",
+  dismiss: "Dismiss",
+  unreadOnly: "Unread Only",
+  evaluateNow: "Evaluate Now",
+  quietHours: "Quiet Hours",
+  cooldown: "Cooldown",
 };

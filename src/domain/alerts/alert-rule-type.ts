@@ -1,0 +1,17 @@
+export type AlertRuleType =
+  | "price_cross"
+  | "return_zscore"
+  | "volume_zscore"
+  | "gap_move"
+  | "intraday_reversal"
+  | "new_filing"
+  | "provider_error"
+  | "provider_rate_limited"
+  | "provider_invalid_key"
+  | "technical_signal_change"
+  | "momentum_score_change"
+  | "reliability_deterioration"
+  | "backtest_job_failed"
+  | "data_quality"
+  | "strategy_score_change"
+  | "portfolio_risk";

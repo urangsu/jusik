@@ -128,4 +128,22 @@ export const ko = {
   filingExternalAudit: "외부감사관련",
   filingExchange: "거래소공시",
   filingFairTrade: "공정위공시",
+  
+  // Alerts
+  alertInbox: "알림함",
+  newFiling: "새 공시",
+  providerError: "제공자 오류",
+  rateLimited: "요청 제한",
+  invalidKey: "인증키 오류",
+  technicalSignalChange: "기술 신호 변화",
+  momentumScoreChange: "모멘텀 점수 변화",
+  reliabilityDeterioration: "신뢰도 악화",
+  backtestJobFailed: "백테스트 실패",
+  dataQuality: "데이터 품질",
+  markAsRead: "읽음",
+  dismiss: "해제",
+  unreadOnly: "미확인만 보기",
+  evaluateNow: "평가 실행",
+  quietHours: "조용한 시간",
+  cooldown: "쿨다운",
 };

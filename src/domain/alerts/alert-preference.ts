@@ -1,13 +1,27 @@
-import { NotificationChannelId } from "./alert-channel";
+import { AlertRuleType } from "./alert-rule-type";
+import { AlertSeverity } from "./alert-severity";
 
-export type NotificationPreference = {
-  globalEnabled: boolean;
-  locale: "ko" | "en";
-  channelPreferences: Record<NotificationChannelId, boolean>;
+export type AlertPreference = {
+  enabled: boolean;
+
+  enabledRuleTypes: AlertRuleType[];
+
+  minSeverity: AlertSeverity;
+
   quietHours: {
     enabled: boolean;
-    start: string;
-    end: string;
-    timezone: string;
+    start: string; // HH:mm
+    end: string;   // HH:mm
+    timezone: "Asia/Seoul";
   };
+
+  channels: {
+    webInbox: boolean;
+    console: boolean;
+    telegram: boolean;
+    email: boolean;
+  };
+
+  cooldownMinutes: number;
+  locale?: "ko" | "en";
 };

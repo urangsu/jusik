@@ -5,7 +5,6 @@ import "@testing-library/jest-dom";
 import { AlertSettingsPage } from "./AlertSettingsPage";
 import { I18nProvider } from "@/i18n/use-i18n";
 
-// Mock fetch
 const globalFetch = global.fetch;
 
 describe("AlertSettingsPage UI Component", () => {
@@ -18,64 +17,28 @@ describe("AlertSettingsPage UI Component", () => {
           ok: true,
           json: () =>
             Promise.resolve({
-              globalEnabled: true,
-              locale: "ko",
-              channelPreferences: {
-                web_inbox: true,
-                console: true,
-                telegram: false,
-                kakao: false,
-                email: false,
-              },
-              quietHours: {
+              value: {
                 enabled: true,
-                start: "23:00",
-                end: "07:00",
-                timezone: "Asia/Seoul",
-              },
-            }),
-        });
-      }
-      if (urlStr.includes("/api/notifications/channels")) {
-        return Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              channels: [
-                {
-                  id: "web_inbox",
-                  displayName: "Web Inbox (앱 내 알림)",
-                  status: "enabled",
-                  supportsMarkdown: true,
-                  supportsImmediateDelivery: true,
+                enabledRuleTypes: [
+                  "price_cross",
+                  "return_zscore",
+                  "new_filing",
+                ],
+                minSeverity: "info",
+                channels: {
+                  webInbox: true,
+                  console: true,
+                  telegram: false,
+                  email: false,
                 },
-                {
-                  id: "console",
-                  displayName: "Console (로그 출력)",
-                  status: "enabled",
-                  supportsMarkdown: false,
-                  supportsImmediateDelivery: true,
-                },
-              ],
-            }),
-        });
-      }
-      if (urlStr.includes("/api/alerts/rules")) {
-        return Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              rules: [
-                {
-                  id: "rule-1",
-                  name: "테스트 1일 수익률",
+                quietHours: {
                   enabled: true,
-                  type: "return_zscore",
-                  scope: "universe",
-                  channels: ["web_inbox"],
-                  cooldownMinutes: 60,
+                  start: "23:00",
+                  end: "07:00",
+                  timezone: "Asia/Seoul",
                 },
-              ],
+                cooldownMinutes: 60,
+              },
             }),
         });
       }
@@ -84,40 +47,23 @@ describe("AlertSettingsPage UI Component", () => {
           ok: true,
           json: () =>
             Promise.resolve({
-              events: [
+              value: [
                 {
                   id: "evt-1",
-                  ruleId: "rule-1",
-                  ruleName: "테스트 1일 수익률",
-                  ruleType: "return_zscore",
-                  severity: "warning",
-                  title: "삼성전자 급등",
-                  body: "삼성전자가 급등했습니다.",
+                  ruleType: "new_filing",
+                  severity: "info",
+                  titleKo: "삼성전자 급등",
+                  titleEn: "Samsung Electronics Spike",
+                  messageKo: "삼성전자가 급등했습니다.",
+                  messageEn: "Samsung Electronics skyrocketed.",
                   dataStatus: "real_time",
                   source: "Test",
                   sourceTier: "official",
                   warnings: [],
                   createdAt: new Date().toISOString(),
-                },
-              ],
-            }),
-        });
-      }
-      if (urlStr.includes("/api/notifications/history")) {
-        return Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              deliveries: [
-                {
-                  id: "del-1",
-                  alertEventId: "evt-1",
-                  channelId: "web_inbox",
-                  status: "sent",
-                  title: "삼성전자 급등",
-                  body: "삼성전자가 급등했습니다.",
-                  locale: "ko",
-                  createdAt: new Date().toISOString(),
+                  occurredAt: new Date().toISOString(),
+                  readAt: null,
+                  dismissedAt: null,
                 },
               ],
             }),
@@ -131,7 +77,7 @@ describe("AlertSettingsPage UI Component", () => {
     global.fetch = globalFetch;
   });
 
-  it("renders page header and main preferences config", async () => {
+  it("renders page header and main preferences config and inbox", async () => {
     render(
       <I18nProvider initialLocale="ko">
         <AlertSettingsPage />
@@ -139,27 +85,34 @@ describe("AlertSettingsPage UI Component", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("알림 및 규칙 엔진 제어판")).toBeInTheDocument();
-      expect(screen.getByText("글로벌 환경 설정")).toBeInTheDocument();
-      expect(screen.getAllByText("테스트 1일 수익률")[0]).toBeInTheDocument();
-      expect(screen.getAllByText("삼성전자 급등")[0]).toBeInTheDocument();
+      expect(screen.getByText("글로벌 알림 환경 설정")).toBeInTheDocument();
+      expect(screen.getByText("실시간 알림 감지 활성화")).toBeInTheDocument();
+      expect(screen.getByText("알림 및 경보 보드")).toBeInTheDocument();
+      expect(screen.getByText("삼성전자 급등")).toBeInTheDocument();
     });
   });
 
-  it("shows rule editor when clicking '새 규칙' button", async () => {
+  it("handles preference updates and submit", async () => {
     render(
       <I18nProvider initialLocale="ko">
         <AlertSettingsPage />
       </I18nProvider>
     );
 
-    // Wait for load
-    await screen.findAllByText("테스트 1일 수익률");
+    // Wait for preferences load
+    await screen.findByText("글로벌 알림 환경 설정");
 
-    const newRuleBtn = screen.getByText("새 규칙");
-    fireEvent.click(newRuleBtn);
+    const submitBtn = screen.getByText("설정 저장");
+    fireEvent.click(submitBtn);
 
-    expect(screen.getByText("새 알림 규칙 추가")).toBeInTheDocument();
-    expect(screen.getByText("규칙 이름")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/alerts/preferences",
+        expect.objectContaining({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+    });
   });
 });

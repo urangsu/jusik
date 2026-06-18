@@ -12,12 +12,14 @@ interface TopCommandBarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onSelectAsset: (asset: Asset) => void;
+  unreadAlertsCount?: number;
 }
 
 export const TopCommandBar: React.FC<TopCommandBarProps> = ({
   activeTab,
   onTabChange,
   onSelectAsset,
+  unreadAlertsCount,
 }) => {
   const { locale } = useI18n();
 
@@ -63,13 +65,18 @@ export const TopCommandBar: React.FC<TopCommandBarProps> = ({
               id={`nav-tab-${tab.id}`}
               onClick={() => onTabChange(tab.id)}
               aria-current={isActive ? "page" : undefined}
-              className={`whitespace-nowrap px-3 py-1 text-xs font-medium rounded-kt-pill transition-colors cursor-pointer ${
+              className={`whitespace-nowrap px-3 py-1 text-xs font-medium rounded-kt-pill transition-colors cursor-pointer flex items-center gap-1.5 ${
                 isActive
                   ? "bg-kt-bg-body text-kt-text-primary border border-kt-border-panel"
                   : "text-kt-text-secondary hover:text-kt-text-primary"
               }`}
             >
               {tab.label}
+              {tab.id === "alerts" && unreadAlertsCount !== undefined && unreadAlertsCount > 0 && (
+                <span className="inline-flex items-center justify-center bg-kt-positive text-kt-bg-body text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none">
+                  {unreadAlertsCount}
+                </span>
+              )}
             </button>
           );
         })}
