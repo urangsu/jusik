@@ -9,7 +9,8 @@ import { BacktestVetoReasons } from "./BacktestVetoReasons";
 import { BacktestMetricCard } from "./BacktestMetricCard";
 import { IcChart } from "./IcChart";
 import { OosSummaryTable } from "./OosSummaryTable";
-import { BarChart3, Info, Loader2, Sparkles } from "lucide-react";
+import { BarChart3, Loader2, BookOpen } from "lucide-react";
+import { StrategyResearchPanel } from "@/components/strategy/StrategyResearchPanel";
 
 export const BacktestWorkspace: React.FC = () => {
   const { locale } = useI18n();
@@ -202,6 +203,17 @@ export const BacktestWorkspace: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Strategy Research Log */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-kt-text-muted" />
+            <span className="text-xs font-semibold text-kt-text-primary">
+              {locale === "ko" ? "전략 연구 기록" : "Strategy Research Log"}
+            </span>
+          </div>
+          <StrategyResearchPanel />
+        </div>
       </div>
     </div>
   );

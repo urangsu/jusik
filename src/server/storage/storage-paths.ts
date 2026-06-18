@@ -28,3 +28,11 @@ export function getSignalHistoryPath(): string {
 export function getCurrentSignalsPath(): string {
   return path.join(getDataDir(), "signals/current-signals.json");
 }
+
+export function getStrategyTrialsPath(): string {
+  return path.join(getDataDir(), "strategy-trials/events.json");
+}
+
+export function getStrategyTrialsLatestPath(): string {
+  return path.join(getDataDir(), "strategy-trials/latest.json");
+}

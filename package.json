@@ -24,7 +24,11 @@
     "opendart:search": "tsx scripts/opendart/search-disclosures.ts",
     "opendart:sync": "tsx scripts/opendart/sync-disclosures.ts",
     "macro:evaluate": "tsx scripts/macro/evaluate-regime.ts",
-    "sentiment:refresh": "tsx scripts/sentiment/refresh-sentiment-references.ts"
+    "sentiment:refresh": "tsx scripts/sentiment/refresh-sentiment-references.ts",
+    "strategy:trial": "tsx scripts/strategy/register-strategy-trial.ts",
+    "audit:individual-signal-ic": "tsx scripts/audit/audit-individual-signal-ic.ts",
+    "audit:strategy-correlation": "tsx scripts/audit/audit-strategy-correlation.ts",
+    "audit:market-exposure": "tsx scripts/audit/audit-market-exposure.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
