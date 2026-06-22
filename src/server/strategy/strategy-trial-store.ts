@@ -1,80 +1,132 @@
+import fs from "fs/promises";
+import path from "path";
+import crypto from "crypto";
+import { StrategyTrialRecord, StrategyTrialStoreData } from "@/domain/strategy/strategy-trial-record";
+import { StrategyTrialStatus } from "@/domain/strategy/strategy-trial-status";
+import { StrategyTrialEvent } from "@/domain/strategy/strategy-trial-event";
+import { writeAtomic } from "../storage/atomic-write";
 import {
-  StrategyTrialRecord,
-  StrategyTrialStoreData,
-  EMPTY_STRATEGY_TRIAL_STORE,
-} from "@/domain/strategy/strategy-trial-record";
-import { JsonFileStore } from "@/server/storage/json-file-store";
-import { getStrategyTrialsPath } from "@/server/storage/storage-paths";
+  getStrategyTrialsDir,
+  getStrategyTrialsEventsPath,
+  getStrategyTrialsLatestPath,
+  getStrategyTrialByIdPath,
+} from "./strategy-trial-store-paths";
 
-/**
- * StrategyTrialStore
- *
- * 전략 실험 기록을 영속 저장한다.
- * rejected 전략을 포함해 모든 trial을 삭제하지 않는다.
- * parameterHash 중복 감지로 동일 실험의 반복을 경고한다.
- */
-export class StrategyTrialStore {
-  private store: JsonFileStore<StrategyTrialStoreData>;
+export type StrategyTrialQuery = {
+  strategyId?: string;
+  universeId?: "KOSPI_SAMPLE" | "SP500_SAMPLE";
+  validationStatus?: StrategyTrialStatus;
+  includeRejected?: boolean;
+  includeInvalid?: boolean;
+  parameterHash?: string;
+};
 
-  constructor() {
-    this.store = new JsonFileStore<StrategyTrialStoreData>(
-      getStrategyTrialsPath(),
-      EMPTY_STRATEGY_TRIAL_STORE
-    );
+export async function saveStrategyTrialRecord(record: StrategyTrialRecord): Promise<void> {
+  const byIdPath = getStrategyTrialByIdPath(record.id);
+
+  // Check if already exists to prevent duplicate writes
+  try {
+    await fs.access(byIdPath);
+    throw new Error(`StrategyTrialRecord with ID ${record.id} already exists`);
+  } catch (err: any) {
+    if (err.code !== "ENOENT") {
+      throw err;
+    }
   }
 
-  async getAll(): Promise<StrategyTrialRecord[]> {
-    const data = await this.store.read();
-    return data.trials;
+  // 1. Write the by-id file
+  await writeAtomic(byIdPath, JSON.stringify(record, null, 2));
+
+  // 2. Append event to events.json
+  const eventsPath = getStrategyTrialsEventsPath();
+  let events: StrategyTrialEvent[] = [];
+  try {
+    const rawEvents = await fs.readFile(eventsPath, "utf8");
+    events = JSON.parse(rawEvents);
+  } catch (err) {
+    // If file doesn't exist or is invalid
   }
 
-  async getById(id: string): Promise<StrategyTrialRecord | null> {
-    const trials = await this.getAll();
-    return trials.find((t) => t.id === id) ?? null;
+  const event: StrategyTrialEvent = {
+    id: `event_${crypto.randomUUID()}`,
+    trialId: record.id,
+    type: "created",
+    payload: record as any,
+    createdAt: new Date().toISOString(),
+  };
+  events.push(event);
+  await writeAtomic(eventsPath, JSON.stringify(events, null, 2));
+
+  // 3. Update latest.json snapshot
+  const latestPath = getStrategyTrialsLatestPath();
+  let latestData: StrategyTrialStoreData = { trials: [], lastUpdatedAt: new Date(0).toISOString() };
+  try {
+    const rawLatest = await fs.readFile(latestPath, "utf8");
+    latestData = JSON.parse(rawLatest);
+  } catch (err) {
+    // If file doesn't exist
   }
 
-  async getByStrategyId(strategyId: string): Promise<StrategyTrialRecord[]> {
-    const trials = await this.getAll();
-    return trials.filter((t) => t.strategyId === strategyId);
+  latestData.trials = latestData.trials.filter((t) => t.id !== record.id);
+  latestData.trials.push(record);
+  latestData.lastUpdatedAt = new Date().toISOString();
+  await writeAtomic(latestPath, JSON.stringify(latestData, null, 2));
+}
+
+export async function listStrategyTrialRecords(
+  query?: StrategyTrialQuery
+): Promise<StrategyTrialRecord[]> {
+  const latestPath = getStrategyTrialsLatestPath();
+  let latestData: StrategyTrialStoreData = { trials: [], lastUpdatedAt: new Date(0).toISOString() };
+  try {
+    const rawLatest = await fs.readFile(latestPath, "utf8");
+    latestData = JSON.parse(rawLatest);
+  } catch (err) {
+    return [];
   }
 
-  async create(trial: StrategyTrialRecord): Promise<StrategyTrialRecord> {
-    const data = await this.store.read();
-    data.trials.push(trial);
-    data.lastUpdatedAt = new Date().toISOString();
-    await this.store.write(data);
-    return trial;
+  let filtered = latestData.trials;
+
+  if (query) {
+    if (query.strategyId) {
+      filtered = filtered.filter((t) => t.strategyId === query.strategyId);
+    }
+    if (query.universeId) {
+      filtered = filtered.filter((t) => t.universeId === query.universeId);
+    }
+    if (query.validationStatus) {
+      filtered = filtered.filter((t) => t.validationStatus === query.validationStatus);
+    }
+    if (query.parameterHash) {
+      filtered = filtered.filter((t) => t.parameterHash === query.parameterHash);
+    }
+    if (query.includeRejected === false) {
+      filtered = filtered.filter((t) => t.validationStatus !== "rejected");
+    }
+    if (query.includeInvalid === false) {
+      filtered = filtered.filter((t) => t.validationStatus !== "invalid");
+    }
   }
 
-  async update(
-    id: string,
-    patch: Partial<Pick<StrategyTrialRecord, "validationStatus" | "rejectionReason" | "biasWarnings" | "backtestRunId" | "observedMetrics">>
-  ): Promise<StrategyTrialRecord | null> {
-    const data = await this.store.read();
-    const idx = data.trials.findIndex((t) => t.id === id);
-    if (idx === -1) return null;
+  return filtered;
+}
 
-    data.trials[idx] = {
-      ...data.trials[idx],
-      ...patch,
-      updatedAt: new Date().toISOString(),
-    };
-    data.lastUpdatedAt = new Date().toISOString();
-    await this.store.write(data);
-    return data.trials[idx];
-  }
-
-  /**
-   * 동일 parameterHash가 이미 존재하면 해당 trial을 반환한다.
-   * 데이터 스누핑 방지: 같은 파라미터를 반복해서 테스트하고 있을 가능성 감지.
-   */
-  async findDuplicateByHash(
-    parameterHash: string,
-    strategyId: string
-  ): Promise<StrategyTrialRecord | null> {
-    const trials = await this.getByStrategyId(strategyId);
-    return trials.find((t) => t.parameterHash === parameterHash) ?? null;
+export async function getStrategyTrialRecordById(
+  id: string
+): Promise<StrategyTrialRecord | null> {
+  const byIdPath = getStrategyTrialByIdPath(id);
+  try {
+    const raw = await fs.readFile(byIdPath, "utf8");
+    return JSON.parse(raw);
+  } catch (err) {
+    return null;
   }
 }
 
-export const strategyTrialStore = new StrategyTrialStore();
+export async function findStrategyTrialsByParameterHash(
+  strategyId: string,
+  parameterHash: string
+): Promise<StrategyTrialRecord[]> {
+  const all = await listStrategyTrialRecords();
+  return all.filter((t) => t.strategyId === strategyId && t.parameterHash === parameterHash);
+}

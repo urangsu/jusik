@@ -22,6 +22,7 @@ import {
   StrategyBiasWarning,
   EMPTY_STRATEGY_TRIAL_STORE,
 } from "../../src/domain/strategy/strategy-trial-record";
+import { BacktestStrategy } from "../../src/domain/backtest/backtest-run";
 import { JsonFileStore } from "../../src/server/storage/json-file-store";
 import { getStrategyTrialsPath } from "../../src/server/storage/storage-paths";
 import { assignBiasWarnings } from "../../src/server/strategy/strategy-bias-checker";
@@ -109,7 +110,7 @@ async function main() {
   const now = new Date().toISOString();
   const trialBase: Omit<StrategyTrialRecord, "biasWarnings"> = {
     id: generateId(),
-    strategyId,
+    strategyId: strategyId as BacktestStrategy,
     variantId,
     strategyFamily: "momentum",
     thesisKo,
@@ -121,17 +122,44 @@ async function main() {
     backtestRunId: null,
     observedMetrics: {
       oosReturn: null,
+      benchmarkReturn: null,
+      excessReturn: null,
       sharpe: null,
       maxDrawdown: null,
       spearmanIc: null,
       icir: null,
       hitRate: null,
       turnover: null,
+      nOosWindows: 0,
+      nValidReturnWindows: 0,
+      nValidIcWindows: 0,
+      totalSelectedPositions: 0,
     },
     validationStatus: status,
+    validityLevel: null,
     rejectionReason: status === "rejected" ? rejectionReason : null,
+    failureConditionSummary: {
+      hasInvalidBacktest: false,
+      hasInsufficientData: false,
+      hasMissingBenchmark: false,
+      hasLowDataQuality: false,
+      hasInsufficientIcPairs: false,
+      hasPersonalFallback: false,
+      hasSampleUniverseOnly: false,
+      hasAdjustedPriceMissing: false,
+      hasNoHistoricalUniverseMembership: false,
+    },
+    postmortemSummary: {
+      signalPostmortemCount: 0,
+      failedPositionCount: 0,
+      positivePositionCount: 0,
+      negativePositionCount: 0,
+      missingPricePositionCount: 0,
+    },
+    sourceBacktestResultPath: null,
     createdAt: now,
     updatedAt: now,
+    engineVersion: "1.0.0",
   };
 
   const biasWarnings: StrategyBiasWarning[] = assignBiasWarnings(

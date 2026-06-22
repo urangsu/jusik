@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { strategyTrialStore } from "@/server/strategy/strategy-trial-store";
+import { listStrategyTrialRecords } from "@/server/strategy/strategy-trial-store";
 import { auditAllStrategyCorrelations } from "@/server/audit/strategy-correlation-auditor";
 
 export async function GET(req: NextRequest) {
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     | "SP500_SAMPLE";
 
   try {
-    const allTrials = await strategyTrialStore.getAll();
+    const allTrials = await listStrategyTrialRecords();
 
     // Group by strategyId and extract a score proxy from observedMetrics
     // (spearmanIc per trial as a single-point score series)

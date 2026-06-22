@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { strategyTrialStore } from "@/server/strategy/strategy-trial-store";
+import { listStrategyTrialRecords } from "@/server/strategy/strategy-trial-store";
 import { auditMarketExposure } from "@/server/audit/market-exposure-auditor";
 
 export async function GET(req: NextRequest) {
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const strategyId = searchParams.get("strategyId");
 
   try {
-    const allTrials = await strategyTrialStore.getAll();
+    const allTrials = await listStrategyTrialRecords();
 
     const filtered = allTrials.filter(
       (t) =>

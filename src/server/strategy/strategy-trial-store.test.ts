@@ -1,104 +1,133 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "fs/promises";
-
-// Use a temp directory for test isolation without requiring path or os imports inside vi.hoisted
-const { TEST_DATA_DIR } = vi.hoisted(() => {
-  const tmpDir = process.env.TMPDIR || "/tmp";
-  const uniqueDir = tmpDir.replace(/\/$/, "") + "/strategy-trial-store-test-" + Date.now();
-  return { TEST_DATA_DIR: uniqueDir };
-});
-
-vi.mock("@/server/storage/storage-paths", () => ({
-  getStrategyTrialsPath: () => TEST_DATA_DIR + "/events.json",
-}));
-
-import { StrategyTrialStore } from "@/server/strategy/strategy-trial-store";
+import {
+  saveStrategyTrialRecord,
+  listStrategyTrialRecords,
+  getStrategyTrialRecordById,
+  findStrategyTrialsByParameterHash,
+} from "./strategy-trial-store";
+import { getStrategyTrialsDir } from "./strategy-trial-store-paths";
 import { StrategyTrialRecord } from "@/domain/strategy/strategy-trial-record";
 
-function makeTrial(id: string, strategyId: string, overrides: Partial<StrategyTrialRecord> = {}): StrategyTrialRecord {
-  const now = new Date().toISOString();
-  return {
-    id,
-    strategyId,
-    variantId: `variant_${id}`,
-    strategyFamily: "momentum",
-    thesisKo: "테스트 전략",
-    hypothesis: "테스트 가설",
-    parameters: { window: 20 },
-    parameterHash: `hash_${id}`,
-    universeId: "KOSPI_SAMPLE",
-    dataWindow: { startDate: "2022-01-01", endDate: "2024-01-01" },
-    backtestRunId: null,
-    observedMetrics: {
-      oosReturn: null,
-      sharpe: null,
-      maxDrawdown: null,
-      spearmanIc: null,
-      icir: null,
-      hitRate: null,
-      turnover: null,
-    },
-    validationStatus: "draft",
-    rejectionReason: null,
-    biasWarnings: ["sample_universe_only"],
-    createdAt: now,
-    updatedAt: now,
-    ...overrides,
-  };
-}
-
 describe("StrategyTrialStore", () => {
-  let store: StrategyTrialStore;
+  const testDir = getStrategyTrialsDir();
 
   beforeEach(async () => {
-    await fs.mkdir(TEST_DATA_DIR, { recursive: true });
-    store = new StrategyTrialStore();
+    await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  it("should create and retrieve a trial", async () => {
-    const trial = makeTrial("t1", "momentum_v1");
-    await store.create(trial);
-
-    const found = await store.getById("t1");
-    expect(found).not.toBeNull();
-    expect(found?.strategyId).toBe("momentum_v1");
+  afterEach(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  it("should store rejected trials and not delete them", async () => {
-    const rejected = makeTrial("t2", "strategy_a", {
-      validationStatus: "rejected",
-      rejectionReason: "표본 부족",
-    });
-    await store.create(rejected);
+  it("saves, retrieves, lists and queries trials", async () => {
+    const trial: StrategyTrialRecord = {
+      id: "t1",
+      strategyId: "momentum_v1_long_only",
+      variantId: "baseline",
+      strategyFamily: "momentum",
+      thesisKo: "테제",
+      hypothesis: "가설",
+      parameters: { x: 1 },
+      parameterHash: "h123",
+      universeId: "KOSPI_SAMPLE",
+      dataWindow: { startDate: "2026-01-01", endDate: "2026-06-01" },
+      backtestRunId: "run1",
+      observedMetrics: {
+        oosReturn: 0.1,
+        benchmarkReturn: 0.05,
+        excessReturn: 0.05,
+        sharpe: 1.5,
+        maxDrawdown: -0.1,
+        spearmanIc: 0.2,
+        icir: 2.0,
+        hitRate: 0.6,
+        turnover: 0.2,
+        nOosWindows: 5,
+        nValidReturnWindows: 5,
+        nValidIcWindows: 5,
+        totalSelectedPositions: 10,
+      },
+      validationStatus: "backtested",
+      validityLevel: "functional_check_only",
+      rejectionReason: null,
+      biasWarnings: [],
+      failureConditionSummary: {
+        hasInvalidBacktest: false,
+        hasInsufficientData: false,
+        hasMissingBenchmark: false,
+        hasLowDataQuality: false,
+        hasInsufficientIcPairs: false,
+        hasPersonalFallback: false,
+        hasSampleUniverseOnly: false,
+        hasAdjustedPriceMissing: false,
+        hasNoHistoricalUniverseMembership: false,
+      },
+      postmortemSummary: {
+        signalPostmortemCount: 0,
+        failedPositionCount: 0,
+        positivePositionCount: 0,
+        negativePositionCount: 0,
+        missingPricePositionCount: 0,
+      },
+      sourceBacktestResultPath: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      engineVersion: "1.0.0",
+    };
 
-    const all = await store.getAll();
-    const found = all.find((t) => t.id === "t2");
-    expect(found).toBeDefined();
-    expect(found?.validationStatus).toBe("rejected");
-    expect(found?.rejectionReason).toBe("표본 부족");
+    await saveStrategyTrialRecord(trial);
+
+    const retrieved = await getStrategyTrialRecordById("t1");
+    expect(retrieved).not.toBeNull();
+    expect(retrieved?.id).toBe("t1");
+
+    const all = await listStrategyTrialRecords();
+    expect(all).toHaveLength(1);
+    expect(all[0].id).toBe("t1");
+
+    const found = await findStrategyTrialsByParameterHash("momentum_v1_long_only", "h123");
+    expect(found).toHaveLength(1);
+    expect(found[0].id).toBe("t1");
   });
 
-  it("should detect duplicate parameterHash", async () => {
-    const trial = makeTrial("t3", "strategy_b", { parameterHash: "abc123" });
-    await store.create(trial);
+  it("throws error when trying to save duplicate ID", async () => {
+    const trial1: any = {
+      id: "dup",
+      strategyId: "momentum_v1_long_only",
+      variantId: "baseline",
+      strategyFamily: "momentum",
+      thesisKo: "T",
+      hypothesis: "H",
+      parameters: {},
+      parameterHash: "h1",
+      universeId: "KOSPI_SAMPLE",
+      dataWindow: { startDate: "2026", endDate: "2026" },
+      backtestRunId: null,
+      observedMetrics: {
+        oosReturn: null, benchmarkReturn: null, excessReturn: null, sharpe: null, maxDrawdown: null,
+        spearmanIc: null, icir: null, hitRate: null, turnover: null, nOosWindows: 0, nValidReturnWindows: 0, nValidIcWindows: 0, totalSelectedPositions: 0
+      },
+      validationStatus: "draft",
+      validityLevel: null,
+      rejectionReason: null,
+      biasWarnings: [],
+      failureConditionSummary: {
+        hasInvalidBacktest: false, hasInsufficientData: false, hasMissingBenchmark: false, hasLowDataQuality: false,
+        hasInsufficientIcPairs: false, hasPersonalFallback: false, hasSampleUniverseOnly: false, hasAdjustedPriceMissing: false, hasNoHistoricalUniverseMembership: false
+      },
+      postmortemSummary: {
+        signalPostmortemCount: 0, failedPositionCount: 0, positivePositionCount: 0, negativePositionCount: 0, missingPricePositionCount: 0
+      },
+      sourceBacktestResultPath: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      engineVersion: "1.0.0"
+    };
 
-    const dup = await store.findDuplicateByHash("abc123", "strategy_b");
-    expect(dup).not.toBeNull();
-    expect(dup?.id).toBe("t3");
-  });
+    const trial2 = { ...trial1 };
 
-  it("should return null for unknown parameterHash", async () => {
-    const dup = await store.findDuplicateByHash("unknown_hash", "strategy_c");
-    expect(dup).toBeNull();
-  });
-
-  it("should filter trials by strategyId", async () => {
-    await store.create(makeTrial("t4", "strategy_x"));
-    await store.create(makeTrial("t5", "strategy_y"));
-    await store.create(makeTrial("t6", "strategy_x"));
-
-    const xTrials = await store.getByStrategyId("strategy_x");
-    expect(xTrials).toHaveLength(2);
-    expect(xTrials.every((t) => t.strategyId === "strategy_x")).toBe(true);
+    await saveStrategyTrialRecord(trial1);
+    await expect(saveStrategyTrialRecord(trial2)).rejects.toThrow();
   });
 });

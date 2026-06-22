@@ -1,0 +1,17 @@
+export type StrategyBiasWarning =
+  | "survivorship_bias_possible"
+  | "lookahead_bias_possible"
+  | "data_snooping_possible"
+  | "insufficient_oos_period"
+  | "sample_universe_only"
+  | "adjusted_price_missing"
+  | "high_parameter_sensitivity"
+  | "high_market_beta"
+  | "regime_dependency_high"
+  | "insufficient_signal_history"
+  | "missing_benchmark"
+  | "personal_fallback_used"
+  | "insufficient_ic_pairs"
+  | "low_data_quality"
+  | "no_historical_universe_membership"
+  | "functional_check_only";

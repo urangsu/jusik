@@ -26,6 +26,7 @@
     "macro:evaluate": "tsx scripts/macro/evaluate-regime.ts",
     "sentiment:refresh": "tsx scripts/sentiment/refresh-sentiment-references.ts",
     "strategy:trial": "tsx scripts/strategy/register-strategy-trial.ts",
+    "strategy:trial:from-backtest": "tsx scripts/strategy/register-backtest-trial.ts",
     "audit:individual-signal-ic": "tsx scripts/audit/audit-individual-signal-ic.ts",
     "audit:strategy-correlation": "tsx scripts/audit/audit-strategy-correlation.ts",
     "audit:market-exposure": "tsx scripts/audit/audit-market-exposure.ts"

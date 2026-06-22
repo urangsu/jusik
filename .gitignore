@@ -61,6 +61,7 @@ data/regime/
 data/sentiment/
 data/settings/
 data/strategy-trials/
+data/signal-postmortems/
 
 # Keep directory structure placeholders
 !data/.gitkeep
@@ -78,6 +79,7 @@ data/strategy-trials/
 !data/sentiment/.gitkeep
 !data/settings/.gitkeep
 !data/strategy-trials/.gitkeep
+!data/signal-postmortems/.gitkeep
 
 # Test fixtures are allowed to be committed (keep small & synthetic)
 !test/fixtures/**

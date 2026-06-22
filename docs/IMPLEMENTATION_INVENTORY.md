@@ -36,7 +36,7 @@
 | Factor Correlation Audit | **missing_p0** | - | - | 팩터 간 상관관계 감사 없음 |
 | Individual Signal IC Audit | **missing_p0** | - | - | 개별 시그널 IC 리포트 없음 |
 | Signal Stability Gate | **missing_p0** | - | - | flipCount/consecutiveDays 미구현 |
-| StrategyTrialRecord | **missing_p0** | - | - | 전략 묘지/시도 기록 없음 |
+| StrategyTrialRecord | **implemented** | `src/domain/strategy/strategy-trial-record.ts`, `strategy-trial-store.ts` | ✓ | 전략 묘지/시도 기록 및 중복 감지 |
 | Structured Output Guard | **missing_p0** | - | - | LLM 출력 검증 가드 없음 |
 | Earnings Event Minimal | **missing_p1** | - | - | 영업이익/순이익 이벤트 탐지 없음 |
 | Signal History Visualization | **missing_p1** | - | - | UI 컴포넌트 없음 |
@@ -201,7 +201,7 @@
 | Factor Correlation Audit | **missing_p0** | 팩터 간 다중공선성 감지 없음 | 팩터 추가 전 필수 |
 | Individual Signal IC Audit | **missing_p0** | 시그널별 IC 리포트 없음 | 신호 추가 전 필수 |
 | Signal Stability Gate | **missing_p0** | flipCount/consecutiveDays 미구현 | 잦은 신호 반전 감지 |
-| StrategyTrialRecord | **missing_p0** | 전략 묘지/시도 기록 없음 | 다중검정 추적 기반 |
+| StrategyTrialRecord | **implemented (WO017-B)** | `src/domain/strategy/strategy-trial-record.ts` | 다중검정 추적 기반 |
 | Structured Output Guard | **missing_p0** | LLM 출력 검증 없음 | LLM 기능 추가 전 필수 |
 | Earnings Event Minimal | **missing_p1** | 영업이익/순이익 이벤트 탐지 없음 | OpenDART 재무 데이터 연결 시 |
 | Signal History Visualization | **missing_p1** | Store는 구현, UI 없음 | 신호 이력 분석 UI 필요 시 |
@@ -263,9 +263,9 @@ GPT Vision          : ✗ 코드 없음
 | Command | Result |
 |---|---|
 | `npm run typecheck` | ✓ PASS (0 errors) |
-| `npm run lint` | ✓ PASS (0 errors, 331 warnings — `any` 타입 등) |
-| `npm run test` | ✓ PASS (130 files, 389 tests) |
-| `npm run build` | 미실행 (WO016 종료 전 실행 예정) |
+| `npm run lint` | ✓ PASS (0 errors, 377 warnings — `any` 타입 등) |
+| `npm run test` | ✓ PASS (151 files, 454 tests) |
+| `npm run build` | ✓ PASS |
 | `npm run docs:check` | ✓ PASS |
 | `npm run docs:quant` | ✓ PASS |
 | `npm run check:wording` | ✓ PASS (docs 내 정책 설명 warn-only) |

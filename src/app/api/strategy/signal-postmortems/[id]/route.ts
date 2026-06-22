@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { createSafeResponse } from "@/server/security/safe-api-response";
-import { getStrategyTrialRecordById } from "@/server/strategy/strategy-trial-store";
+import { getSignalPostmortemById } from "@/server/strategy/signal-postmortem-store";
 import { DataEnvelope } from "@/domain/common/data-status";
-import { StrategyTrialRecord } from "@/domain/strategy/strategy-trial-record";
+import { SignalPostmortem } from "@/domain/strategy/signal-postmortem";
 
 export async function GET(
   _req: NextRequest,
@@ -10,25 +10,25 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const trial = await getStrategyTrialRecordById(id);
+    const postmortem = await getSignalPostmortemById(id);
 
-    if (!trial) {
+    if (!postmortem) {
       const envelope: DataEnvelope<null> = {
         value: null,
         status: "not_found",
-        source: "Strategy Trials API",
+        source: "Signal Postmortems API",
         sourceTier: "official",
         warnings: [],
         updatedAt: null,
-        message: `Trial '${id}' not found`,
+        message: `SignalPostmortem '${id}' not found`,
       };
       return createSafeResponse(envelope, 404);
     }
 
-    const envelope: DataEnvelope<StrategyTrialRecord> = {
-      value: trial,
+    const envelope: DataEnvelope<SignalPostmortem> = {
+      value: postmortem,
       status: "cached",
-      source: "Strategy Trials API",
+      source: "Signal Postmortems API",
       sourceTier: "official",
       warnings: [],
       updatedAt: new Date().toISOString(),
@@ -38,7 +38,7 @@ export async function GET(
     const envelope: DataEnvelope<null> = {
       value: null,
       status: "error",
-      source: "Strategy Trials API",
+      source: "Signal Postmortems API",
       sourceTier: "official",
       warnings: [],
       updatedAt: null,

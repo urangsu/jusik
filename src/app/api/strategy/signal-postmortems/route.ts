@@ -1,36 +1,34 @@
 import { NextRequest } from "next/server";
 import { createSafeResponse } from "@/server/security/safe-api-response";
-import { listStrategyTrialRecords, StrategyTrialQuery } from "@/server/strategy/strategy-trial-store";
+import { listSignalPostmortems, SignalPostmortemQuery } from "@/server/strategy/signal-postmortem-store";
 import { DataEnvelope } from "@/domain/common/data-status";
-import { StrategyTrialRecord } from "@/domain/strategy/strategy-trial-record";
+import { SignalPostmortem } from "@/domain/strategy/signal-postmortem";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const trialId = searchParams.get("trialId") || undefined;
     const strategyId = searchParams.get("strategyId") || undefined;
     const universeId = (searchParams.get("universeId") as any) || undefined;
-    const validationStatus = (searchParams.get("validationStatus") as any) || undefined;
-    
-    // Default to true unless explicitly 'false'
-    const includeRejected = searchParams.get("includeRejected") !== "false";
-    const includeInvalid = searchParams.get("includeInvalid") !== "false";
-    const parameterHash = searchParams.get("parameterHash") || undefined;
+    const assetId = searchParams.get("assetId") || undefined;
+    const outcome = (searchParams.get("outcome") as any) || undefined;
+    const status = (searchParams.get("status") as any) || undefined;
 
-    const query: StrategyTrialQuery = {
+    const query: SignalPostmortemQuery = {
+      trialId,
       strategyId,
       universeId,
-      validationStatus,
-      includeRejected,
-      includeInvalid,
-      parameterHash,
+      assetId,
+      outcome,
+      status,
     };
 
-    const trials = await listStrategyTrialRecords(query);
+    const postmortems = await listSignalPostmortems(query);
 
-    const envelope: DataEnvelope<StrategyTrialRecord[]> = {
-      value: trials,
+    const envelope: DataEnvelope<SignalPostmortem[]> = {
+      value: postmortems,
       status: "cached",
-      source: "Strategy Trials API",
+      source: "Signal Postmortems API",
       sourceTier: "official",
       warnings: [],
       updatedAt: new Date().toISOString(),
@@ -41,7 +39,7 @@ export async function GET(request: NextRequest) {
     const envelope: DataEnvelope<null> = {
       value: null,
       status: "error",
-      source: "Strategy Trials API",
+      source: "Signal Postmortems API",
       sourceTier: "official",
       warnings: [],
       updatedAt: null,
