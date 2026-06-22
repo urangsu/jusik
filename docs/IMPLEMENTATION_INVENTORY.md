@@ -34,7 +34,7 @@
 | Signal History Store | **implemented** | `src/server/signals/signal-history-store.ts` | ✓ | |
 | PIT Store | **implemented** | `src/server/data/in-memory-pit-store.ts` | ✓ | In-memory only (운용용 PIT DB 미구현) |
 | Factor Correlation Audit | **missing_p0** | - | - | 팩터 간 상관관계 감사 없음 |
-| Individual Signal IC Audit | **missing_p0** | - | - | 개별 시그널 IC 리포트 없음 |
+| Individual Signal IC Audit | **implemented** | `src/server/audit/individual-signal-ic-auditor.ts` | ✓ | 개별 시그널의 1w/1m/3m IC 요약 및 경고 |
 | Signal Stability Gate | **missing_p0** | - | - | flipCount/consecutiveDays 미구현 |
 | StrategyTrialRecord | **implemented** | `src/domain/strategy/strategy-trial-record.ts`, `strategy-trial-store.ts` | ✓ | 전략 묘지/시도 기록 및 중복 감지 |
 | Structured Output Guard | **missing_p0** | - | - | LLM 출력 검증 가드 없음 |
@@ -199,7 +199,7 @@
 | Item | Classification | Reason | Trigger |
 |---|---|---|---|
 | Factor Correlation Audit | **missing_p0** | 팩터 간 다중공선성 감지 없음 | 팩터 추가 전 필수 |
-| Individual Signal IC Audit | **missing_p0** | 시그널별 IC 리포트 없음 | 신호 추가 전 필수 |
+| Individual Signal IC Audit | **implemented (WO017-C)** | `src/server/audit/individual-signal-ic-auditor.ts` | 신호 추가 전 필수 |
 | Signal Stability Gate | **missing_p0** | flipCount/consecutiveDays 미구현 | 잦은 신호 반전 감지 |
 | StrategyTrialRecord | **implemented (WO017-B)** | `src/domain/strategy/strategy-trial-record.ts` | 다중검정 추적 기반 |
 | Structured Output Guard | **missing_p0** | LLM 출력 검증 없음 | LLM 기능 추가 전 필수 |

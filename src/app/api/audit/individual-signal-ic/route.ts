@@ -1,36 +1,68 @@
 import { NextRequest } from "next/server";
-import { auditIndividualSignalIc } from "@/server/audit/individual-signal-ic-auditor";
+import { createSafeResponse } from "@/server/security/safe-api-response";
+import { listIndividualSignalIcResults } from "@/server/audit/individual-signal-ic-store";
+import { DataEnvelope } from "@/domain/common/data-status";
+import { IndividualSignalIcResult } from "@/domain/audit/individual-signal-ic-result";
+import fs from "fs/promises";
+import { getIndividualSignalIcLatestPath } from "@/server/audit/individual-signal-ic-store-paths";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const universeId = (searchParams.get("universeId") ?? "KOSPI_SAMPLE") as
-    | "KOSPI_SAMPLE"
-    | "SP500_SAMPLE";
-
-  if (universeId !== "KOSPI_SAMPLE" && universeId !== "SP500_SAMPLE") {
-    return Response.json(
-      { status: "error", message: "유효하지 않은 universeId입니다." },
-      { status: 400 }
-    );
-  }
-
+export async function GET(request: NextRequest) {
   try {
-    const results = await auditIndividualSignalIc({ universeId });
+    const { searchParams } = new URL(request.url);
+    const universeId = (searchParams.get("universeId") as any) || undefined;
+    const signalId = searchParams.get("signalId") || undefined;
+    const horizon = (searchParams.get("horizon") as any) || undefined;
 
-    return Response.json({
-      status: "cached",
-      value: {
-        universeId,
-        results,
-        disclaimer:
-          "이 결과는 기능 검증 목적이며, 투자 판단에 사용할 수 없습니다. 표본은 샘플 유니버스 전용입니다.",
-      },
+    // Check if the latest file exists
+    const latestPath = getIndividualSignalIcLatestPath();
+    let fileExists = true;
+    try {
+      await fs.access(latestPath);
+    } catch {
+      fileExists = false;
+    }
+
+    if (!fileExists) {
+      const envelope: DataEnvelope<IndividualSignalIcResult[]> = {
+        value: [],
+        status: "not_found",
+        message: "No individual signal IC audit results found.",
+        source: "Individual Signal IC API",
+        sourceTier: "official",
+        warnings: [],
+        updatedAt: null,
+      };
+      return createSafeResponse(envelope);
+    }
+
+    const results = await listIndividualSignalIcResults({
+      universeId,
+      signalId,
+      horizon,
     });
-  } catch (err) {
-    console.error("[audit/individual-signal-ic GET]", err);
-    return Response.json(
-      { status: "error", message: "개별 신호 IC 감사 실패" },
-      { status: 500 }
-    );
+
+    const envelope: DataEnvelope<IndividualSignalIcResult[]> = {
+      value: results,
+      status: "cached",
+      source: "Individual Signal IC API",
+      sourceTier: "official",
+      warnings: [],
+      updatedAt: new Date().toISOString(),
+    };
+
+    return createSafeResponse(envelope);
+  } catch (err: any) {
+    const envelope: DataEnvelope<null> = {
+      value: null,
+      status: "error",
+      source: "Individual Signal IC API",
+      sourceTier: "official",
+      warnings: [],
+      updatedAt: null,
+      message: err?.message || String(err),
+    };
+    return createSafeResponse(envelope, 500);
   }
 }
+
+export const dynamic = "force-dynamic";

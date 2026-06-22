@@ -87,3 +87,11 @@ export type StrategyTrialRecord = {
    - `listStrategyTrialRecords()`를 통해 동일한 `strategyId`와 `parameterHash`를 가진 기록이 있는지 조회한다.
    - 백테스트 실행 시 이미 등록된 파라미터 조합이라면 새로운 Trial로 등록을 차단하거나, 기존 기록을 갱신하라는 안내를 CLI/API 수준에서 강제한다.
    - 단일 전략 계열 하에 등록된 고유 `parameterHash` 개수가 5개를 초과할 경우, 자동으로 `data_snooping_possible` 편향 경고를 바인딩하여 연구원에게 과최적화 위험을 경고한다.
+
+---
+
+## 5. 개별 신호 감사 연계 (Linkage to Individual Signal IC Audit)
+
+연구원은 등록된 `StrategyTrialRecord`를 조회할 때, 해당 전략의 구성 성분인 개별 신호들의 최신 예측력 감사 결과(`IndividualSignalIcResult`)를 함께 조회할 수 있다.
+- **적용 유니버스 매핑**: Trial의 `universeId`에 따라 동일 유니버스의 최신 신호 감사 요약을 화면에 바인딩한다.
+- **다중 차원 진단**: 특정 파라미터 조합의 누적 성과가 왜 좋거나 나쁜지, 개별 신호들의 음수 기여도(`negative_contribution`) 및 약한 신호 고가중치(`weak_signal_high_weight`) 경고 개수를 통해 추적할 수 있어 과최적화 방지 피드백 루프를 형성한다.

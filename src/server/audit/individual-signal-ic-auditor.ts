@@ -1,257 +1,279 @@
 import {
   IndividualSignalIcResult,
-  SignalContributionAssessment,
+  SignalAuditHorizon,
 } from "@/domain/audit/individual-signal-ic-result";
-import { loadOhlcvHistory } from "@/server/factors/ohlcv-history-loader";
-import { calculateTechnicalSignals } from "@/server/factors/technical-signal-engine";
-import { calculateAtomicSignals } from "@/server/factors/atomic-signal-calculator";
-import { assertNoLookAheadBias } from "@/domain/backtest/forward-return";
+import { SignalContributionAssessment } from "@/domain/audit/signal-contribution-assessment";
+import { SignalAuditWarning } from "@/domain/audit/signal-audit-warning";
+import { resolveSignalAuditCandidates } from "./signal-candidate-resolver";
+import { loadSignalScoreSeries, SignalScorePoint } from "./signal-score-series-loader";
+import { loadForwardReturnSeries, ForwardReturnPoint } from "./forward-return-series-loader";
 import { calculateSpearmanIC } from "@/server/backtest/backtest-ic-calculator";
-import {
-  KOSPI_SAMPLE_CONSTITUENTS,
-  SP500_SAMPLE_CONSTITUENTS,
-} from "@/domain/universe/market-universe";
 
-/**
- * 개별 atomic signal의 예상 가중치 (Momentum v1 기준).
- * 신호가 universe에 없으면 null.
- */
-const MOMENTUM_V1_WEIGHTS: Record<string, number | null> = {
-  momentum_ichimoku: 0.15,
-  momentum_darvas: 0.125,
-  momentum_turtle: 0.125,
-  momentum_weinstein: 0.125,
-  momentum_ma_slope: 0.125,
-  momentum_return: 0.15,
-  momentum_volatility: 0.05,
-  momentum_volume: 0.15,
-  // return_20d / return_60d / volume_zscore_60 are sub-components mapped to
-  // momentum_return / momentum_volume — show as null weight
-  return_20d: null,
-  return_60d: null,
-  volume_zscore_60: null,
-};
-
-const HORIZON_DAYS: Record<"1w" | "1m" | "3m", number> = {
-  "1w": 5,
-  "1m": 20,
-  "3m": 60,
-};
-
-const MIN_SAMPLE = 30;
-
-function assessContribution(
-  sampleSize: number,
-  spearmanIc: number | null,
-  icir: number | null,
-  currentWeight: number | null
-): { assessment: SignalContributionAssessment; warning: string | null } {
-  if (sampleSize < MIN_SAMPLE) {
-    return {
-      assessment: "insufficient_sample",
-      warning: `표본 수 부족 (n=${sampleSize}, 최소 ${MIN_SAMPLE} 필요)`,
-    };
-  }
-
-  if (spearmanIc === null) {
-    return {
-      assessment: "insufficient_sample",
-      warning: "IC 계산 불가",
-    };
-  }
-
-  if (spearmanIc < 0) {
-    return {
-      assessment: "negative",
-      warning: `IC 음수 (${spearmanIc.toFixed(4)}): 이 신호는 현재 방향성을 거스를 수 있습니다.`,
-    };
-  }
-
-  if (icir !== null && icir < 0) {
-    return {
-      assessment: "negative",
-      warning: `ICIR 음수 (${icir.toFixed(4)}): 신호가 불안정합니다.`,
-    };
-  }
-
-  if (
-    Math.abs(spearmanIc) < 0.01 &&
-    currentWeight !== null &&
-    currentWeight > 0.1
-  ) {
-    return {
-      assessment: "neutral",
-      warning: `IC 미미 (${spearmanIc.toFixed(4)})이나 가중치 높음 (${(currentWeight * 100).toFixed(0)}%): 재검토 필요`,
-    };
-  }
-
-  if (spearmanIc >= 0.01) {
-    return {
-      assessment: "positive",
-      warning: null,
-    };
-  }
-
-  return {
-    assessment: "neutral",
-    warning: null,
-  };
-}
+const ENGINE_VERSION = "1.0.0";
 
 /**
  * 개별 atomic signal별 IC를 계산한다.
- * Momentum v1 composite IC만 보지 않고, 각 신호의 기여도를 개별 측정한다.
  *
- * 이 결과는 설명 목적이며, 주문 추천 또는 자동 전략 활성화와 연결되지 않는다.
+ * 이 결과는 진단/설명 목적이며, 주문 추천 또는 자동 전략 활성화와 연결되지 않는다.
  */
-export async function auditIndividualSignalIc(params: {
+export async function auditIndividualSignalIc(input: {
   universeId: "KOSPI_SAMPLE" | "SP500_SAMPLE";
-  horizons?: ("1w" | "1m" | "3m")[];
+  signalId?: string;
+  horizon?: "1w" | "1m" | "3m";
+  startDate?: string;
+  endDate?: string;
 }): Promise<IndividualSignalIcResult[]> {
-  const { universeId, horizons = ["1w", "1m", "3m"] } = params;
+  const { universeId, signalId, horizon, startDate, endDate } = input;
 
-  const constituents =
-    universeId === "KOSPI_SAMPLE"
-      ? KOSPI_SAMPLE_CONSTITUENTS
-      : SP500_SAMPLE_CONSTITUENTS;
+  // 1. Resolve candidates
+  const allCandidates = await resolveSignalAuditCandidates({ universeId });
+  const targetCandidates = allCandidates.filter((c) => {
+    if (signalId && c.signalId !== signalId) return false;
+    return c.available;
+  });
 
-  // Collect (signalId, horizon, date) → (score, forwardReturn) observations
-  type Observation = { score: number; forwardReturn: number; date: string };
-  const signalObs: Record<string, Record<string, Observation[]>> = {};
-  // key: signalId, subkey: horizon
-
-  for (const constituent of constituents) {
-    const { assetId } = constituent;
-    const ohlcvEnv = await loadOhlcvHistory(universeId, assetId);
-    if (!ohlcvEnv.value || ohlcvEnv.value.length < 30) continue;
-
-    const bars = ohlcvEnv.value;
-    const startIdx = Math.min(25, bars.length - 1);
-
-    for (let i = startIdx; i < bars.length; i++) {
-      const currentBar = bars[i];
-      const signalDate = currentBar.date;
-      if (i + 1 >= bars.length) continue;
-      const entryBar = bars[i + 1];
-      assertNoLookAheadBias({ signalDate, entryDate: entryBar.date });
-
-      const techResult = calculateTechnicalSignals(bars, i);
-      const atomicSigs = calculateAtomicSignals(
-        techResult,
-        ohlcvEnv.status,
-        currentBar.close,
-        currentBar.open
-      );
-
-      for (const sig of atomicSigs) {
-        if (sig.score === null) continue;
-
-        for (const h of horizons) {
-          const exitIdx = i + 1 + HORIZON_DAYS[h];
-          if (exitIdx >= bars.length) continue;
-          const forwardReturn =
-            (bars[exitIdx].close - entryBar.close) / entryBar.close;
-
-          if (!signalObs[sig.factorId]) signalObs[sig.factorId] = {};
-          if (!signalObs[sig.factorId][h]) signalObs[sig.factorId][h] = [];
-          signalObs[sig.factorId][h].push({
-            score: sig.score,
-            forwardReturn,
-            date: signalDate,
-          });
-        }
-      }
-    }
-  }
-
+  const horizons: SignalAuditHorizon[] = horizon ? [horizon] : ["1w", "1m", "3m"];
   const results: IndividualSignalIcResult[] = [];
+  const timestampStr = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+  const calculatedAt = new Date().toISOString();
 
-  for (const [signalId, horizonMap] of Object.entries(signalObs)) {
-    for (const h of horizons) {
-      const obs = horizonMap[h] ?? [];
+  for (const candidate of targetCandidates) {
+    // 2. Load score series
+    const scores = await loadSignalScoreSeries({
+      universeId,
+      signalId: candidate.signalId,
+      startDate,
+      endDate,
+    });
 
-      if (obs.length < MIN_SAMPLE) {
+    // Check if score series is empty
+    if (scores.length === 0) {
+      for (const h of horizons) {
+        const id = `individual_signal_ic_${universeId}_${candidate.signalId}_${h}_${timestampStr}`;
         results.push({
-          signalId,
+          id,
+          signalId: candidate.signalId,
+          signalLabelKo: candidate.signalLabelKo,
           universeId,
           horizon: h,
-          sampleSize: obs.length,
+          sampleSize: 0,
+          dateCount: 0,
+          assetCount: 0,
           spearmanIc: null,
           icir: null,
           hitRate: null,
-          currentWeightInMomentumV1: MOMENTUM_V1_WEIGHTS[signalId] ?? null,
-          contributionAssessment: "insufficient_sample",
-          warning: `표본 수 부족 (n=${obs.length})`,
+          currentWeightInMomentumV1: candidate.currentWeightInMomentumV1,
+          contributionAssessment: "not_available",
+          warnings: ["missing_signal_score", "sample_universe_only"],
+          sourceSignalCount: 1,
+          calculatedAt,
+          engineVersion: ENGINE_VERSION,
         });
-        continue;
+      }
+      continue;
+    }
+
+    // Extract unique dates and assets
+    const dates = Array.from(new Set(scores.map((s) => s.date))).sort();
+    const assetIds = Array.from(new Set(scores.map((s) => s.assetId)));
+
+    for (const h of horizons) {
+      // 3. Load forward return series
+      const returns = await loadForwardReturnSeries({
+        universeId,
+        horizon: h,
+        dates,
+        assetIds,
+      });
+
+      // Map returns for quick lookup by (date, assetId)
+      const returnMap = new Map<string, number | null>();
+      const returnWarningsMap = new Map<string, string[]>();
+      let hasMissingReturn = false;
+      let hasPersonalFallbackPrice = false;
+
+      for (const ret of returns) {
+        const key = `${ret.date}_${ret.assetId}`;
+        returnMap.set(key, ret.forwardReturn);
+        returnWarningsMap.set(key, ret.warnings);
+        if (ret.forwardReturn === null) {
+          hasMissingReturn = true;
+        }
+        if (ret.warnings.includes("personal_fallback_used")) {
+          hasPersonalFallbackPrice = true;
+        }
       }
 
-      // Group by date for daily cross-sectional IC
-      const byDate: Record<string, { score: number; forwardReturn: number }[]> =
-        {};
-      for (const o of obs) {
-        if (!byDate[o.date]) byDate[o.date] = [];
-        byDate[o.date].push({ score: o.score, forwardReturn: o.forwardReturn });
+      // Group valid pairs by date
+      const dailyPairs = new Map<string, { score: number; forwardReturn: number }[]>();
+      const allValidPairs: { score: number; forwardReturn: number; date: string }[] = [];
+      let hasPersonalFallbackScore = false;
+
+      for (const sc of scores) {
+        const key = `${sc.date}_${sc.assetId}`;
+        const forwardReturn = returnMap.get(key);
+
+        if (sc.warnings.includes("personal_fallback_used")) {
+          hasPersonalFallbackScore = true;
+        }
+
+        if (
+          sc.score !== null &&
+          forwardReturn !== undefined &&
+          forwardReturn !== null &&
+          Number.isFinite(sc.score) &&
+          Number.isFinite(forwardReturn)
+        ) {
+          const pair = { score: sc.score, forwardReturn };
+          allValidPairs.push({ ...pair, date: sc.date });
+
+          if (!dailyPairs.has(sc.date)) {
+            dailyPairs.set(sc.date, []);
+          }
+          dailyPairs.get(sc.date)!.push(pair);
+        }
       }
 
+      // Filter daily groups to those with at least 3 pairs
       const dailyIcs: number[] = [];
-      for (const dateObs of Object.values(byDate)) {
-        const result = calculateSpearmanIC(
-          dateObs.map((o) => ({
-            score: o.score,
-            forwardReturn: o.forwardReturn,
-          }))
-        );
-        if (result.ic !== null) dailyIcs.push(result.ic);
+      let calculatedDateCount = 0;
+      for (const [date, pairs] of dailyPairs.entries()) {
+        if (pairs.length >= 3) {
+          const icResult = calculateSpearmanIC(pairs);
+          if (icResult.ic !== null && Number.isFinite(icResult.ic)) {
+            dailyIcs.push(icResult.ic);
+            calculatedDateCount++;
+          }
+        }
       }
+
+      const sampleSize = allValidPairs.length;
+      const uniqueAssets = Array.from(new Set(allValidPairs.map((p) => p.date))); // Wait, asset count is unique assetIds!
+      const uniqueAssetIdsObserved = Array.from(new Set(scores.filter((s) => s.score !== null).map((s) => s.assetId)));
 
       let spearmanIc: number | null = null;
       let icir: number | null = null;
 
       if (dailyIcs.length >= 2) {
-        spearmanIc = dailyIcs.reduce((a, b) => a + b, 0) / dailyIcs.length;
-        const variance =
-          dailyIcs.reduce((s, ic) => s + (ic - spearmanIc!) ** 2, 0) /
-          dailyIcs.length;
+        const sum = dailyIcs.reduce((a, b) => a + b, 0);
+        spearmanIc = sum / dailyIcs.length;
+
+        const variance = dailyIcs.reduce((s, ic) => s + (ic - spearmanIc!) ** 2, 0) / dailyIcs.length;
         const std = Math.sqrt(variance);
         icir = std > 0 ? spearmanIc / std : null;
+
+        // Round to 4 decimal places
         spearmanIc = Math.round(spearmanIc * 10000) / 10000;
-        if (icir !== null) icir = Math.round(icir * 10000) / 10000;
+        if (icir !== null) {
+          icir = Math.round(icir * 10000) / 10000;
+        }
       } else if (dailyIcs.length === 1) {
         spearmanIc = Math.round(dailyIcs[0] * 10000) / 10000;
       }
 
-      // Hit rate
-      let hits = 0;
-      for (const o of obs) {
-        if (
-          (o.score > 0 && o.forwardReturn > 0) ||
-          (o.score < 0 && o.forwardReturn < 0)
-        ) {
-          hits++;
+      // 4. Hit Rate calculation: score > medianScore인 그룹의 forwardReturn > 0 비율
+      let hitRate: number | null = null;
+      let hitCount = 0;
+      let totalAboveMedianCount = 0;
+
+      // Group valid pairs by date again to find date-specific medians
+      const validPairsByDate = new Map<string, { score: number; forwardReturn: number }[]>();
+      for (const p of allValidPairs) {
+        if (!validPairsByDate.has(p.date)) {
+          validPairsByDate.set(p.date, []);
+        }
+        validPairsByDate.get(p.date)!.push(p);
+      }
+
+      for (const [date, pairs] of validPairsByDate.entries()) {
+        const sortedScores = pairs.map((p) => p.score).sort((a, b) => a - b);
+        if (sortedScores.length === 0) continue;
+
+        let medianScore = 0;
+        const mid = Math.floor(sortedScores.length / 2);
+        if (sortedScores.length % 2 === 0) {
+          medianScore = (sortedScores[mid - 1] + sortedScores[mid]) / 2;
+        } else {
+          medianScore = sortedScores[mid];
+        }
+
+        for (const p of pairs) {
+          if (p.score > medianScore) {
+            totalAboveMedianCount++;
+            if (p.forwardReturn > 0) {
+              hitCount++;
+            }
+          }
         }
       }
-      const hitRate = Math.round((hits / obs.length) * 10000) / 10000;
 
-      const currentWeight = MOMENTUM_V1_WEIGHTS[signalId] ?? null;
-      const { assessment, warning } = assessContribution(
-        obs.length,
-        spearmanIc,
-        icir,
-        currentWeight
-      );
+      if (totalAboveMedianCount > 0) {
+        hitRate = Math.round((hitCount / totalAboveMedianCount) * 10000) / 10000;
+      }
+
+      // 5. Construct warnings and contribution assessment
+      const warnings: SignalAuditWarning[] = ["sample_universe_only"];
+
+      if (sampleSize < 30) {
+        warnings.push("insufficient_sample");
+      }
+      if (calculatedDateCount < 3) {
+        warnings.push("not_enough_time_series");
+      }
+      if (uniqueAssetIdsObserved.length < 3) {
+        warnings.push("not_enough_cross_section");
+      }
+      if (spearmanIc !== null && spearmanIc < 0) {
+        warnings.push("negative_contribution");
+      }
+      if (
+        spearmanIc !== null &&
+        Math.abs(spearmanIc) < 0.01 &&
+        candidate.currentWeightInMomentumV1 !== null &&
+        candidate.currentWeightInMomentumV1 >= 0.10
+      ) {
+        warnings.push("weak_signal_high_weight");
+      }
+      if (icir !== null && icir < 0) {
+        warnings.push("unstable_signal");
+      }
+      if (hasMissingReturn) {
+        warnings.push("missing_forward_return");
+      }
+      if (hasPersonalFallbackScore || hasPersonalFallbackPrice) {
+        warnings.push("personal_fallback_used");
+      }
+
+      // Assess contribution
+      let assessment: SignalContributionAssessment = "neutral";
+      if (sampleSize < 30) {
+        assessment = "insufficient_sample";
+      } else if (spearmanIc !== null && spearmanIc < 0) {
+        assessment = "negative";
+      } else if (spearmanIc !== null && spearmanIc > 0.02 && sampleSize >= 30) {
+        assessment = "positive";
+      }
+
+      const id = `individual_signal_ic_${universeId}_${candidate.signalId}_${h}_${timestampStr}`;
 
       results.push({
-        signalId,
+        id,
+        signalId: candidate.signalId,
+        signalLabelKo: candidate.signalLabelKo,
         universeId,
         horizon: h,
-        sampleSize: obs.length,
+        sampleSize,
+        dateCount: calculatedDateCount,
+        assetCount: uniqueAssetIdsObserved.length,
         spearmanIc,
         icir,
         hitRate,
-        currentWeightInMomentumV1: currentWeight,
+        currentWeightInMomentumV1: candidate.currentWeightInMomentumV1,
         contributionAssessment: assessment,
-        warning,
+        warnings,
+        sourceSignalCount: 1,
+        calculatedAt,
+        engineVersion: ENGINE_VERSION,
       });
     }
   }

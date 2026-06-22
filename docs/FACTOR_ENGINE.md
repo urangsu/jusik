@@ -69,3 +69,8 @@ The Signal Reliability Engine evaluates individual technical atomic signals (Ich
 - **No Direct Mutation**: Reliability-derived weights do not modify base database values of factors (`RELIABILITY_WEIGHTING_ENABLED=false` by default). The UI presents these weights side-by-side with original factor weights to maintain transparency and stability.
 
 
+## Individual Signal IC Audit Integration (WO017-C)
+
+Composite factor인 `momentum_v1`을 구성하는 각 atomic signal들의 실질적 예측 능력을 개별 검증합니다.
+- **독립적 IC 감사**: 각 atomic signal과 OOS 미래 수익률 간의 Spearman Rank IC, ICIR 및 Hit Rate를 계산하여 예측 성능을 개별 진단합니다.
+- **예측 경고 피드백**: IC가 음수이거나 미미함에도 높은 가중치가 할당된 상태 (`weak_signal_high_weight`, `negative_contribution` 등)를 탐지하여 리서처의 수동 팩터 가중치 재검토를 유도합니다.

@@ -137,7 +137,8 @@ turnover_t = 0.5 * Σ |w_t(asset) - w_{t-1}(asset)|
 
 ---
 
-## 9. 다음 후보 (미구현)
+## 9. 개별 신호 분석 연계 및 사후 검토 (Individual Signal IC Audit & Postmortem)
 
-- **Parameter Plateau**: 파라미터 민감도/고원(plateau) 분석은 WO017-A 범위 밖이며, Signal Postmortem과 함께 후속 작업 후보로 남깁니다.
-- **selectedPositions**: 각 OOS 구간의 선택 종목 상세는 향후 Signal Postmortem 입력으로 사용합니다.
+- **Selected Positions 상세 연계**: 각 OOS 구간에서 선정된 종목 리스트는 `SignalPostmortem` skeleton으로 자동 변환되어 사후적으로 실현 경과가 정산(Postmortem Audit)됩니다 (WO017-B 구현).
+- **개별 신호 IC 감사**: 백테스트 종합 성과를 구성하는 개별 신호들의 단면 예측력은 `IndividualSignalIcResult` 계산 모듈을 통해 분리되어 독립적으로 감사됩니다 (WO017-C 구현).
+- **Parameter Plateau**: 파라미터 민감도/고원(plateau) 분석은 향후 후속 연구용 후보로 남깁니다.

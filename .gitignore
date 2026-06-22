@@ -80,6 +80,8 @@ data/signal-postmortems/
 !data/settings/.gitkeep
 !data/strategy-trials/.gitkeep
 !data/signal-postmortems/.gitkeep
+data/audits/individual-signal-ic/*
+!data/audits/individual-signal-ic/.gitkeep
 
 # Test fixtures are allowed to be committed (keep small & synthetic)
 !test/fixtures/**
