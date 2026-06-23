@@ -113,6 +113,9 @@ describe("WatchlistReportAggregator", () => {
     expect(res.items[0].severity).toBe("warning");
     expect(res.items[0].category).toBe("internal_research");
     expect(res.items[0].source.sourceType).toBe("signal_postmortem");
+    expect(res.items[0].source.sourceTier).toBe("manual_import");
+    expect(res.items[0].source.warnings).toContain("source_tier_not_preserved");
+    expect(res.items[0].source.internalUrl).toBe("/strategy/signal-postmortems/pm-1");
     expect(vi.mocked(saveWatchlistReportItem)).toHaveBeenCalledTimes(1);
   });
 
@@ -130,6 +133,7 @@ describe("WatchlistReportAggregator", () => {
         messageKo: "전략 신호가 변경되었습니다.",
         occurredAt: "2026-06-18T00:00:00Z",
         createdAt: "2026-06-18T00:00:00Z",
+        sourceTier: "free_limited",
         warnings: [],
       },
     ] as any);
@@ -141,6 +145,7 @@ describe("WatchlistReportAggregator", () => {
     expect(res.items).toHaveLength(1);
     expect(res.items[0].category).toBe("signal");
     expect(res.items[0].severity).toBe("critical");
+    expect(res.items[0].source.sourceTier).toBe("free_limited");
     expect(res.items[0].source.internalUrl).toBe("/alerts");
   });
 
@@ -168,6 +173,8 @@ describe("WatchlistReportAggregator", () => {
     expect(res.items).toHaveLength(1);
     expect(res.items[0].severity).toBe("critical");
     expect(res.items[0].category).toBe("filing");
+    expect(res.items[0].source.sourceTier).toBe("official");
     expect(res.items[0].source.sourceUrl).toBe("http://dart.fss.or.kr/123");
+    expect(res.items[0].source.internalUrl).toBe("/filings?assetId=KR:005930&filingId=filing-1");
   });
 });

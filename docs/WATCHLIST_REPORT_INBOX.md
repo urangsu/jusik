@@ -30,7 +30,7 @@ The aggregator collects data matching watched asset IDs from three primary inter
    - **Source Tier**: `official`
    - **Severity Rules**: Keyword checks in `reportName` (정정, 소송, 감사의견 -> `warning`; 상장폐지, 횡령 -> `critical`).
 2. **Signal Postmortems**: Matches by `assetId`.
-   - **Source Tier**: `personal_fallback`
+   - **Source Tier**: `manual_import` (Appends `"source_tier_not_preserved"` to the warnings list since postmortems do not carry a native `sourceTier` field).
    - **Severity Rules**: Outcome classification (`negative` or `missing_price` -> `warning`, `not_evaluable` -> `watch`, else -> `info`).
 3. **Alert Events**: Matches by `assetId`.
    - **Source Tier**: Matches original alert tier.
@@ -56,10 +56,12 @@ Each item renders external original link buttons (e.g., to DART official viewer)
 ### 4.1 Internal Application Badging Only (자동 외부 푸시 아님)
 - **No External Push Channels**: The system strictly does **not** push alerts via Telegram, KakaoTalk, SMS, Email, or browser push notifications.
 - **App-Local Badges**: Active notifications are represented inside the client application through an local unread badge displayed in the navigation tabs of `TopCommandBar`.
-- **Semi-Automatic Aggregation**:
-  1. Polled updates: The client polls `/api/watchlist/reports/unread-count` at 15-second intervals to update the badge.
-  2. Auto-triggered on additions: When a user registers a new watched asset, a background fetch automatically triggers aggregation for that `assetId`.
-  3. On-demand manual trigger: Users can run the aggregator manually by clicking the "이벤트 수집 실행" (Run Aggregator) button.
+- **Semi-Automatic Aggregation & Polling**:
+  1. Polled updates: The client polls `/api/watchlist/reports/unread-count` and `/api/alerts/events` at 15-second intervals.
+  2. Visibility Guarded: Polling only triggers when `document.visibilityState === "visible"`. When the browser tab is hidden, polling is skipped.
+  3. Immediate Refresh: Focus changes on the browser window immediately trigger unread badge count refreshes.
+  4. Auto-triggered on additions: When a user registers a new watched asset, a background fetch automatically triggers aggregation for that `assetId`.
+  5. On-demand manual trigger: Users can run the aggregator manually by clicking the "이벤트 수집 실행" (Run Aggregator) button.
 
 ### 4.2 Source Tier Policy Separation (데이터 출처 등급 구분)
 We distinguish between the **API Envelope Metadata** and the **ReportItem source metadata**:

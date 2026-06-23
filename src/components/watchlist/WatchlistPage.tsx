@@ -112,11 +112,15 @@ export const WatchlistPage: React.FC<WatchlistPageProps> = ({ onRefreshUnreadCou
       await fetchReports();
       onRefreshUnreadCount?.();
     } catch (err: any) {
-      let msg = err?.message || String(err) || "Aggregation failed";
+      let msg = err?.message || String(err) || "";
       if (msg.includes("LOCAL_SETTINGS_WRITE_ENABLED=true") || msg.includes("Settings write route") || msg.includes("disabled") || msg.includes("forbidden")) {
         msg = locale === "ko"
           ? "LOCAL_SETTINGS_WRITE_ENABLED=true 필요. 수집 실행 권한이 비활성화되어 있습니다."
-          : "LOCAL_SETTINGS_WRITE_ENABLED=true required. Aggregation write operation is disabled.";
+          : "LOCAL_SETTINGS_WRITE_ENABLED=true is required. Aggregation write operation is disabled.";
+      } else {
+        msg = locale === "ko"
+          ? "리포트 수집 중 오류가 발생했습니다."
+          : "An error occurred during report aggregation.";
       }
       setAggregateError(msg);
     } finally {

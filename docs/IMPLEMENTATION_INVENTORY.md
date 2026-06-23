@@ -134,8 +134,8 @@
 
 | Component | Status | SSR Safe | Notes |
 |---|---|---|---|
-| `TerminalShell` | **implemented** | ✓ | 전체 레이아웃 쉘 |
-| `TopCommandBar` | **implemented** | ✓ | |
+| `TerminalShell` | **implemented** | ✓ | 전체 레이아웃 쉘. 활성 탭 대응만 분기 렌더링 |
+| `TopCommandBar` | **implemented** | ✓ | 상단 메뉴 바. 실 구현된 7개 탭만 노출 (나머지는 UI에서 제외/유지보수 보류) |
 | `LeftRail` / `RightRail` | **implemented** | ✓ | |
 | `BottomStatusBar` | **implemented** | ✓ | |
 | `MarketBoardPage` | **implemented** | ✓ | mounted 가드, toLocaleString 보호 |

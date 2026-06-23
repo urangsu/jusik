@@ -50,4 +50,17 @@ describe("Unread Count API - GET /api/watchlist/reports/unread-count", () => {
       latestDetectedAt: null,
     });
   });
+
+  it("should return 500 and status=error when the store fails", async () => {
+    vi.mocked(listWatchlistReportItems).mockRejectedValue(new Error("Store read failed"));
+
+    const req = new NextRequest("http://localhost/api/watchlist/reports/unread-count");
+    const res = await GET(req);
+    expect(res.status).toBe(500);
+
+    const json = await res.json();
+    expect(json.status).toBe("error");
+    expect(json.message).toBe("Store read failed");
+    expect(json.sourceTier).toBe("manual_import");
+  });
 });

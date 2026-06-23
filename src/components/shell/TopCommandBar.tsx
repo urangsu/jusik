@@ -31,16 +31,11 @@ export const TopCommandBar: React.FC<TopCommandBarProps> = ({
 
   const tabs = [
     { id: "markets", label: locale === "ko" ? "시장 보드" : "Markets" },
-    { id: "terminal", label: locale === "ko" ? "터미널" : "Terminal" },
-    { id: "financials", label: locale === "ko" ? "재무분석" : "Financials" },
     { id: "strategy", label: locale === "ko" ? "전략 점수" : "Strategy" },
     { id: "backtest", label: locale === "ko" ? "백테스트" : "Backtest" },
     { id: "reliability", label: locale === "ko" ? "신호 신뢰도" : "Signal Reliability" },
     { id: "alerts", label: locale === "ko" ? "알림 설정" : "Alerts" },
     { id: "watchlist", label: locale === "ko" ? "관심종목" : "Watchlist" },
-    { id: "portfolio", label: locale === "ko" ? "포트폴리오" : "Portfolio" },
-    { id: "research", label: locale === "ko" ? "리서치" : "Research" },
-    { id: "ai", label: locale === "ko" ? "AI 분석" : "AI" },
     { id: "settings", label: locale === "ko" ? "설정" : "Settings" },
   ];
 

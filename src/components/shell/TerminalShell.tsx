@@ -69,13 +69,22 @@ export const TerminalShell: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchUnreadCount();
-    fetchUnreadWatchlistCount();
-    const intervalAlerts = setInterval(fetchUnreadCount, 15000);
-    const intervalWatchlist = setInterval(fetchUnreadWatchlistCount, 15000);
+    const refresh = () => {
+      if (document.visibilityState !== "visible") return;
+      fetchUnreadCount();
+      fetchUnreadWatchlistCount();
+    };
+
+    refresh();
+
+    const interval = setInterval(refresh, 15000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+
     return () => {
-      clearInterval(intervalAlerts);
-      clearInterval(intervalWatchlist);
+      clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
     };
   }, []);
 
