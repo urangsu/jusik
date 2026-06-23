@@ -141,7 +141,7 @@ describe("WatchlistReportAggregator", () => {
     expect(res.items).toHaveLength(1);
     expect(res.items[0].category).toBe("signal");
     expect(res.items[0].severity).toBe("critical");
-    expect(res.items[0].source.internalUrl).toBe("/alerts?eventId=alert-1");
+    expect(res.items[0].source.internalUrl).toBe("/alerts");
   });
 
   it("should aggregate OpenDART filings by stockCode and keyword-severity evaluation", async () => {

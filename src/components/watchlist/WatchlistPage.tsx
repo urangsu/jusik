@@ -9,9 +9,13 @@ import { AddWatchlistAssetForm } from "./AddWatchlistAssetForm";
 import { WatchlistReportSummary } from "./WatchlistReportSummary";
 import { WatchlistReportFilters } from "./WatchlistReportFilters";
 import { WatchlistReportInbox } from "./WatchlistReportInbox";
-import { RefreshCw, Play, Loader2, Info } from "lucide-react";
+import { RefreshCw, Play, Loader2, Info, AlertTriangle } from "lucide-react";
 
-export const WatchlistPage: React.FC = () => {
+interface WatchlistPageProps {
+  onRefreshUnreadCount?: () => void;
+}
+
+export const WatchlistPage: React.FC<WatchlistPageProps> = ({ onRefreshUnreadCount }) => {
   const { locale } = useI18n();
 
   // Data states
@@ -26,6 +30,7 @@ export const WatchlistPage: React.FC = () => {
     created: number;
     skippedDuplicate: number;
   } | null>(null);
+  const [aggregateError, setAggregateError] = useState<string | null>(null);
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -82,11 +87,13 @@ export const WatchlistPage: React.FC = () => {
 
   const handleReportStatusChange = (id: string, newStatus: WatchlistReportStatus) => {
     setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r)));
+    onRefreshUnreadCount?.();
   };
 
   const triggerAggregate = async (specificAssetId?: string) => {
     setAggregating(true);
     setAggregateResult(null);
+    setAggregateError(null);
     try {
       const res = await fetch("/api/watchlist/reports/aggregate", {
         method: "POST",
@@ -94,15 +101,24 @@ export const WatchlistPage: React.FC = () => {
         body: JSON.stringify({ assetId: specificAssetId }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.message || "Aggregation failed.");
+      if (!res.ok) {
+        throw new Error(json.message || "Aggregation failed.");
+      }
       
       const { created, skippedDuplicate } = json.value;
       setAggregateResult({ created, skippedDuplicate });
       
       // Re-fetch reports to show new items
       await fetchReports();
-    } catch (err) {
-      alert(err || "Aggregation failed");
+      onRefreshUnreadCount?.();
+    } catch (err: any) {
+      let msg = err?.message || String(err) || "Aggregation failed";
+      if (msg.includes("LOCAL_SETTINGS_WRITE_ENABLED=true") || msg.includes("Settings write route") || msg.includes("disabled") || msg.includes("forbidden")) {
+        msg = locale === "ko"
+          ? "LOCAL_SETTINGS_WRITE_ENABLED=true 필요. 수집 실행 권한이 비활성화되어 있습니다."
+          : "LOCAL_SETTINGS_WRITE_ENABLED=true required. Aggregation write operation is disabled.";
+      }
+      setAggregateError(msg);
     } finally {
       setAggregating(false);
     }
@@ -146,6 +162,21 @@ export const WatchlistPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {aggregateError && (
+        <div className="p-3.5 bg-kt-negative-weak/20 border border-kt-negative-weak text-xs text-kt-negative-text rounded-kt-card flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-kt-negative-text shrink-0" />
+            <span>{aggregateError}</span>
+          </div>
+          <button
+            onClick={() => setAggregateError(null)}
+            className="text-kt-text-muted hover:text-kt-text-primary transition font-bold px-1.5 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Stats Summary */}
       <WatchlistReportSummary reports={reports} />

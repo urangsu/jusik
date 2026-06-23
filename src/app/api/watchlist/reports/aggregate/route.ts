@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       value: result,
       status: "real_time",
       source: "Watchlist Report Aggregator",
-      sourceTier: "personal_fallback",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: new Date().toISOString(),
     };
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       value: null,
       status: "error",
       source: "Watchlist Report Aggregator",
-      sourceTier: "personal_fallback",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: null,
       message: err?.message || String(err),

@@ -13,6 +13,9 @@ interface TopCommandBarProps {
   onTabChange: (tab: string) => void;
   onSelectAsset: (asset: Asset) => void;
   unreadAlertsCount?: number;
+  unreadWatchlistReportsCount?: number;
+  watchlistCriticalCount?: number;
+  watchlistWarningCount?: number;
 }
 
 export const TopCommandBar: React.FC<TopCommandBarProps> = ({
@@ -20,6 +23,9 @@ export const TopCommandBar: React.FC<TopCommandBarProps> = ({
   onTabChange,
   onSelectAsset,
   unreadAlertsCount,
+  unreadWatchlistReportsCount,
+  watchlistCriticalCount,
+  watchlistWarningCount,
 }) => {
   const { locale } = useI18n();
 
@@ -31,6 +37,7 @@ export const TopCommandBar: React.FC<TopCommandBarProps> = ({
     { id: "backtest", label: locale === "ko" ? "백테스트" : "Backtest" },
     { id: "reliability", label: locale === "ko" ? "신호 신뢰도" : "Signal Reliability" },
     { id: "alerts", label: locale === "ko" ? "알림 설정" : "Alerts" },
+    { id: "watchlist", label: locale === "ko" ? "관심종목" : "Watchlist" },
     { id: "portfolio", label: locale === "ko" ? "포트폴리오" : "Portfolio" },
     { id: "research", label: locale === "ko" ? "리서치" : "Research" },
     { id: "ai", label: locale === "ko" ? "AI 분석" : "AI" },
@@ -75,6 +82,17 @@ export const TopCommandBar: React.FC<TopCommandBarProps> = ({
               {tab.id === "alerts" && unreadAlertsCount !== undefined && unreadAlertsCount > 0 && (
                 <span className="inline-flex items-center justify-center bg-kt-positive text-kt-bg-body text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none">
                   {unreadAlertsCount}
+                </span>
+              )}
+              {tab.id === "watchlist" && unreadWatchlistReportsCount !== undefined && unreadWatchlistReportsCount > 0 && (
+                <span className={`inline-flex items-center justify-center text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none ${
+                  watchlistCriticalCount && watchlistCriticalCount > 0
+                    ? "bg-kt-positive text-kt-bg-body"
+                    : watchlistWarningCount && watchlistWarningCount > 0
+                    ? "bg-kt-negative-text text-kt-bg-body"
+                    : "bg-kt-text-muted text-kt-bg-body"
+                }`}>
+                  {unreadWatchlistReportsCount > 99 ? "99+" : unreadWatchlistReportsCount}
                 </span>
               )}
             </button>

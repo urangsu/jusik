@@ -12,6 +12,34 @@ export async function GET(req: NextRequest) {
     const market = searchParams.get("market") as "KR" | "US" | null;
     const tag = searchParams.get("tag") || undefined;
     const reportInboxEnabledParam = searchParams.get("reportInboxEnabled");
+
+    // Validation
+    if (market !== null && market !== "KR" && market !== "US") {
+      const envelope: DataEnvelope<null> = {
+        value: null,
+        status: "error",
+        source: "Watchlist Store",
+        sourceTier: "manual_import",
+        warnings: [],
+        updatedAt: null,
+        message: "Invalid market parameter: must be 'KR' or 'US'",
+      };
+      return createSafeResponse(envelope, 400);
+    }
+
+    if (reportInboxEnabledParam !== null && reportInboxEnabledParam !== "true" && reportInboxEnabledParam !== "false") {
+      const envelope: DataEnvelope<null> = {
+        value: null,
+        status: "error",
+        source: "Watchlist Store",
+        sourceTier: "manual_import",
+        warnings: [],
+        updatedAt: null,
+        message: "Invalid reportInboxEnabled parameter: must be 'true' or 'false'",
+      };
+      return createSafeResponse(envelope, 400);
+    }
+
     const reportInboxEnabled = reportInboxEnabledParam !== null ? reportInboxEnabledParam === "true" : undefined;
 
     const items = await listWatchlistItems({
@@ -24,7 +52,7 @@ export async function GET(req: NextRequest) {
       value: items,
       status: "cached",
       source: "Watchlist Store",
-      sourceTier: "personal_fallback",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: new Date().toISOString(),
     };
@@ -34,7 +62,7 @@ export async function GET(req: NextRequest) {
       value: null,
       status: "error",
       source: "Watchlist Store",
-      sourceTier: "personal_fallback",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: null,
       message: err?.message || String(err),
@@ -56,7 +84,7 @@ export async function POST(req: NextRequest) {
         value: null,
         status: "insufficient_data",
         source: "Watchlist Store",
-        sourceTier: "personal_fallback",
+        sourceTier: "manual_import",
         warnings: [],
         updatedAt: null,
         message: "Missing required fields: assetId, symbol, market, universeId",
@@ -85,7 +113,7 @@ export async function POST(req: NextRequest) {
       value: item,
       status: "real_time",
       source: "Watchlist Store",
-      sourceTier: "personal_fallback",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: new Date().toISOString(),
     };
@@ -95,7 +123,7 @@ export async function POST(req: NextRequest) {
       value: null,
       status: "error",
       source: "Watchlist Store",
-      sourceTier: "personal_fallback",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: null,
       message: err?.message || String(err),

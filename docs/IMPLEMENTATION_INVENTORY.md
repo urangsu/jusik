@@ -101,6 +101,7 @@
 | `PATCH /api/watchlist/[assetId]` | **implemented** | ✓ | SettingsWriteGuard | 관심종목 수정 |
 | `DELETE /api/watchlist/[assetId]` | **implemented** | ✓ | SettingsWriteGuard | 관심종목 삭제 |
 | `GET /api/watchlist/reports` | **implemented** | ✓ | - | 수집된 리포트 조회 |
+| `GET /api/watchlist/reports/unread-count` | **implemented** | ✓ | - | 읽지 않은 리포트 갯수 조회 |
 | `POST /api/watchlist/reports/aggregate` | **implemented** | ✓ | SettingsWriteGuard | 관심종목 관련 리포트 수집 실행 |
 | `PATCH /api/watchlist/reports/[id]/status` | **implemented** | ✓ | SettingsWriteGuard | 리포트 읽음/보관/숨김 상태 갱신 |
 

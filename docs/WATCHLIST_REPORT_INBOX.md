@@ -48,3 +48,31 @@ Users manage incoming reports within the `/watchlist` dashboard:
 - **Hide**: Excludes selected elements from the feed.
 
 Each item renders external original link buttons (e.g., to DART official viewer) or internal detail routing buttons (e.g., to postmortem audit details page).
+
+---
+
+## 4. Automation & Alerting Policies
+
+### 4.1 Internal Application Badging Only (자동 외부 푸시 아님)
+- **No External Push Channels**: The system strictly does **not** push alerts via Telegram, KakaoTalk, SMS, Email, or browser push notifications.
+- **App-Local Badges**: Active notifications are represented inside the client application through an local unread badge displayed in the navigation tabs of `TopCommandBar`.
+- **Semi-Automatic Aggregation**:
+  1. Polled updates: The client polls `/api/watchlist/reports/unread-count` at 15-second intervals to update the badge.
+  2. Auto-triggered on additions: When a user registers a new watched asset, a background fetch automatically triggers aggregation for that `assetId`.
+  3. On-demand manual trigger: Users can run the aggregator manually by clicking the "이벤트 수집 실행" (Run Aggregator) button.
+
+### 4.2 Source Tier Policy Separation (데이터 출처 등급 구분)
+We distinguish between the **API Envelope Metadata** and the **ReportItem source metadata**:
+- **API Envelope SourceTier**: Set to `"manual_import"` for all watchlist-related routes (`/api/watchlist`, `/api/watchlist/reports`, etc.) because the watchlist itself is custom user-managed settings.
+- **ReportItem Source.SourceTier**: Represents the actual origin of the event data and must **not** be overwritten with `"manual_import"`:
+  - `OpenDART filings` -> `"official"`
+  - `AlertEvents` -> preserved from the underlying alert rule engine (`alert.sourceTier`).
+  - `SignalPostmortems` -> set to `"manual_import"` since postmortems are generated internally, and we prepend `"source_tier_not_preserved"` to the warnings list because postmortems do not carry a native `sourceTier` field.
+
+### 4.3 Validation of Internal Navigation Routes (내부 링크 무결성)
+- We ensure `internalUrl` entries map to actual, existing routes:
+  - `SignalPostmortem`: `/strategy/signal-postmortems/[id]` maps to a physical page route which displays prices, outcomes, and performance metrics.
+  - `OpenDART filings`: `/filings?assetId=<assetId>&filingId=<id>` maps to a dedicated filings route parsing query parameters.
+  - `AlertEvent`: `/alerts` points directly to the Alerts settings and inbox dashboard.
+- Any link pointing to a non-existent route is prohibited.
+

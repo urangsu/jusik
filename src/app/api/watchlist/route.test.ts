@@ -31,6 +31,24 @@ describe("Watchlist API - GET/POST /api/watchlist", () => {
     expect(json.status).toBe("cached");
   });
 
+  it("GET should return 400 if market is invalid", async () => {
+    const req = new NextRequest("http://localhost/api/watchlist?market=INVALID");
+    const res = await GET(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.status).toBe("error");
+    expect(json.message).toContain("market");
+  });
+
+  it("GET should return 400 if reportInboxEnabled is invalid", async () => {
+    const req = new NextRequest("http://localhost/api/watchlist?reportInboxEnabled=INVALID");
+    const res = await GET(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.status).toBe("error");
+    expect(json.message).toContain("reportInboxEnabled");
+  });
+
   it("POST should block requests if write is disabled", async () => {
     process.env.LOCAL_SETTINGS_WRITE_ENABLED = "false";
 

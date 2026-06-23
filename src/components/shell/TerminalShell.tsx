@@ -11,6 +11,7 @@ import { AlertSettingsPage } from "../alerts/AlertSettingsPage";
 import { BacktestWorkspace } from "../backtest/BacktestWorkspace";
 import { ReliabilityWorkspace } from "../reliability/ReliabilityWorkspace";
 import { ProviderApiSettingsPanel } from "../settings/ProviderApiSettingsPanel";
+import { WatchlistPage } from "../watchlist/WatchlistPage";
 import { Panel } from "../ui/Panel";
 import { MetricCell } from "../ui/MetricCell";
 import { Asset } from "@/domain/market/asset";
@@ -34,6 +35,9 @@ export const TerminalShell: React.FC = () => {
   });
 
   const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
+  const [unreadWatchlistReportsCount, setUnreadWatchlistReportsCount] = useState(0);
+  const [watchlistCriticalCount, setWatchlistCriticalCount] = useState(0);
+  const [watchlistWarningCount, setWatchlistWarningCount] = useState(0);
 
   const fetchUnreadCount = async () => {
     try {
@@ -48,10 +52,31 @@ export const TerminalShell: React.FC = () => {
     }
   };
 
+  const fetchUnreadWatchlistCount = async () => {
+    try {
+      const res = await fetch("/api/watchlist/reports/unread-count");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.value) {
+          setUnreadWatchlistReportsCount(data.value.unreadCount || 0);
+          setWatchlistCriticalCount(data.value.criticalCount || 0);
+          setWatchlistWarningCount(data.value.warningCount || 0);
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  };
+
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 15000);
-    return () => clearInterval(interval);
+    fetchUnreadWatchlistCount();
+    const intervalAlerts = setInterval(fetchUnreadCount, 15000);
+    const intervalWatchlist = setInterval(fetchUnreadWatchlistCount, 15000);
+    return () => {
+      clearInterval(intervalAlerts);
+      clearInterval(intervalWatchlist);
+    };
   }, []);
 
   const handleSelectAsset = (asset: Asset) => {
@@ -71,6 +96,9 @@ export const TerminalShell: React.FC = () => {
         onTabChange={setActiveTab}
         onSelectAsset={handleSelectAsset}
         unreadAlertsCount={unreadAlertsCount}
+        unreadWatchlistReportsCount={unreadWatchlistReportsCount}
+        watchlistCriticalCount={watchlistCriticalCount}
+        watchlistWarningCount={watchlistWarningCount}
       />
 
       {/* Market Indices Strip */}
@@ -93,6 +121,8 @@ export const TerminalShell: React.FC = () => {
             <ReliabilityWorkspace />
           ) : activeTab === "settings" ? (
             <ProviderApiSettingsPanel />
+          ) : activeTab === "watchlist" ? (
+            <WatchlistPage onRefreshUnreadCount={fetchUnreadWatchlistCount} />
           ) : (
             <>
               {/* Active Asset Info Block */}
