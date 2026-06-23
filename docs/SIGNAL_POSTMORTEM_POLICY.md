@@ -82,3 +82,15 @@ export type SignalPostmortem = {
 
 4. **개별 신호 감사(Individual Signal IC Audit)와의 연계**:
    - 개별 포지션 수준의 실현 결과(`SignalPostmortem`)는 특정 자산 진입 시점의 팩터 점수와 실제 성과를 1대1로 대조할 수 있는 데이터셋이 된다. 이는 시계열 평균치인 `IndividualSignalIcResult`가 감지한 예측 신뢰성 지표가 실제 거래 표본에서 어떻게 분해되고 기각되었는지를 정밀 역추적하는 근거로 활용된다.
+
+---
+
+## 5. 관심종목 리포트 인박스 연계 (Linkage to Watchlist Report Inbox)
+
+생성된 `SignalPostmortem` 기록 중 `assetId`가 사용자의 관심종목에 등록되어 있고, 해당 관심종목의 리포트 인박스가 활성화(`reportInboxEnabled = true`)되어 있는 경우:
+- **자동 수집**: 자산 이벤트 수집기(Asset Event Aggregator)가 가동될 때 `internal_research` 카테고리의 리포트 아이템으로 자동 수집됩니다.
+- **심각도 매핑 규칙**:
+  - `outcome`이 `negative` 또는 `missing_price`인 경우 `warning` 심각도로 설정되어 위험 징후를 명확하게 알립니다.
+  - `outcome`이 `not_evaluable`인 경우 `watch` 심각도로 설정됩니다.
+  - 그 외의 정상/성공적인 결과는 `info` 심각도로 설정됩니다.
+- **UI 연계**: 리포트 인박스 카드에서 제공하는 '상세 보기' 링크를 통해 해당하는 `SignalPostmortem` 상세 진단 화면(`/strategy/signal-postmortems/<id>`)으로 즉시 이동하여 성과 요약과 가격 누락 여부 등을 면밀히 검토할 수 있습니다.

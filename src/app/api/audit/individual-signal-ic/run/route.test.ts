@@ -51,7 +51,7 @@ describe("POST /api/audit/individual-signal-ic/run", () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.status).toBe("success");
+    expect(json.status).toBe("cached");
     expect(json.value).toHaveLength(1);
     expect(json.value[0].id).toBe("audit-1");
 

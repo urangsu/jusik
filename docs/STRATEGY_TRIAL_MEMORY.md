@@ -95,3 +95,9 @@ export type StrategyTrialRecord = {
 연구원은 등록된 `StrategyTrialRecord`를 조회할 때, 해당 전략의 구성 성분인 개별 신호들의 최신 예측력 감사 결과(`IndividualSignalIcResult`)를 함께 조회할 수 있다.
 - **적용 유니버스 매핑**: Trial의 `universeId`에 따라 동일 유니버스의 최신 신호 감사 요약을 화면에 바인딩한다.
 - **다중 차원 진단**: 특정 파라미터 조합의 누적 성과가 왜 좋거나 나쁜지, 개별 신호들의 음수 기여도(`negative_contribution`) 및 약한 신호 고가중치(`weak_signal_high_weight`) 경고 개수를 통해 추적할 수 있어 과최적화 방지 피드백 루프를 형성한다.
+
+---
+
+## 6. 관심종목 리포트 인박스 연계 (Linkage to Watchlist Report Inbox)
+
+개별 `StrategyTrialRecord`는 직접 자산 경고를 만들지는 않지만, 해당 시도에 편입된 개별 자산 포지션들의 사후정산 기록(`SignalPostmortem`)을 생성합니다. 자산 이벤트 수집기(Asset Event Aggregator)가 가동될 때 관심종목에 등록된 `assetId`에 해당하는 사후검토 기록이 발견되면 자동으로 리포트 인박스 피드에 노출되어, 백테스트/시뮬레이션 연구와 관심 종목에 대한 통합 추적이 가능해집니다.

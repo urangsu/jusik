@@ -35,6 +35,8 @@
 | PIT Store | **implemented** | `src/server/data/in-memory-pit-store.ts` | ✓ | In-memory only (운용용 PIT DB 미구현) |
 | Factor Correlation Audit | **missing_p0** | - | - | 팩터 간 상관관계 감사 없음 |
 | Individual Signal IC Audit | **implemented** | `src/server/audit/individual-signal-ic-auditor.ts` | ✓ | 개별 시그널의 1w/1m/3m IC 요약 및 경고 |
+| Watchlist Store | **implemented** | `src/server/watchlist/watchlist-store.ts` | ✓ | 관심종목 저장소 및 CRUD |
+| Watchlist Report Inbox & Aggregator | **implemented** | `src/server/watchlist/watchlist-report-aggregator.ts` | ✓ | 관심종목 자산별 공시/경보/사후검토 취합 |
 | Signal Stability Gate | **missing_p0** | - | - | flipCount/consecutiveDays 미구현 |
 | StrategyTrialRecord | **implemented** | `src/domain/strategy/strategy-trial-record.ts`, `strategy-trial-store.ts` | ✓ | 전략 묘지/시도 기록 및 중복 감지 |
 | Structured Output Guard | **missing_p0** | - | - | LLM 출력 검증 가드 없음 |
@@ -94,6 +96,13 @@
 | `GET /api/broker/kis/balance` | **implemented** | ✓ | - | Read-only |
 | `GET /api/broker/kis/health` | **implemented** | ✓ | - | |
 | `POST /api/broker/kis/order` | **skeleton_only** | ✓ | - | 항상 거부 응답. 실주문 영구 제외 |
+| `GET /api/watchlist` | **implemented** | ✓ | - | 관심종목 조회 |
+| `POST /api/watchlist` | **implemented** | ✓ | SettingsWriteGuard | 관심종목 추가 |
+| `PATCH /api/watchlist/[assetId]` | **implemented** | ✓ | SettingsWriteGuard | 관심종목 수정 |
+| `DELETE /api/watchlist/[assetId]` | **implemented** | ✓ | SettingsWriteGuard | 관심종목 삭제 |
+| `GET /api/watchlist/reports` | **implemented** | ✓ | - | 수집된 리포트 조회 |
+| `POST /api/watchlist/reports/aggregate` | **implemented** | ✓ | SettingsWriteGuard | 관심종목 관련 리포트 수집 실행 |
+| `PATCH /api/watchlist/reports/[id]/status` | **implemented** | ✓ | SettingsWriteGuard | 리포트 읽음/보관/숨김 상태 갱신 |
 
 ---
 
