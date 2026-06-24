@@ -16,8 +16,8 @@ export const VetoReasonList: React.FC<VetoReasonListProps> = ({
 
   return (
     <ul className="flex flex-col gap-2">
-      {reasons.map((reason) => (
-        <li key={reason} className="flex items-start gap-2 text-xs text-kt-text-secondary">
+      {reasons.map((reason, index) => (
+        <li key={`${reason}-${index}`} className="flex items-start gap-2 text-xs text-kt-text-secondary">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-kt-negative-text" />
           <span>{reason}</span>
         </li>
