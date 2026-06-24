@@ -33,10 +33,11 @@
 | Factor Store | **implemented** | `src/server/factors/factor-store.ts` | ✓ | |
 | Signal History Store | **implemented** | `src/server/signals/signal-history-store.ts` | ✓ | |
 | PIT Store | **implemented** | `src/server/data/in-memory-pit-store.ts` | ✓ | In-memory only (운용용 PIT DB 미구현) |
-| Factor Correlation Audit | **missing_p0** | - | - | 팩터 간 상관관계 감사 없음 |
+| Factor Correlation Audit | **implemented** | `src/server/audit/factor-correlation-auditor.ts` | ✓ | 팩터 간 상관관계 감사 및 경고 |
 | Individual Signal IC Audit | **implemented** | `src/server/audit/individual-signal-ic-auditor.ts` | ✓ | 개별 시그널의 1w/1m/3m IC 요약 및 경고 |
 | Watchlist Store | **implemented** | `src/server/watchlist/watchlist-store.ts` | ✓ | 관심종목 저장소 및 CRUD |
 | Watchlist Report Inbox & Aggregator | **implemented** | `src/server/watchlist/watchlist-report-aggregator.ts` | ✓ | 관심종목 자산별 공시/경보/사후검토 취합 |
+| Market Exposure Audit | **implemented** | `src/server/audit/market-exposure-auditor.ts` | ✓ | 전략별 시장 노출도(Beta, capture 등) 감사 |
 | Signal Stability Gate | **missing_p0** | - | - | flipCount/consecutiveDays 미구현 |
 | StrategyTrialRecord | **implemented** | `src/domain/strategy/strategy-trial-record.ts`, `strategy-trial-store.ts` | ✓ | 전략 묘지/시도 기록 및 중복 감지 |
 | Structured Output Guard | **missing_p0** | - | - | LLM 출력 검증 가드 없음 |

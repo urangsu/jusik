@@ -7,6 +7,8 @@ import { SignalPostmortemSummary } from "./SignalPostmortemSummary";
 import { useI18n } from "@/i18n/use-i18n";
 import { DataEnvelope } from "@/domain/common/data-status";
 import IndividualSignalIcSummary from "./IndividualSignalIcSummary";
+import MarketExposureSummary from "./MarketExposureSummary";
+
 
 export const StrategyTrialMemoryPanel: React.FC = () => {
   const { locale } = useI18n();
@@ -61,6 +63,14 @@ export const StrategyTrialMemoryPanel: React.FC = () => {
               </h3>
               <IndividualSignalIcSummary universeId={selectedTrial.universeId} />
             </div>
+
+            <div className="bg-kt-bg-surface-100 border border-kt-border-panel rounded-kt-card p-4 space-y-4">
+              <h3 className="text-xs font-semibold text-kt-text-primary border-b border-kt-border-panel/40 pb-2">
+                {locale === "ko" ? "시장 노출도 감사 (Market Exposure Audit)" : "Market Exposure Audit"}
+              </h3>
+              <MarketExposureSummary trialId={selectedTrial.id} />
+            </div>
+
 
             <div className="bg-kt-bg-surface-100 border border-kt-border-panel rounded-kt-card p-4 space-y-4">
               <h3 className="text-xs font-semibold text-kt-text-primary border-b border-kt-border-panel/40 pb-2">
