@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         status: "error",
         message: "Missing trialId",
         source: "Market Exposure Run API",
-        sourceTier: "official",
+        sourceTier: "manual_import",
         warnings: [],
         updatedAt: null,
       };
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       value: result,
       status: "cached",
       source: "Market Exposure Run API",
-      sourceTier: "official",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: new Date().toISOString(),
     };
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       value: null,
       status: "error",
       source: "Market Exposure Run API",
-      sourceTier: "official",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: null,
       message: err?.message || String(err),

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         status: "error",
         message: "Invalid universeId query parameter.",
         source: "Factor Correlation API",
-        sourceTier: "official",
+        sourceTier: "manual_import",
         warnings: [],
         updatedAt: null,
       };
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         status: "error",
         message: "Invalid severity query parameter.",
         source: "Factor Correlation API",
-        sourceTier: "official",
+        sourceTier: "manual_import",
         warnings: [],
         updatedAt: null,
       };
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         status: "error",
         message: "Invalid method query parameter.",
         source: "Factor Correlation API",
-        sourceTier: "official",
+        sourceTier: "manual_import",
         warnings: [],
         updatedAt: null,
       };
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
         status: "not_found",
         message: "No factor correlation audit results found. Please run audit first.",
         source: "Factor Correlation API",
-        sourceTier: "official",
+        sourceTier: "manual_import",
         warnings: [],
         updatedAt: null,
       };
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       value: results,
       status: "cached",
       source: "Factor Correlation API",
-      sourceTier: "official",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: new Date().toISOString(),
     };
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       value: null,
       status: "error",
       source: "Factor Correlation API",
-      sourceTier: "official",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: null,
       message: err?.message || String(err),

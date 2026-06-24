@@ -108,4 +108,27 @@ describe("MarketExposureAuditor", () => {
     // averageExcessReturn = mean(S - B) = mean([0.01, 0.02, 0.00, 0.02, -0.01]) = 0.008
     expect(result.averageExcessReturn).toBe(0.008);
   });
+
+  it("should return not_available and warning insufficient_benchmark_data if beta/correlation is null", async () => {
+    mockGetStrategyTrialRecordById.mockResolvedValue({
+      id: "trial-1",
+      strategyId: "momentum_v1",
+      universeId: "KOSPI_SAMPLE",
+      backtestRunId: "run-1",
+    });
+
+    // We make benchmark returns all constant so variance of B is 0, making beta/correlation null
+    mockGetBacktestResult.mockResolvedValue({
+      runId: "run-1",
+      oosSummaries: [
+        { longOnlyReturn: 0.02, benchmarkReturn: 0.01, benchmarkAssetId: "KR:KOSPI" },
+        { longOnlyReturn: 0.04, benchmarkReturn: 0.01, benchmarkAssetId: "KR:KOSPI" },
+        { longOnlyReturn: -0.01, benchmarkReturn: 0.01, benchmarkAssetId: "KR:KOSPI" },
+      ],
+    });
+
+    const result = await auditMarketExposureFromTrial({ trialId: "trial-1" });
+    expect(result.assessment).toBe("not_available");
+    expect(result.warnings).toContain("insufficient_benchmark_data");
+  });
 });

@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
         status: "error",
         message: "Invalid universeId",
         source: "Factor Correlation Run API",
-        sourceTier: "official",
+        sourceTier: "manual_import",
         warnings: [],
         updatedAt: null,
       };
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         status: "error",
         message: "Invalid method",
         source: "Factor Correlation Run API",
-        sourceTier: "official",
+        sourceTier: "manual_import",
         warnings: [],
         updatedAt: null,
       };
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       value: results,
       status: "cached",
       source: "Factor Correlation Run API",
-      sourceTier: "official",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: new Date().toISOString(),
     };
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       value: null,
       status: "error",
       source: "Factor Correlation Run API",
-      sourceTier: "official",
+      sourceTier: "manual_import",
       warnings: [],
       updatedAt: null,
       message: err?.message || String(err),

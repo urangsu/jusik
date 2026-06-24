@@ -224,6 +224,11 @@ export async function auditMarketExposureFromTrial(input: {
     } else if (absBeta >= 0.7 || absCorr >= 0.5) {
       assessment = "partially_market_dependent";
     }
+  } else {
+    assessment = "not_available";
+    if (!warnings.includes("insufficient_benchmark_data")) {
+      warnings.push("insufficient_benchmark_data");
+    }
   }
 
   // Warnings additions
