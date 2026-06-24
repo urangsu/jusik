@@ -1,95 +1,111 @@
-import { describe, it, expect } from "vitest";
-import { auditMarketExposure } from "@/server/audit/market-exposure-auditor";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+// Mock dependencies
+const mockGetStrategyTrialRecordById = vi.fn();
+vi.mock("@/server/strategy/strategy-trial-store", () => ({
+  getStrategyTrialRecordById: (id: string) => mockGetStrategyTrialRecordById(id),
+}));
+
+const mockGetBacktestResult = vi.fn();
+vi.mock("@/server/backtest/backtest-result-store", () => ({
+  getBacktestResult: (runId: string) => mockGetBacktestResult(runId),
+}));
+
+import { auditMarketExposureFromTrial } from "./market-exposure-auditor";
 
 describe("MarketExposureAuditor", () => {
-  it("should return insufficient_data when observations < 10", () => {
-    const result = auditMarketExposure({
-      strategyId: "test_strategy",
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return not_available if the trial is not found", async () => {
+    mockGetStrategyTrialRecordById.mockResolvedValue(null);
+
+    const result = await auditMarketExposureFromTrial({ trialId: "trial-1" });
+    expect(result.assessment).toBe("not_available");
+    expect(result.warnings).toContain("insufficient_benchmark_data");
+  });
+
+  it("should return not_available if backtest run is missing", async () => {
+    mockGetStrategyTrialRecordById.mockResolvedValue({
+      id: "trial-1",
+      strategyId: "momentum_v1",
       universeId: "KOSPI_SAMPLE",
-      observations: [
-        { strategyReturn: 0.01, benchmarkReturn: 0.01 },
-        { strategyReturn: -0.01, benchmarkReturn: -0.01 },
+      backtestRunId: null,
+    });
+
+    const result = await auditMarketExposureFromTrial({ trialId: "trial-1" });
+    expect(result.assessment).toBe("not_available");
+  });
+
+  it("should return insufficient_sample if valid observations are less than 3", async () => {
+    mockGetStrategyTrialRecordById.mockResolvedValue({
+      id: "trial-1",
+      strategyId: "momentum_v1",
+      universeId: "KOSPI_SAMPLE",
+      backtestRunId: "run-1",
+    });
+
+    mockGetBacktestResult.mockResolvedValue({
+      runId: "run-1",
+      oosSummaries: [
+        { longOnlyReturn: 0.05, benchmarkReturn: 0.02 }, // Only 1 observation
       ],
     });
-    expect(result.marketNeutralityAssessment).toBe("insufficient_data");
-    expect(result.betaToBenchmark).toBeNull();
+
+    const result = await auditMarketExposureFromTrial({ trialId: "trial-1" });
+    expect(result.assessment).toBe("insufficient_sample");
+    expect(result.warnings).toContain("insufficient_benchmark_data");
   });
 
-  it("should classify high_beta when betaToBenchmark > 1.2", () => {
-    // Strategy that moves 2x the benchmark → beta ≈ 2.0
-    const n = 30;
-    const observations = Array.from({ length: n }, (_, i) => ({
-      strategyReturn: (i % 2 === 0 ? 0.02 : -0.02),
-      benchmarkReturn: (i % 2 === 0 ? 0.01 : -0.01),
-    }));
-    const result = auditMarketExposure({
-      strategyId: "high_beta_strategy",
+  it("should calculate beta, correlation, capture ratios and excess return correctly", async () => {
+    mockGetStrategyTrialRecordById.mockResolvedValue({
+      id: "trial-1",
+      strategyId: "momentum_v1",
       universeId: "KOSPI_SAMPLE",
-      observations,
-    });
-    expect(result.betaToBenchmark).not.toBeNull();
-    if (result.betaToBenchmark !== null) {
-      expect(result.betaToBenchmark).toBeGreaterThan(1.2);
-    }
-    expect(result.warnings).toContain("high_market_beta");
-    expect(result.marketNeutralityAssessment).toBe("high_beta");
-  });
-
-  it("should classify regime_dependency_high when riskOffReturn < -5%", () => {
-    const n = 20;
-    const base = Array.from({ length: n }, () => ({
-      strategyReturn: 0.01,
-      benchmarkReturn: 0.01,
-    }));
-    const riskOffObs = Array.from({ length: 10 }, () => ({
-      strategyReturn: -0.08, // -8% → below -5% threshold
-      benchmarkReturn: -0.03,
-      regime: "risk_off",
-    }));
-
-    const result = auditMarketExposure({
-      strategyId: "regime_dependent",
-      universeId: "KOSPI_SAMPLE",
-      observations: [...base, ...riskOffObs],
-    });
-    expect(result.riskOffReturn).not.toBeNull();
-    if (result.riskOffReturn !== null) {
-      expect(result.riskOffReturn).toBeLessThan(-0.05);
-    }
-    expect(result.warnings).toContain("regime_dependency_high");
-  });
-
-  it("should always include sample_universe_only warning", () => {
-    const n = 15;
-    const observations = Array.from({ length: n }, () => ({
-      strategyReturn: 0.01,
-      benchmarkReturn: 0.01,
-    }));
-    const result = auditMarketExposure({
-      strategyId: "any_strategy",
-      universeId: "SP500_SAMPLE",
-      observations,
-    });
-    expect(result.warnings).toContain("sample_universe_only");
-  });
-
-  it("should not output trading recommendation strings", () => {
-    const n = 20;
-    const observations = Array.from({ length: n }, () => ({
-      strategyReturn: 0.005,
-      benchmarkReturn: 0.004,
-    }));
-    const result = auditMarketExposure({
-      strategyId: "safe_strategy",
-      universeId: "KOSPI_SAMPLE",
-      observations,
+      backtestRunId: "run-1",
     });
 
-    // The result should not contain any trading recommendation
-    const resultStr = JSON.stringify(result);
-    const forbiddenTerms = ["매수", "매도", "추천", "buy", "sell", "order", "signal"];
-    for (const term of forbiddenTerms) {
-      expect(resultStr.toLowerCase()).not.toContain(term.toLowerCase());
-    }
+    // We create 5 walk-forward window summaries
+    // S = [0.02, 0.04, -0.01, 0.05, -0.02]
+    // B = [0.01, 0.02, -0.01, 0.03, -0.01]
+    mockGetBacktestResult.mockResolvedValue({
+      runId: "run-1",
+      oosSummaries: [
+        { longOnlyReturn: 0.02, benchmarkReturn: 0.01, benchmarkAssetId: "KR:KOSPI" },
+        { longOnlyReturn: 0.04, benchmarkReturn: 0.02, benchmarkAssetId: "KR:KOSPI" },
+        { longOnlyReturn: -0.01, benchmarkReturn: -0.01, benchmarkAssetId: "KR:KOSPI" },
+        { longOnlyReturn: 0.05, benchmarkReturn: 0.03, benchmarkAssetId: "KR:KOSPI" },
+        { longOnlyReturn: -0.02, benchmarkReturn: -0.01, benchmarkAssetId: "KR:KOSPI" },
+      ],
+    });
+
+    const result = await auditMarketExposureFromTrial({ trialId: "trial-1" });
+
+    expect(result.sampleSize).toBe(5);
+    expect(result.benchmarkAssetId).toBe("KR:KOSPI");
+
+    // beta = cov(S, B) / var(B)
+    // Mean B = 0.008, Mean S = 0.016
+    // cov = ((0.02-0.016)*(0.01-0.008) + (0.04-0.016)*(0.02-0.008) + (-0.01-0.016)*(-0.01-0.008) + (0.05-0.016)*(0.03-0.008) + (-0.02-0.016)*(-0.01-0.008)) / 5
+    // cov = (0.004*0.002 + 0.024*0.012 + -0.026*-0.018 + 0.034*0.022 + -0.036*-0.018) / 5
+    // cov = (0.000008 + 0.000288 + 0.000468 + 0.000748 + 0.000648) / 5 = 0.00216 / 5 = 0.000432
+    // var B = ((0.01-0.008)^2 + (0.02-0.008)^2 + (-0.01-0.008)^2 + (0.03-0.008)^2 + (-0.01-0.008)^2) / 5
+    // var B = (0.000004 + 0.000144 + 0.000324 + 0.000484 + 0.000324) / 5 = 0.00128 / 5 = 0.000256
+    // beta = 0.000432 / 0.000256 = 1.6875
+    expect(result.beta).toBe(1.6875);
+
+    // beta >= 1.2 triggers high_beta warning
+    expect(result.warnings).toContain("high_beta");
+    expect(result.assessment).toBe("market_dependent");
+
+    // upMarketAvgReturn = average of strategy returns where benchmark > 0 (0.02, 0.04, 0.05) = 0.0367
+    expect(result.upMarketAvgReturn).toBe(0.0367);
+
+    // downMarketAvgReturn = average where benchmark < 0 (-0.01, -0.02) = -0.015
+    expect(result.downMarketAvgReturn).toBe(-0.015);
+
+    // averageExcessReturn = mean(S - B) = mean([0.01, 0.02, 0.00, 0.02, -0.01]) = 0.008
+    expect(result.averageExcessReturn).toBe(0.008);
   });
 });

@@ -1,20 +1,25 @@
 import { NextRequest } from "next/server";
+import { checkSettingsWriteEnabled } from "@/server/security/settings-write-guard";
+import { auditMarketExposureFromTrial } from "@/server/audit/market-exposure-auditor";
+import { saveMarketExposureResult } from "@/server/audit/market-exposure-store";
 import { createSafeResponse } from "@/server/security/safe-api-response";
-import { getMarketExposureResultByTrial } from "@/server/audit/market-exposure-store";
 import { DataEnvelope } from "@/domain/common/data-status";
 import { MarketExposureResult } from "@/domain/audit/market-exposure-result";
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
+  const guardResponse = checkSettingsWriteEnabled({ routeName: "POST /api/audit/market-exposure/run" });
+  if (guardResponse) return guardResponse;
+
   try {
-    const { searchParams } = new URL(request.url);
-    const trialId = searchParams.get("trialId");
+    const body = await request.json().catch(() => ({}));
+    const trialId = body.trialId;
 
     if (!trialId) {
       const envelope: DataEnvelope<null> = {
         value: null,
         status: "error",
-        message: "Missing trialId parameter.",
-        source: "Market Exposure API",
+        message: "Missing trialId",
+        source: "Market Exposure Run API",
         sourceTier: "official",
         warnings: [],
         updatedAt: null,
@@ -22,25 +27,14 @@ export async function GET(request: NextRequest) {
       return createSafeResponse(envelope, 400);
     }
 
-    const result = await getMarketExposureResultByTrial(trialId);
+    const result = await auditMarketExposureFromTrial({ trialId });
 
-    if (!result) {
-      const envelope: DataEnvelope<null> = {
-        value: null,
-        status: "not_found",
-        message: "Market exposure audit result not found for this trial. Please run audit first.",
-        source: "Market Exposure API",
-        sourceTier: "official",
-        warnings: [],
-        updatedAt: null,
-      };
-      return createSafeResponse(envelope);
-    }
+    await saveMarketExposureResult(result);
 
     const envelope: DataEnvelope<MarketExposureResult> = {
       value: result,
       status: "cached",
-      source: "Market Exposure API",
+      source: "Market Exposure Run API",
       sourceTier: "official",
       warnings: [],
       updatedAt: new Date().toISOString(),
@@ -51,7 +45,7 @@ export async function GET(request: NextRequest) {
     const envelope: DataEnvelope<null> = {
       value: null,
       status: "error",
-      source: "Market Exposure API",
+      source: "Market Exposure Run API",
       sourceTier: "official",
       warnings: [],
       updatedAt: null,
@@ -60,5 +54,3 @@ export async function GET(request: NextRequest) {
     return createSafeResponse(envelope, 500);
   }
 }
-
-export const dynamic = "force-dynamic";

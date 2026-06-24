@@ -101,3 +101,12 @@ export type StrategyTrialRecord = {
 ## 6. 관심종목 리포트 인박스 연계 (Linkage to Watchlist Report Inbox)
 
 개별 `StrategyTrialRecord`는 직접 자산 경고를 만들지는 않지만, 해당 시도에 편입된 개별 자산 포지션들의 사후정산 기록(`SignalPostmortem`)을 생성합니다. 자산 이벤트 수집기(Asset Event Aggregator)가 가동될 때 관심종목에 등록된 `assetId`에 해당하는 사후검토 기록이 발견되면 자동으로 리포트 인박스 피드에 노출되어, 백테스트/시뮬레이션 연구와 관심 종목에 대한 통합 추적이 가능해집니다.
+
+---
+
+## 7. 시장 노출도 감사 연계 (Linkage to Market Exposure Audit)
+
+연구원은 등록된 `StrategyTrialRecord`를 조회할 때, 해당 전략의 수익률과 벤치마크 간의 시장 노출도 감사 결과(`MarketExposureResult`)를 함께 조회할 수 있다.
+- **시장 의존성 탐지**: Beta 값과 상관계수를 통해 전략 성과가 시장 상승에만 전적으로 종속되어 있는지 진단한다.
+- **캡처 비율 및 초과수익**: 상승/하락장 캡처 비율 및 평균 초과수익률을 파악하여 알파 창출 기여도를 평가한다.
+- **진단 보조 장치**: 시장 중립성 평가 결과(`market_dependent` 등) 및 경고(`high_beta`, `down_market_underperformance`)는 수동 진단용 지표이며, 자동 거래/매수/매도 추천 정보가 아닙니다.
