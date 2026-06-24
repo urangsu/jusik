@@ -207,4 +207,49 @@ describe("IndividualSignalIcAuditor", () => {
     expect(results[0].contributionAssessment).toBe("neutral");
     expect(results[0].warnings).toContain("weak_signal_high_weight");
   });
+
+  it("should calculate Pearson IC, Spearman IC, and quantile spread correctly on varying score and return data", async () => {
+    mockResolveSignalAuditCandidates.mockResolvedValue([
+      { signalId: "momentum_return", signalLabelKo: "수익률 모멘텀", currentWeightInMomentumV1: 0.2, available: true },
+    ]);
+
+    const scores: any[] = [];
+    const returns: any[] = [];
+
+    for (let i = 1; i <= 30; i++) {
+      const date = `2024-01-10`;
+      const assetId = `A0${i}`;
+      scores.push({
+        date,
+        assetId,
+        signalId: "momentum_return",
+        score: i,
+        sourceTier: "official",
+        warnings: [],
+      });
+      returns.push({
+        date,
+        assetId,
+        horizon: "1w",
+        forwardReturn: i * 0.01,
+        sourceTier: "official",
+        warnings: [],
+      });
+    }
+
+    mockLoadSignalScoreSeries.mockResolvedValue(scores);
+    mockLoadForwardReturnSeries.mockResolvedValue(returns);
+
+    const results = await auditIndividualSignalIc({ universeId: "KOSPI_SAMPLE", horizon: "1w" });
+
+    expect(results.length).toBe(1);
+    expect(results[0].sampleSize).toBe(30);
+    expect(results[0].icPearson).toBe(1.0);
+    expect(results[0].icSpearman).toBe(1.0);
+
+    expect(results[0].meanForwardReturnTopQuantile).toBe(0.275);
+    expect(results[0].meanForwardReturnBottomQuantile).toBe(0.035);
+    expect(results[0].topBottomSpread).toBe(0.24);
+    expect(results[0].severity).toBe("strong_positive");
+  });
 });

@@ -61,7 +61,7 @@ export const StrategyTrialMemoryPanel: React.FC = () => {
               <h3 className="text-xs font-semibold text-kt-text-primary border-b border-kt-border-panel/40 pb-2">
                 {locale === "ko" ? "개별 신호 IC 요약 (Individual Signal IC Audit)" : "Individual Signal IC Audit"}
               </h3>
-              <IndividualSignalIcSummary universeId={selectedTrial.universeId} />
+              <IndividualSignalIcSummary universeId={selectedTrial.universeId} strategyId={selectedTrial.strategyId} />
             </div>
 
             <div className="bg-kt-bg-surface-100 border border-kt-border-panel rounded-kt-card p-4 space-y-4">

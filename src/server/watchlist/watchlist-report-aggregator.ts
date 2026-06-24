@@ -188,6 +188,13 @@ export async function aggregateWatchlistReports(input?: {
     }
   }
 
+  // TODO(WO017-F): Implement "individual_signal_ic" report aggregation.
+  // Conditions to trigger:
+  // 1. WatchlistItem.universeId === IC result.universeId
+  // 2. IC result.severity is weak_negative, strong_negative, insufficient_sample, or not_available
+  // 3. WatchlistItem.reportInboxEnabled === true
+  // 4. The signalId is mapped to the active strategy or watchlist factor set.
+
   let created = 0;
   let skippedDuplicate = 0;
   const processedItems: WatchlistReportItem[] = [];

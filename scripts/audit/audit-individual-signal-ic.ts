@@ -4,7 +4,7 @@
  * CLI 도구: 개별 atomic signal의 예측력을 검증(Individual Signal IC Audit)한다.
  *
  * 사용:
- *   npm run audit:individual-signal-ic -- --universe=KOSPI_SAMPLE [--signal=momentum_return] [--horizon=1m]
+ *   npm run audit:individual-signal-ic -- --universe=KOSPI_SAMPLE [--signal=momentum_return] [--horizon=forward_20d]
  */
 
 import { auditIndividualSignalIc } from "../../src/server/audit/individual-signal-ic-auditor";
@@ -26,7 +26,7 @@ async function main() {
 
   const universe = (args.universe ?? "KOSPI_SAMPLE") as "KOSPI_SAMPLE" | "SP500_SAMPLE";
   const signal = args.signal || undefined;
-  const horizon = args.horizon as "1w" | "1m" | "3m" | undefined;
+  const horizon = args.horizon || undefined;
 
   console.log("[Individual Signal IC Audit] 시작...");
   console.log(`  Universe: ${universe}`);
@@ -37,7 +37,7 @@ async function main() {
     const results = await auditIndividualSignalIc({
       universeId: universe,
       signalId: signal,
-      horizon,
+      horizon: horizon as any,
     });
 
     if (results.length === 0) {
@@ -49,37 +49,37 @@ async function main() {
     await saveIndividualSignalIcResults(results);
 
     // CLI Output Table
-    console.log("\n------------------------------------------------------------------------------------------------------------------------");
+    console.log("\n---------------------------------------------------------------------------------------------------------------------------------------------");
     console.log(
-      "Signal ID".padEnd(20) + " | " +
-      "Horizon".padEnd(8) + " | " +
+      "Signal ID".padEnd(25) + " | " +
+      "Horizon".padEnd(12) + " | " +
       "Sample".padEnd(8) + " | " +
-      "IC".padEnd(8) + " | " +
-      "ICIR".padEnd(8) + " | " +
-      "Hit Rate".padEnd(10) + " | " +
-      "Assessment".padEnd(20) + " | " +
+      "IC(S)".padEnd(8) + " | " +
+      "IC(P)".padEnd(8) + " | " +
+      "Spread".padEnd(10) + " | " +
+      "Severity".padEnd(18) + " | " +
       "Warnings"
     );
-    console.log("------------------------------------------------------------------------------------------------------------------------");
+    console.log("---------------------------------------------------------------------------------------------------------------------------------------------");
 
     for (const r of results) {
-      const icStr = r.spearmanIc !== null ? r.spearmanIc.toFixed(4) : "null";
-      const icirStr = r.icir !== null ? r.icir.toFixed(4) : "null";
-      const hrStr = r.hitRate !== null ? (r.hitRate * 100).toFixed(2) + "%" : "null";
+      const icSStr = r.icSpearman !== null ? r.icSpearman.toFixed(4) : "null";
+      const icPStr = r.icPearson !== null ? r.icPearson.toFixed(4) : "null";
+      const spreadStr = r.topBottomSpread !== null ? (r.topBottomSpread * 100).toFixed(2) + "%" : "null";
       const weightStr = r.currentWeightInMomentumV1 !== null ? `(w=${r.currentWeightInMomentumV1})` : "";
       
       console.log(
-        `${r.signalId} ${weightStr}`.padEnd(20) + " | " +
-        r.horizon.padEnd(8) + " | " +
+        `${r.signalId} ${weightStr}`.padEnd(25) + " | " +
+        r.horizon.padEnd(12) + " | " +
         String(r.sampleSize).padEnd(8) + " | " +
-        icStr.padEnd(8) + " | " +
-        icirStr.padEnd(8) + " | " +
-        hrStr.padEnd(10) + " | " +
-        r.contributionAssessment.padEnd(20) + " | " +
+        icSStr.padEnd(8) + " | " +
+        icPStr.padEnd(8) + " | " +
+        spreadStr.padEnd(10) + " | " +
+        r.severity.padEnd(18) + " | " +
         r.warnings.join(", ")
       );
     }
-    console.log("------------------------------------------------------------------------------------------------------------------------");
+    console.log("---------------------------------------------------------------------------------------------------------------------------------------------");
     console.log("\n[Individual Signal IC Audit] 완료 및 저장되었습니다.");
     console.log("  저장위치: data/audits/individual-signal-ic/latest.json");
 
