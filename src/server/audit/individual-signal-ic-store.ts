@@ -1,6 +1,10 @@
 import fs from "fs/promises";
 import path from "path";
-import { IndividualSignalIcResult } from "@/domain/audit/individual-signal-ic-result";
+import {
+  IndividualSignalIcResult,
+  IndividualSignalIcHorizon,
+  IndividualSignalIcSeverity,
+} from "@/domain/audit/individual-signal-ic-result";
 import { writeAtomic } from "../storage/atomic-write";
 import {
   getIndividualSignalIcDir,
@@ -33,7 +37,8 @@ export async function saveIndividualSignalIcResults(
 export async function listIndividualSignalIcResults(query?: {
   universeId?: "KOSPI_SAMPLE" | "SP500_SAMPLE";
   signalId?: string;
-  horizon?: "1w" | "1m" | "3m";
+  horizon?: "1w" | "1m" | "3m" | IndividualSignalIcHorizon;
+  severity?: IndividualSignalIcSeverity;
 }): Promise<IndividualSignalIcResult[]> {
   const latestPath = getIndividualSignalIcLatestPath();
   let results: IndividualSignalIcResult[] = [];
@@ -56,7 +61,19 @@ export async function listIndividualSignalIcResults(query?: {
       results = results.filter((r) => r.signalId === query.signalId);
     }
     if (query.horizon) {
-      results = results.filter((r) => r.horizon === query.horizon);
+      const qh = query.horizon;
+      const targetHorizons = [qh];
+      if (qh === "1w" || qh === "forward_5d") {
+        targetHorizons.push("1w", "forward_5d");
+      } else if (qh === "1m" || qh === "forward_20d") {
+        targetHorizons.push("1m", "forward_20d");
+      } else if (qh === "3m" || qh === "forward_60d") {
+        targetHorizons.push("3m", "forward_60d");
+      }
+      results = results.filter((r) => targetHorizons.includes(r.horizon));
+    }
+    if (query.severity) {
+      results = results.filter((r) => r.severity === query.severity);
     }
   }
 

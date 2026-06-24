@@ -3,13 +3,14 @@
 import React, { useEffect, useState } from "react";
 import { IndividualSignalIcResult } from "@/domain/audit/individual-signal-ic-result";
 import { DataEnvelope } from "@/domain/common/data-status";
-import { AlertTriangle, TrendingDown, Info, ShieldAlert, BarChart3 } from "lucide-react";
+import { AlertTriangle, TrendingDown, Info, ShieldAlert, BarChart3, Clock } from "lucide-react";
 
 type Props = {
   universeId: "KOSPI_SAMPLE" | "SP500_SAMPLE";
+  strategyId?: string;
 };
 
-export default function IndividualSignalIcSummary({ universeId }: Props) {
+export default function IndividualSignalIcSummary({ universeId, strategyId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<IndividualSignalIcResult[]>([]);
@@ -65,19 +66,28 @@ export default function IndividualSignalIcSummary({ universeId }: Props) {
     );
   }
 
-  if (results.length === 0) {
+  // Filter based on strategyId connection (momentum_v1 connects to momentum_ signals)
+  const connectedResults = strategyId === "momentum_v1"
+    ? results.filter((r) => r.signalId.startsWith("momentum_"))
+    : results;
+
+  if (connectedResults.length === 0) {
     return (
       <div className="p-4 bg-kt-bg-panel/40 border border-kt-border-panel/40 rounded-kt-card text-kt-text-secondary flex items-center gap-2 text-xs">
         <Info className="w-4 h-4 text-kt-text-secondary/60" />
-        <span>개별 신호 IC 감사 기록이 없습니다. CLI 또는 API 실행을 통해 감사를 먼저 수행하십시오.</span>
+        <span>개별 신호 IC 감사 결과가 아직 없습니다. CLI 또는 상관관계 탭에서 감사를 먼저 수행하십시오.</span>
       </div>
     );
   }
 
-  // Calculate statistics
-  const negativeSignals = results.filter((r) => r.contributionAssessment === "negative");
-  const insufficientSignals = results.filter((r) => r.contributionAssessment === "insufficient_sample");
-  const weakHighWeightSignals = results.filter((r) => r.warnings.includes("weak_signal_high_weight"));
+  // Calculate diagnostic counts
+  const negativeSignals = connectedResults.filter((r) => r.severity === "strong_negative" || r.severity === "weak_negative");
+  const insufficientSignals = connectedResults.filter((r) => r.severity === "insufficient_sample");
+  const weakHighWeightSignals = connectedResults.filter((r) => r.warnings.includes("weak_signal_high_weight"));
+
+  const calculatedAtStr = connectedResults[0]?.calculatedAt
+    ? new Date(connectedResults[0].calculatedAt).toLocaleString()
+    : "N/A";
 
   return (
     <div className="space-y-4">
@@ -86,7 +96,7 @@ export default function IndividualSignalIcSummary({ universeId }: Props) {
         <div className="bg-kt-bg-panel/30 border border-kt-border-panel/50 p-3 rounded-kt-card">
           <div className="text-[10px] text-kt-text-secondary font-medium flex items-center gap-1.5">
             <TrendingDown className="w-3.5 h-3.5 text-kt-negative-text" />
-            <span>음수 기여 신호</span>
+            <span>음수 IC 신호</span>
           </div>
           <div className={`text-xl font-bold mt-1 tabular-nums ${negativeSignals.length > 0 ? "text-kt-negative-text" : "text-kt-text-primary"}`}>
             {negativeSignals.length}
@@ -116,37 +126,44 @@ export default function IndividualSignalIcSummary({ universeId }: Props) {
 
       {/* Main Table */}
       <div className="bg-kt-bg-panel/30 border border-kt-border-panel/50 rounded-kt-card overflow-hidden">
-        <div className="px-3 py-2 bg-kt-bg-overlay-100 border-b border-kt-border-panel/50 flex items-center gap-1.5">
-          <BarChart3 className="w-3.5 h-3.5 text-kt-text-secondary" />
-          <span className="text-xs font-bold text-kt-text-primary">개별 신호 IC 상세 (Individual Signal IC Audit)</span>
+        <div className="px-3 py-2 bg-kt-bg-overlay-100 border-b border-kt-border-panel/50 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <BarChart3 className="w-3.5 h-3.5 text-kt-text-secondary" />
+            <span className="text-xs font-bold text-kt-text-primary">개별 신호 IC 상세 (Individual Signal IC Audit)</span>
+          </div>
+          <div className="flex items-center gap-1 text-[10px] text-kt-text-secondary">
+            <Clock className="w-3 h-3" />
+            <span>감사 시점: {calculatedAtStr}</span>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-[11px] text-left border-collapse">
             <thead>
               <tr className="border-b border-kt-border-panel/30 bg-kt-bg-overlay-100 text-kt-text-secondary font-semibold">
-                <th className="py-2 px-3">신호명 / 가중치</th>
+                <th className="py-2 px-3">Signal ID</th>
                 <th className="py-2 px-1">Horizon</th>
-                <th className="py-2 px-1 text-right">표본 수</th>
-                <th className="py-2 px-1 text-right">IC</th>
-                <th className="py-2 px-1 text-right">ICIR</th>
-                <th className="py-2 px-1 text-right">Hit Rate</th>
-                <th className="py-2 px-2 text-center">평가</th>
-                <th className="py-2 px-3">경고</th>
+                <th className="py-2 px-1 text-right">Sample Size</th>
+                <th className="py-2 px-1 text-right">IC Spearman</th>
+                <th className="py-2 px-1 text-right">Top-Bottom Spread</th>
+                <th className="py-2 px-2 text-center">Severity</th>
+                <th className="py-2 px-3">Warnings</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-kt-border-panel/20">
-              {results.map((r) => {
-                const isPositive = r.contributionAssessment === "positive";
-                const isNegative = r.contributionAssessment === "negative";
-                const isInsufficient = r.contributionAssessment === "insufficient_sample";
+              {connectedResults.map((r) => {
+                const isPositive = r.severity === "strong_positive" || r.severity === "weak_positive";
+                const isNegative = r.severity === "strong_negative" || r.severity === "weak_negative";
 
-                let assessmentBadge = "bg-kt-bg-overlay-300 text-kt-text-secondary";
+                let severityBadge = "bg-kt-bg-overlay-300 text-kt-text-secondary border border-kt-border-panel/40";
                 if (isPositive) {
-                  assessmentBadge = "bg-kt-positive-weak/10 text-kt-positive-text border border-kt-positive/20";
+                  severityBadge = "bg-kt-positive-weak/10 text-kt-positive-text border border-kt-positive/20";
                 } else if (isNegative) {
-                  assessmentBadge = "bg-kt-negative-weak/10 text-kt-negative-text border border-kt-negative/20";
+                  severityBadge = "bg-kt-negative-weak/10 text-kt-negative-text border border-kt-negative/20";
                 }
+
+                const icVal = r.icSpearman;
+                const spreadVal = r.topBottomSpread;
 
                 return (
                   <tr key={r.id} className="hover:bg-kt-bg-overlay-100/50 transition-colors">
@@ -159,42 +176,38 @@ export default function IndividualSignalIcSummary({ universeId }: Props) {
                     <td className="py-2.5 px-1 font-mono text-kt-text-primary">{r.horizon}</td>
                     <td className="py-2.5 px-1 text-right font-mono text-kt-text-primary tabular-nums">{r.sampleSize}</td>
                     <td className="py-2.5 px-1 text-right font-mono tabular-nums text-kt-text-primary">
-                      {r.spearmanIc !== null ? (
-                        <span className={r.spearmanIc > 0 ? "text-kt-positive-text" : r.spearmanIc < 0 ? "text-kt-negative-text" : ""}>
-                          {r.spearmanIc > 0 ? "+" : ""}{r.spearmanIc.toFixed(4)}
+                      {icVal !== null ? (
+                        <span className={icVal > 0 ? "text-kt-positive-text" : icVal < 0 ? "text-kt-negative-text" : "text-kt-text-secondary"}>
+                          {icVal > 0 ? "+" : ""}{icVal.toFixed(4)}
                         </span>
                       ) : (
                         "null"
                       )}
                     </td>
                     <td className="py-2.5 px-1 text-right font-mono tabular-nums text-kt-text-primary">
-                      {r.icir !== null ? (
-                        <span className={r.icir > 0 ? "text-kt-positive-text" : r.icir < 0 ? "text-kt-negative-text" : ""}>
-                          {r.icir > 0 ? "+" : ""}{r.icir.toFixed(4)}
+                      {spreadVal !== null ? (
+                        <span className={spreadVal > 0 ? "text-kt-positive-text" : spreadVal < 0 ? "text-kt-negative-text" : "text-kt-text-secondary"}>
+                          {spreadVal > 0 ? "+" : ""}{(spreadVal * 100).toFixed(2)}%
                         </span>
                       ) : (
                         "null"
                       )}
-                    </td>
-                    <td className="py-2.5 px-1 text-right font-mono tabular-nums text-kt-text-primary">
-                      {r.hitRate !== null ? `${(r.hitRate * 100).toFixed(2)}%` : "null"}
                     </td>
                     <td className="py-2.5 px-2 text-center">
-                      <span className={`px-1.5 py-0.5 rounded-[3px] text-[9px] font-medium inline-block ${assessmentBadge}`}>
-                        {r.contributionAssessment}
+                      <span className={`px-1.5 py-0.5 rounded-[3px] text-[9px] font-medium inline-block ${severityBadge}`}>
+                        {r.severity}
                       </span>
                     </td>
                     <td className="py-2.5 px-3">
                       <div className="flex flex-wrap gap-1">
                         {r.warnings.filter(w => w !== "sample_universe_only").map((w) => {
-                          const isWeak = w === "weak_signal_high_weight";
-                          const isNeg = w === "negative_contribution";
-                          const isIns = w === "insufficient_sample" || w === "not_enough_cross_section" || w === "not_enough_time_series";
+                          const isWarningText = w === "weak_signal_high_weight" || w === "negative_ic" || (w as string) === "negative_contribution" || w === "unstable_across_horizons";
+                          const isInsufficientText = w === "insufficient_sample" || w === "missing_signal_score" || w === "missing_forward_return";
 
                           let color = "bg-kt-bg-overlay-300 text-kt-text-secondary border border-kt-border-panel/40";
-                          if (isWeak || isNeg) {
-                            color = "bg-kt-positive-weak/10 text-kt-positive-text border border-kt-positive/20";
-                          } else if (isIns) {
+                          if (isWarningText) {
+                            color = "bg-kt-negative-weak/10 text-kt-negative-text border border-kt-negative/20";
+                          } else if (isInsufficientText) {
                             color = "bg-kt-bg-panel text-kt-text-secondary border border-kt-border-panel/40";
                           }
 

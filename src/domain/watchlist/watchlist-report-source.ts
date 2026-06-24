@@ -6,7 +6,8 @@ export type WatchlistReportSourceType =
   | "signal_postmortem"
   | "provider_health"
   | "manual_link"
-  | "manual_upload";
+  | "manual_upload"
+  | "individual_signal_ic";
 
 export type WatchlistReportSource = {
   sourceType: WatchlistReportSourceType;
