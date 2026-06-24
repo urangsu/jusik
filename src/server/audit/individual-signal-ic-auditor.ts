@@ -283,7 +283,7 @@ export async function auditIndividualSignalIc(input: {
       }
       if (finalSpearman !== null && finalSpearman < 0) {
         warnings.push("negative_ic");
-        (warnings as any).push("negative_contribution");
+        warnings.push("negative_contribution");
       }
       if (finalSpearman !== null && Math.abs(finalSpearman) < 0.03) {
         warnings.push("near_zero_ic");

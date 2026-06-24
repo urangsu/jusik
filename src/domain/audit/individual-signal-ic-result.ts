@@ -20,6 +20,7 @@ export type IndividualSignalIcSeverity =
 export type IndividualSignalIcWarning =
   | "insufficient_sample"
   | "negative_ic"
+  | "negative_contribution"
   | "near_zero_ic"
   | "unstable_across_horizons"
   | "weak_signal_high_weight"

@@ -57,4 +57,36 @@ describe("POST /api/audit/individual-signal-ic/run", () => {
 
     expect(saveIndividualSignalIcResults).toHaveBeenCalled();
   });
+
+  it("should fail with 400 when horizon is invalid", async () => {
+    (process.env as any).NODE_ENV = "development";
+    process.env.LOCAL_SETTINGS_WRITE_ENABLED = "true";
+
+    const req = new NextRequest("http://localhost/api/audit/individual-signal-ic/run", {
+      method: "POST",
+      body: JSON.stringify({ universeId: "KOSPI_SAMPLE", horizon: "invalid_horizon" }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.status).toBe("error");
+    expect(json.message).toBe("Invalid horizon");
+  });
+
+  it("should fail with 400 when horizons array contains invalid horizon", async () => {
+    (process.env as any).NODE_ENV = "development";
+    process.env.LOCAL_SETTINGS_WRITE_ENABLED = "true";
+
+    const req = new NextRequest("http://localhost/api/audit/individual-signal-ic/run", {
+      method: "POST",
+      body: JSON.stringify({ universeId: "KOSPI_SAMPLE", horizons: ["forward_5d", "invalid_horizon"] }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.status).toBe("error");
+    expect(json.message).toBe("Invalid horizons");
+  });
 });

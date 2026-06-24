@@ -17,6 +17,37 @@ export async function POST(request: NextRequest) {
     const bodyHorizon = body.horizon || undefined;
     const bodyHorizons = body.horizons || undefined;
 
+    const VALID_HORIZONS = ["1w", "1m", "3m", "forward_5d", "forward_20d", "forward_60d"];
+
+    const validateHorizon = (h: unknown) =>
+      typeof h === "string" && VALID_HORIZONS.includes(h);
+
+    if (bodyHorizon && !validateHorizon(bodyHorizon)) {
+      const envelope: DataEnvelope<null> = {
+        value: null,
+        status: "error",
+        message: "Invalid horizon",
+        source: "Individual Signal IC Run API",
+        sourceTier: "manual_import",
+        warnings: [],
+        updatedAt: null,
+      };
+      return createSafeResponse(envelope, 400);
+    }
+
+    if (Array.isArray(bodyHorizons) && bodyHorizons.some((h) => !validateHorizon(h))) {
+      const envelope: DataEnvelope<null> = {
+        value: null,
+        status: "error",
+        message: "Invalid horizons",
+        source: "Individual Signal IC Run API",
+        sourceTier: "manual_import",
+        warnings: [],
+        updatedAt: null,
+      };
+      return createSafeResponse(envelope, 400);
+    }
+
     if (universeId !== "KOSPI_SAMPLE" && universeId !== "SP500_SAMPLE") {
       const envelope: DataEnvelope<null> = {
         value: null,

@@ -39,8 +39,8 @@
 |---|---|---|
 | **`not_available`** | 신호 점수 또는 미래 수익률 결측 | 계산에 필요한 데이터가 완전히 누락된 상태. |
 | **`insufficient_sample`** | 전체 유효 쌍(sample size) < 30 | 통계적 신뢰성을 확보하기에 표본 수가 부족한 상태. |
-| **`strong_positive`** | $\text{icSpearman} \ge 0.08$ 이고 $\text{sampleSize} \ge 30$ | 매우 강력하고 안정적인 양(+)의 예측력을 보임. |
-| **`weak_positive`** | $0.03 \le \text{icSpearman} < 0.08$ 이고 $\text{sampleSize} \ge 30$ | 양호한 수준의 양(+)의 예측력을 기여하고 있음. |
+| **`strong_positive`** | $\text{icSpearman} \ge 0.08$ 이고 $\text{sampleSize} \ge 30$ | 상대적으로 높은 양(+)의 IC가 관측된 상태. 샘플 유니버스 기준의 진단 결과이며 전략 편입 또는 가중치 확대 지시가 아님. |
+| **`weak_positive`** | $0.03 \le \text{icSpearman} < 0.08$ 이고 $\text{sampleSize} \ge 30$ | 약한 양(+)의 IC가 관측된 상태. 샘플 유니버스 기준의 진단 결과이며 전략 편입 또는 가중치 확대 지시가 아님. |
 | **`neutral`** | $-0.03 < \text{icSpearman} < 0.03$ 이고 $\text{sampleSize} \ge 30$ | 예측 기여도가 미미하거나 보합인 상태. |
 | **`weak_negative`** | $-0.08 < \text{icSpearman} \le -0.03$ 이고 $\text{sampleSize} \ge 30$ | 음(-)의 예측 기여도가 의심되는 불안정한 상태. |
 | **`strong_negative`** | $\text{icSpearman} \le -0.08$ 이고 $\text{sampleSize} \ge 30$ | 강한 음(-)의 상관관계가 나타나 전략 위험을 높이는 상태. |
