@@ -62,6 +62,8 @@ data/sentiment/
 data/settings/
 data/strategy-trials/
 data/signal-postmortems/
+data/ai/
+
 
 # Keep directory structure placeholders
 !data/.gitkeep
@@ -80,6 +82,8 @@ data/signal-postmortems/
 !data/settings/.gitkeep
 !data/strategy-trials/.gitkeep
 !data/signal-postmortems/.gitkeep
+!data/ai/.gitkeep
+
 data/audits/individual-signal-ic/*
 !data/audits/individual-signal-ic/.gitkeep
 

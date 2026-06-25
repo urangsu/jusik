@@ -11,7 +11,7 @@ import { DataEnvelope } from "@/domain/common/data-status";
 import { useI18n } from "@/i18n/use-i18n";
 import { BarChart3, Info, ShieldAlert, RefreshCw, Loader2, Link as LinkIcon, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { AiContextPack } from "@/domain/ai/structured-ai-output";
+import { AiContextPack, StructuredAiOutput } from "@/domain/ai/structured-ai-output";
 import { AiPromptInput } from "@/domain/ai/ai-prompt-input";
 
 type Props = {
@@ -37,6 +37,12 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
   const [promptInputData, setPromptInputData] = useState<Record<string, AiPromptInput>>({});
   const [cachedBadgeData, setCachedBadgeData] = useState<Record<string, boolean>>({});
   const [loadingPromptInputs, setLoadingPromptInputs] = useState<Record<string, boolean>>({});
+
+  // Expanded mock structured outputs state
+  const [expandedMockOutputs, setExpandedMockOutputs] = useState<Record<string, boolean>>({});
+  const [mockOutputData, setMockOutputData] = useState<Record<string, StructuredAiOutput>>({});
+  const [loadingMockOutputs, setLoadingMockOutputs] = useState<Record<string, boolean>>({});
+  const [mockModes, setMockModes] = useState<Record<string, "safe" | "forbidden_wording" | "ungrounded_claim" | "missing_disclaimer">>({});
 
   // Local filters
   const [sourceTypeFilter, setSourceTypeFilter] = useState<string>("all");
@@ -165,6 +171,72 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
         console.error(err);
       } finally {
         setLoadingPromptInputs((prev) => ({ ...prev, [findingId]: false }));
+      }
+    }
+  };
+
+  const handleRunMockOutput = async (findingId: string) => {
+    const isExpanded = !!expandedMockOutputs[findingId];
+    setExpandedMockOutputs((prev) => ({ ...prev, [findingId]: !isExpanded }));
+
+    if (!isExpanded) {
+      const mode = mockModes[findingId] || "safe";
+      setLoadingMockOutputs((prev) => ({ ...prev, [findingId]: true }));
+      try {
+        const res = await fetch("/api/ai/mock-output/audit-finding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            findingId,
+            locale: isKo ? "ko" : "en",
+            userPrompt: "이 Finding을 설명 요청 계약 기준으로 설명 준비",
+            mode,
+          }),
+        });
+        if (!res.ok) {
+          throw new Error(`Mock output API error: ${res.status}`);
+        }
+        const envelope = await res.json();
+        if (envelope.status === "error" && !envelope.value) {
+          throw new Error(envelope.message || "Failed to fetch mock output");
+        }
+        if (envelope.value) {
+          setMockOutputData((prev) => ({ ...prev, [findingId]: envelope.value.output }));
+        }
+      } catch (err: any) {
+        console.error(err);
+      } finally {
+        setLoadingMockOutputs((prev) => ({ ...prev, [findingId]: false }));
+      }
+    }
+  };
+
+  const handleModeChange = async (findingId: string, newMode: any) => {
+    setMockModes((prev) => ({ ...prev, [findingId]: newMode }));
+    if (expandedMockOutputs[findingId]) {
+      setLoadingMockOutputs((prev) => ({ ...prev, [findingId]: true }));
+      try {
+        const res = await fetch("/api/ai/mock-output/audit-finding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            findingId,
+            locale: isKo ? "ko" : "en",
+            userPrompt: "이 Finding을 설명 요청 계약 기준으로 설명 준비",
+            mode: newMode,
+          }),
+        });
+        if (!res.ok) {
+          throw new Error(`Mock output API error: ${res.status}`);
+        }
+        const envelope = await res.json();
+        if (envelope.value) {
+          setMockOutputData((prev) => ({ ...prev, [findingId]: envelope.value.output }));
+        }
+      } catch (err: any) {
+        console.error(err);
+      } finally {
+        setLoadingMockOutputs((prev) => ({ ...prev, [findingId]: false }));
       }
     }
   };
@@ -413,6 +485,30 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
                                 ? "설명 요청 준비"
                                 : "Prepare Request"}
                             </button>
+                            <div className="flex items-center gap-1 border-l border-kt-border-panel/20 pl-2">
+                              <select
+                                value={mockModes[f.id] || "safe"}
+                                onChange={(e) => handleModeChange(f.id, e.target.value as any)}
+                                className="px-1.5 py-0.5 bg-kt-bg-overlay-200 text-kt-text-secondary hover:text-kt-text-primary text-[9px] font-semibold border border-kt-border-panel/40 rounded focus:outline-none focus:border-kt-border-panel select-none cursor-pointer"
+                              >
+                                <option value="safe">safe</option>
+                                <option value="forbidden_wording">forbidden wording</option>
+                                <option value="ungrounded_claim">ungrounded claim</option>
+                                <option value="missing_disclaimer">missing disclaimer</option>
+                              </select>
+                              <button
+                                onClick={() => handleRunMockOutput(f.id)}
+                                className="px-2 py-0.5 bg-kt-bg-overlay-200 hover:bg-kt-bg-overlay-300 text-kt-text-secondary hover:text-kt-text-primary rounded text-[9px] font-semibold cursor-pointer border border-kt-border-panel/40 transition-colors flex items-center gap-1 select-none"
+                              >
+                                {expandedMockOutputs[f.id]
+                                  ? isKo
+                                    ? "Mock 설명 닫기"
+                                    : "Close Mock"
+                                  : isKo
+                                  ? "Mock 설명 검증"
+                                  : "Verify Mock"}
+                              </button>
+                            </div>
                           </div>
                         </td>
                         <td className="py-2.5 px-3">
@@ -628,6 +724,186 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
                                 </div>
                               ) : (
                                 <div className="text-kt-negative-text font-bold">Failed to load prompt contract.</div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      {expandedMockOutputs[f.id] && (
+                        <tr className="bg-kt-bg-surface-100/10 border-t border-kt-border-panel/20">
+                          <td colSpan={7} className="px-4 py-3">
+                            <div className="bg-kt-bg-body border border-kt-border-panel rounded p-3 text-[10px] font-mono space-y-2.5 text-kt-text-primary">
+                              <div className="flex items-center justify-between border-b border-kt-border-panel/30 pb-1.5">
+                                <span className="font-bold text-kt-text-secondary flex items-center gap-1.5">
+                                  <span>AI Explanation Validation Pipeline (Mock)</span>
+                                  {mockOutputData[f.id] && (
+                                    <span
+                                      className={`px-1.5 py-0.5 rounded-[3px] text-[8px] font-bold uppercase tracking-wider border ${
+                                        mockOutputData[f.id].isBlocked
+                                          ? "bg-kt-negative-weak/10 text-kt-negative-text border-kt-negative-text/20"
+                                          : "bg-kt-positive/10 text-kt-positive-text border-kt-positive/20"
+                                      }`}
+                                    >
+                                      {mockOutputData[f.id].isBlocked
+                                        ? isKo
+                                          ? "차단됨 (Blocked)"
+                                          : "Blocked"
+                                        : isKo
+                                        ? "검증 통과 (Safe)"
+                                        : "Safe"}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="text-[8px] text-kt-text-muted font-bold tracking-wider uppercase">
+                                  No LLM Call executed
+                                </span>
+                              </div>
+
+                              {loadingMockOutputs[f.id] ? (
+                                <div className="flex items-center gap-1.5 py-1 text-kt-text-muted">
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Running output guard pipeline...</span>
+                                </div>
+                              ) : mockOutputData[f.id] ? (
+                                <div className="space-y-3.5">
+                                  {mockOutputData[f.id].isBlocked ? (
+                                    <div className="space-y-3">
+                                      <div className="p-2.5 bg-kt-negative-weak/15 border border-kt-negative-text/30 rounded text-[9.5px] text-kt-negative-text flex items-start gap-2">
+                                        <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                        <div className="space-y-1">
+                                          <div className="font-bold">
+                                            {isKo
+                                              ? "검증 실패로 설명 본문은 표시하지 않습니다."
+                                              : "Validation failed. Explanation body is hidden."}
+                                          </div>
+                                          <div className="text-[9px] opacity-90 leading-normal">
+                                            {isKo
+                                              ? "출력 가드파이프라인이 비정상 금융 권고 문구, 출처 미정의 클레임, 또는 면책조항 누락을 감지하여 차단 처리했습니다."
+                                              : "The output guard pipeline blocked this output due to unauthorized wording, ungrounded claims, or missing disclaimers."}
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                          <span className="text-kt-text-muted block border-b border-kt-border-panel/20 pb-0.5 mb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                                            Blocked Reasons
+                                          </span>
+                                          <ul className="list-disc list-inside space-y-1 text-kt-negative-text/90 pl-1">
+                                            {mockOutputData[f.id].blockReasons.map((reason, idx) => (
+                                              <li key={idx}>{reason}</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                        {mockOutputData[f.id].blockedTerms.length > 0 && (
+                                          <div>
+                                            <span className="text-kt-text-muted block border-b border-kt-border-panel/20 pb-0.5 mb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                                              Detected Forbidden Terms
+                                            </span>
+                                            <div className="flex flex-wrap gap-1">
+                                              {mockOutputData[f.id].blockedTerms.map((term) => (
+                                                <span
+                                                  key={term}
+                                                  className="px-1.5 py-0.5 rounded-[3px] text-[8.5px] font-semibold bg-kt-negative-weak/10 text-kt-negative-text border border-kt-negative-text/20"
+                                                >
+                                                  {term}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-3.5">
+                                      <div className="space-y-1">
+                                        <div className="text-[11px] font-bold text-kt-text-primary border-b border-kt-border-panel/20 pb-1">
+                                          {mockOutputData[f.id].title}
+                                        </div>
+                                        <p className="text-[10px] text-kt-text-secondary leading-relaxed bg-kt-bg-overlay-100 p-2 rounded border border-kt-border-panel/30">
+                                          {mockOutputData[f.id].summary}
+                                        </p>
+                                      </div>
+
+                                      <div>
+                                        <span className="text-kt-text-muted block border-b border-kt-border-panel/20 pb-0.5 mb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                                          Grounded Claims
+                                        </span>
+                                        <div className="space-y-2">
+                                          {mockOutputData[f.id].claims.map((claim) => (
+                                            <div
+                                              key={claim.id}
+                                              className="bg-kt-bg-overlay-100 p-2 rounded border border-kt-border-panel/30 space-y-1.5"
+                                            >
+                                              <div className="text-[9.5px] text-kt-text-primary leading-normal font-sans">
+                                                {claim.text}
+                                              </div>
+                                              <div className="flex flex-wrap gap-x-2 gap-y-1 text-[8px] text-kt-text-muted border-t border-kt-border-panel/10 pt-1">
+                                                <span>Source: {claim.source} ({claim.sourceType})</span>
+                                                <span>Source ID: {claim.sourceId}</span>
+                                                <span>
+                                                  Status:{" "}
+                                                  <span className="text-kt-positive-text font-semibold">
+                                                    {claim.status}
+                                                  </span>
+                                                </span>
+                                                <span>
+                                                  Risk:{" "}
+                                                  <span
+                                                    className={
+                                                      claim.riskLevel === "low"
+                                                        ? "text-kt-positive-text font-semibold"
+                                                        : "text-kt-negative-text font-semibold"
+                                                    }
+                                                  >
+                                                    {claim.riskLevel}
+                                                  </span>
+                                                </span>
+                                                {claim.updatedAt && (
+                                                  <span>
+                                                    Updated: {new Date(claim.updatedAt).toLocaleString()}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              {claim.warnings.length > 0 && (
+                                                <div className="text-[8px] text-kt-negative-text font-semibold">
+                                                  Warnings: {claim.warnings.join(", ")}
+                                                </div>
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                          <span className="text-kt-text-muted block border-b border-kt-border-panel/20 pb-0.5 mb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                                            Required Disclaimers
+                                          </span>
+                                          <div className="bg-kt-bg-overlay-100 p-2 rounded border border-kt-border-panel/30 text-[9px] text-kt-text-secondary leading-normal">
+                                            {mockOutputData[f.id].requiredDisclaimers.join(", ") || "-"}
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <span className="text-kt-text-muted block border-b border-kt-border-panel/20 pb-0.5 mb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                                            Limitations
+                                          </span>
+                                          <ul className="list-disc list-inside space-y-0.5 text-[9px] text-kt-text-secondary pl-1 leading-normal">
+                                            {mockOutputData[f.id].limitations.map((lim, idx) => (
+                                              <li key={idx}>{lim}</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div className="border-t border-kt-border-panel/20 pt-2 flex items-center justify-between text-[8px] text-kt-text-muted font-mono">
+                                    <span>Explanation ID: {mockOutputData[f.id].id}</span>
+                                    <span>Generated At: {new Date(mockOutputData[f.id].generatedAt).toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-kt-negative-text font-bold">Failed to load mock explanation output.</div>
                               )}
                             </div>
                           </td>

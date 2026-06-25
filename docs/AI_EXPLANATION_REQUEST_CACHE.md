@@ -38,3 +38,12 @@ To maintain data integrity and prevent poisoned cache records, the store isolate
 *   **"설명 요청 준비" Button**:
     *   Rendered on the findings panel (`AuditFindingsPanel.tsx`) to allow previewing the constructed prompt contract before any processing.
     *   Displays the cache hit status and the strict system policies/allowed claims/disclaimers bound to the intent.
+
+## 5. Mock Output Integration
+
+To verify the E2E validation pipeline and safety rules without invoking external LLM APIs, a **Mock AI Output Adapter** is integrated:
+*   **Verification Modes**: Runs the guard pipeline with different mock modes (`safe`, `forbidden_wording`, `ungrounded_claim`, `missing_disclaimer`).
+*   **Storage Behavior**: 
+    *   Mock runs in `safe` mode successfully pass validation and write a normal `AiExplanationCacheRecord` to `data/ai/explanation-cache/normal/`.
+    *   Deviated modes fail validation, resulting in `isBlocked = true`, and save an `AiExplanationBlockedRecord` to `data/ai/explanation-cache/blocked/`.
+
