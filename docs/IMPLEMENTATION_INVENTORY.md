@@ -108,6 +108,8 @@
 | `PATCH /api/watchlist/reports/[id]/status` | **implemented** | ✓ | SettingsWriteGuard | 리포트 읽음/보관/숨김 상태 갱신 |
 | `GET /api/audit/findings` | **implemented** | ✓ | - | 필터링된 감사 Finding 조회 |
 | `POST /api/audit/findings/run` | **implemented** | ✓ | SettingsWriteGuard | 감사 Finding 생성/갱신 취합 실행 |
+| `POST /api/ai/structured-output/validate` | **implemented** | ✓ | - | AI 설명구조 출력 검증 |
+| `GET /api/ai/context-pack/audit-finding` | **implemented** | ✓ | - | 감사 Finding용 Context Pack 조회 |
 
 ---
 

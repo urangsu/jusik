@@ -44,3 +44,12 @@
 - **`warnings`**: 바인딩된 경고 코드 리스트
 - **`sourceTier`**: 원천 데이터 소스 등급
 - **`calculatedAt`**: 연산 시각
+
+---
+
+## 4. AI Explanation & Context Packs (Safety Guard Integration)
+
+이 감사 Finding은 **Structured Output Guard**와 연계되어 안전한 AI 보조 설명의 대상이 될 수 있습니다:
+1. **AI Context Pack**: 각 Finding 카드의 "검증 컨텍스트 보기"를 통해 Finding의 정량 지표와 메타데이터가 포함된 `AiContextPack` JSON을 직접 조회할 수 있습니다.
+2. **Deterministic Claim Source**: AI 설명의 모든 Claim은 Context Pack의 `sourceRefs`에 명시된 원천 데이터를 기준으로만 작성되어야 하며, 임의 가격/비율 발명이나 매매 추천 유도를 deterministic하게 차단합니다.
+
