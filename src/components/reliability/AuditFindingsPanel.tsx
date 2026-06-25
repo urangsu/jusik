@@ -1,11 +1,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AuditFinding, AuditFindingSourceType, AuditFindingScope, AuditFindingSeverity } from "@/domain/audit/audit-finding";
+import {
+  AuditFinding,
+  AuditFindingSourceType,
+  AuditFindingScope,
+  AuditFindingSeverity,
+} from "@/domain/audit/audit-finding";
 import { DataEnvelope } from "@/domain/common/data-status";
 import { useI18n } from "@/i18n/use-i18n";
 import { BarChart3, Info, ShieldAlert, RefreshCw, Loader2, Link as LinkIcon, AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { AiContextPack } from "@/domain/ai/structured-ai-output";
 
 type Props = {
   universeId: "KOSPI_SAMPLE" | "SP500_SAMPLE";
@@ -19,6 +25,11 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
   const [calculating, setCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [findings, setFindings] = useState<AuditFinding[]>([]);
+
+  // Expanded context packs state
+  const [expandedContextPacks, setExpandedContextPacks] = useState<Record<string, boolean>>({});
+  const [contextPackData, setContextPackData] = useState<Record<string, AiContextPack>>({});
+  const [loadingContextPacks, setLoadingContextPacks] = useState<Record<string, boolean>>({});
 
   // Local filters
   const [sourceTypeFilter, setSourceTypeFilter] = useState<string>("all");
@@ -90,6 +101,32 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
     }
   };
 
+  const handleToggleContextPack = async (findingId: string) => {
+    const isExpanded = !!expandedContextPacks[findingId];
+    setExpandedContextPacks((prev) => ({ ...prev, [findingId]: !isExpanded }));
+
+    if (!isExpanded && !contextPackData[findingId]) {
+      setLoadingContextPacks((prev) => ({ ...prev, [findingId]: true }));
+      try {
+        const res = await fetch(`/api/ai/context-pack/audit-finding?id=${findingId}`);
+        if (!res.ok) {
+          throw new Error(`Context pack API error: ${res.status}`);
+        }
+        const envelope: DataEnvelope<AiContextPack> = await res.json();
+        if (envelope.status === "error" || envelope.status === "not_found") {
+          throw new Error(envelope.message || "Failed to fetch context pack");
+        }
+        if (envelope.value) {
+          setContextPackData((prev) => ({ ...prev, [findingId]: envelope.value! }));
+        }
+      } catch (err: any) {
+        console.error(err);
+      } finally {
+        setLoadingContextPacks((prev) => ({ ...prev, [findingId]: false }));
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6 bg-kt-bg-surface-100/40 border border-kt-border-panel/40 rounded-kt-card animate-pulse flex flex-col gap-3">
@@ -158,27 +195,31 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
         <div className="grid grid-cols-4 gap-3">
           <div className="bg-kt-bg-surface-100 border border-kt-border-panel p-3 rounded-kt-card flex flex-col justify-between">
             <span className="text-[10px] text-kt-text-secondary font-medium">{isKo ? "Critical 위험" : "Critical"}</span>
-            <span className={`text-lg font-bold tabular-nums mt-1 ${criticalCount > 0 ? "text-kt-negative-text font-extrabold" : "text-kt-text-primary"}`}>
+            <span
+              className={`text-lg font-bold tabular-nums mt-1 ${
+                criticalCount > 0 ? "text-kt-negative-text font-extrabold" : "text-kt-text-primary"
+              }`}
+            >
               {criticalCount}
             </span>
           </div>
           <div className="bg-kt-bg-surface-100 border border-kt-border-panel p-3 rounded-kt-card flex flex-col justify-between">
             <span className="text-[10px] text-kt-text-secondary font-medium">{isKo ? "Warning 경고" : "Warning"}</span>
-            <span className={`text-lg font-bold tabular-nums mt-1 ${warningCount > 0 ? "text-kt-negative-text" : "text-kt-text-primary"}`}>
+            <span
+              className={`text-lg font-bold tabular-nums mt-1 ${
+                warningCount > 0 ? "text-kt-negative-text" : "text-kt-text-primary"
+              }`}
+            >
               {warningCount}
             </span>
           </div>
           <div className="bg-kt-bg-surface-100 border border-kt-border-panel p-3 rounded-kt-card flex flex-col justify-between">
             <span className="text-[10px] text-kt-text-secondary font-medium">{isKo ? "Watch 관망" : "Watch"}</span>
-            <span className="text-lg font-bold tabular-nums text-kt-text-primary mt-1">
-              {watchCount}
-            </span>
+            <span className="text-lg font-bold tabular-nums text-kt-text-primary mt-1">{watchCount}</span>
           </div>
           <div className="bg-kt-bg-surface-100 border border-kt-border-panel p-3 rounded-kt-card flex flex-col justify-between">
             <span className="text-[10px] text-kt-text-secondary font-medium">{isKo ? "Info 정보" : "Info"}</span>
-            <span className="text-lg font-bold tabular-nums text-kt-text-primary mt-1">
-              {infoCount}
-            </span>
+            <span className="text-lg font-bold tabular-nums text-kt-text-primary mt-1">{infoCount}</span>
           </div>
         </div>
       )}
@@ -252,16 +293,14 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
           <div className="px-3 py-2 bg-kt-bg-overlay-100 border-b border-kt-border-panel/50 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <BarChart3 className="w-3.5 h-3.5 text-kt-text-secondary" />
-              <span className="text-xs font-bold text-kt-text-primary">
-                {isKo ? "감사 Finding 내역" : "Audit Findings"}
-              </span>
+              <span className="text-xs font-bold text-kt-text-primary">{isKo ? "감사 Finding 내역" : "Audit Findings"}</span>
             </div>
             <div className="text-[10px] text-kt-text-muted font-mono">
               Filtered: {filteredFindings.length} / {findings.length} findings
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto font-sans">
             <table className="w-full text-[11px] text-left border-collapse">
               <thead>
                 <tr className="border-b border-kt-border-panel/30 bg-kt-bg-overlay-100 text-kt-text-secondary font-semibold">
@@ -284,57 +323,169 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
                   }
 
                   const isAssetScoped = f.assetId !== null;
+                  const isExpanded = !!expandedContextPacks[f.id];
 
                   return (
-                    <tr key={f.id} className="hover:bg-kt-bg-overlay-100/50 transition-colors">
-                      <td className="py-2.5 px-3 text-center">
-                        <span className={`px-1.5 py-0.5 rounded-[3px] text-[9px] uppercase inline-block ${severityBadge}`}>
-                          {f.severity}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-2 font-mono font-medium text-kt-text-secondary">
-                        {f.scope}
-                        {!isAssetScoped && (
-                          <div className="text-[8px] text-kt-text-muted mt-0.5 whitespace-nowrap">
-                            {isKo ? "(전략/신호 단위)" : "(non-asset)"}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-2 text-kt-text-secondary font-mono leading-tight">
-                        {f.sourceType}
-                      </td>
-                      <td className="py-2.5 px-3 space-y-0.5">
-                        <div className="font-semibold text-kt-text-primary">{f.title}</div>
-                        <p className="text-[10px] text-kt-text-muted leading-normal">{f.summary}</p>
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <div className="flex flex-wrap gap-1">
-                          {f.warnings.map((w) => (
-                            <span key={w} className="px-1 py-0.5 rounded-[3px] text-[8px] font-mono leading-none bg-kt-bg-panel text-kt-text-secondary border border-kt-border-panel/40">
-                              {w}
-                            </span>
-                          ))}
-                          {f.warnings.length === 0 && (
-                            <span className="text-kt-text-muted/40 text-[9px] font-mono italic">-</span>
+                    <React.Fragment key={f.id}>
+                      <tr className="hover:bg-kt-bg-overlay-100/50 transition-colors">
+                        <td className="py-2.5 px-3 text-center">
+                          <span className={`px-1.5 py-0.5 rounded-[3px] text-[9px] uppercase inline-block ${severityBadge}`}>
+                            {f.severity}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-2 font-mono font-medium text-kt-text-secondary">
+                          {f.scope}
+                          {!isAssetScoped && (
+                            <div className="text-[8px] text-kt-text-muted mt-0.5 whitespace-nowrap">
+                              {isKo ? "(전략/신호 단위)" : "(non-asset)"}
+                            </div>
                           )}
-                        </div>
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        {f.internalUrl ? (
-                          <Link
-                            href={f.internalUrl}
-                            className="inline-flex items-center justify-center p-1 hover:bg-kt-bg-overlay-200 rounded text-kt-text-secondary hover:text-kt-text-primary transition-colors cursor-pointer"
-                          >
-                            <LinkIcon className="w-3.5 h-3.5" />
-                          </Link>
-                        ) : (
-                          <span className="text-kt-text-muted/20">-</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-kt-text-secondary font-mono text-[9px] whitespace-nowrap">
-                        {new Date(f.calculatedAt).toLocaleString()}
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="py-2.5 px-2 text-kt-text-secondary font-mono leading-tight">{f.sourceType}</td>
+                        <td className="py-2.5 px-3 space-y-0.5">
+                          <div className="font-semibold text-kt-text-primary">{f.title}</div>
+                          <p className="text-[10px] text-kt-text-muted leading-normal">{f.summary}</p>
+                          <div className="mt-1.5 flex items-center gap-2">
+                            <button
+                              onClick={() => handleToggleContextPack(f.id)}
+                              className="px-2 py-0.5 bg-kt-bg-overlay-200 hover:bg-kt-bg-overlay-300 text-kt-text-secondary hover:text-kt-text-primary rounded text-[9px] font-semibold cursor-pointer border border-kt-border-panel/40 transition-colors flex items-center gap-1 select-none"
+                            >
+                              {isExpanded
+                                ? isKo
+                                  ? "컨텍스트 닫기"
+                                  : "Close Context"
+                                : isKo
+                                ? "검증 컨텍스트 보기"
+                                : "View Context"}
+                            </button>
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <div className="flex flex-wrap gap-1">
+                            {f.warnings.map((w) => (
+                              <span
+                                key={w}
+                                className="px-1 py-0.5 rounded-[3px] text-[8px] font-mono leading-none bg-kt-bg-panel text-kt-text-secondary border border-kt-border-panel/40"
+                              >
+                                {w}
+                              </span>
+                            ))}
+                            {f.warnings.length === 0 && (
+                              <span className="text-kt-text-muted/40 text-[9px] font-mono italic">-</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          {f.internalUrl ? (
+                            <Link
+                              href={f.internalUrl}
+                              className="inline-flex items-center justify-center p-1 hover:bg-kt-bg-overlay-200 rounded text-kt-text-secondary hover:text-kt-text-primary transition-colors cursor-pointer"
+                            >
+                              <LinkIcon className="w-3.5 h-3.5" />
+                            </Link>
+                          ) : (
+                            <span className="text-kt-text-muted/20">-</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-right text-kt-text-secondary font-mono text-[9px] whitespace-nowrap">
+                          {new Date(f.calculatedAt).toLocaleString()}
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr className="bg-kt-bg-surface-100/10">
+                          <td colSpan={7} className="px-4 py-3 border-t border-kt-border-panel/20">
+                            <div className="bg-kt-bg-body border border-kt-border-panel rounded p-3 text-[10px] font-mono space-y-2.5 text-kt-text-primary">
+                              <div className="flex items-center justify-between border-b border-kt-border-panel/30 pb-1.5">
+                                <span className="font-bold text-kt-text-secondary">
+                                  AI Context Pack Context (Deterministic Claim Source)
+                                </span>
+                                <span className="text-[8px] text-kt-text-muted font-bold tracking-wider uppercase">
+                                  No LLM Call executed
+                                </span>
+                              </div>
+                              {loadingContextPacks[f.id] ? (
+                                <div className="flex items-center gap-1.5 py-1 text-kt-text-muted">
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Loading context pack...</span>
+                                </div>
+                              ) : contextPackData[f.id] ? (
+                                <div className="space-y-3.5">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[10px] leading-relaxed">
+                                    <div>
+                                      <span className="text-kt-text-muted block border-b border-kt-border-panel/20 pb-0.5 mb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                                        Source References
+                                      </span>
+                                      <div className="space-y-1.5">
+                                        {contextPackData[f.id].sourceRefs.map((ref, idx) => (
+                                          <div
+                                            key={idx}
+                                            className="bg-kt-bg-overlay-100 p-2 rounded border border-kt-border-panel/30 space-y-0.5"
+                                          >
+                                            <div>
+                                              <strong className="text-kt-text-secondary">Source:</strong> {ref.source} (
+                                              {ref.sourceType})
+                                            </div>
+                                            <div>
+                                              <strong className="text-kt-text-secondary">Source ID:</strong> {ref.sourceId}
+                                            </div>
+                                            <div>
+                                              <strong className="text-kt-text-secondary">Status:</strong>{" "}
+                                              <span className="text-kt-positive-text font-semibold">{ref.status}</span>
+                                            </div>
+                                            <div>
+                                              <strong className="text-kt-text-secondary">Updated At:</strong>{" "}
+                                              {ref.updatedAt ? new Date(ref.updatedAt).toLocaleString() : "null"}
+                                            </div>
+                                            {ref.warnings.length > 0 && (
+                                              <div className="text-kt-negative-text font-medium">
+                                                <strong className="text-kt-text-secondary">Warnings:</strong>{" "}
+                                                {ref.warnings.join(", ")}
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <span className="text-kt-text-muted block border-b border-kt-border-panel/20 pb-0.5 mb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                                        Extracted Facts & Scope
+                                      </span>
+                                      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 bg-kt-bg-overlay-100 p-2 rounded border border-kt-border-panel/30">
+                                        {contextPackData[f.id].facts.map((fact, idx) => (
+                                          <div
+                                            key={idx}
+                                            className="flex justify-between border-b border-kt-border-panel/10 pb-0.5 font-mono text-[9px]"
+                                          >
+                                            <span className="text-kt-text-secondary font-medium">{fact.key}:</span>
+                                            <span className="text-kt-text-primary font-semibold">{String(fact.value)}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="text-kt-text-muted block border-b border-kt-border-panel/20 pb-0.5 mb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                                      Freshness & Scope Limitations
+                                    </span>
+                                    <ul className="list-disc list-inside space-y-1 text-kt-text-secondary leading-relaxed pl-1 text-[9.5px]">
+                                      {contextPackData[f.id].limitations.map((lim, idx) => (
+                                        <li key={idx}>{lim}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                  <div className="border-t border-kt-border-panel/20 pt-2 flex items-center justify-between text-[8px] text-kt-text-muted">
+                                    <span>Created At: {new Date(contextPackData[f.id].createdAt).toLocaleString()}</span>
+                                    <span>Intent: {contextPackData[f.id].intent}</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-kt-negative-text font-bold">Failed to load context pack data.</div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </tbody>
