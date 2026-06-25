@@ -10,6 +10,7 @@ import { WatchlistReportSummary } from "./WatchlistReportSummary";
 import { WatchlistReportFilters } from "./WatchlistReportFilters";
 import { WatchlistReportInbox } from "./WatchlistReportInbox";
 import { RefreshCw, Play, Loader2, Info, AlertTriangle } from "lucide-react";
+import Link from "next/link";
 
 interface WatchlistPageProps {
   onRefreshUnreadCount?: () => void;
@@ -165,6 +166,24 @@ export const WatchlistPage: React.FC<WatchlistPageProps> = ({ onRefreshUnreadCou
             <span>{locale === "ko" ? "이벤트 수집 실행" : "Run Aggregator"}</span>
           </button>
         </div>
+      </div>
+
+      {/* Non-asset findings router redirect banner */}
+      <div className="p-3 bg-kt-bg-surface-100/40 border border-kt-border-panel rounded-kt-card flex items-center justify-between gap-4 flex-wrap text-xs">
+        <div className="flex items-center gap-2 text-kt-text-secondary">
+          <Info className="w-4 h-4 text-kt-text-secondary shrink-0" />
+          <span>
+            {locale === "ko"
+              ? "개별 신호 예측력(IC), 팩터 상관관계 및 시장 노출 감사 결과는 자산 독립적 진단입니다. 오해 방지를 위해 종목 피드에는 노출되지 않습니다."
+              : "Individual IC, Factor Correlation, and Market Exposure results are strategy-level diagnostics and are excluded from asset feeds."}
+          </span>
+        </div>
+        <Link
+          href="/reliability"
+          className="font-semibold text-kt-negative-text hover:underline inline-flex items-center gap-1 cursor-pointer"
+        >
+          {locale === "ko" ? "전략/신호 단위 감사 Finding 보기" : "View Strategy/Signal Audit Findings"} →
+        </Link>
       </div>
 
       {aggregateError && (

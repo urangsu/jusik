@@ -5,6 +5,8 @@ import { alertEventStore } from "../alerts/alert-event-store";
 import { getRecentFilings } from "../filings/filing-event-store";
 import { WatchlistReportItem, WatchlistReportSeverity } from "@/domain/watchlist/watchlist-report-item";
 import { WatchlistReportSourceType } from "@/domain/watchlist/watchlist-report-source";
+import { listAuditFindings } from "../audit/audit-finding-store";
+
 
 export async function aggregateWatchlistReports(input?: {
   assetId?: string;
@@ -35,6 +37,9 @@ export async function aggregateWatchlistReports(input?: {
     "signal_postmortem",
     "alert_event",
     "opendart_filing",
+    "individual_signal_ic",
+    "factor_correlation",
+    "market_exposure",
   ];
 
   const candidateItems: WatchlistReportItem[] = [];
@@ -188,12 +193,69 @@ export async function aggregateWatchlistReports(input?: {
     }
   }
 
-  // TODO(WO017-F): Implement "individual_signal_ic" report aggregation.
-  // Conditions to trigger:
-  // 1. WatchlistItem.universeId === IC result.universeId
-  // 2. IC result.severity is weak_negative, strong_negative, insufficient_sample, or not_available
-  // 3. WatchlistItem.reportInboxEnabled === true
-  // 4. The signalId is mapped to the active strategy or watchlist factor set.
+  // Load Audit Findings if active sources has any of them
+  const auditSourceTypes: WatchlistReportSourceType[] = [
+    "individual_signal_ic",
+    "factor_correlation",
+    "market_exposure",
+  ];
+  const hasAuditSource = activeSources.some((s) => auditSourceTypes.includes(s));
+  if (hasAuditSource) {
+    try {
+      const findings = await listAuditFindings();
+      for (const f of findings) {
+        if (!activeSources.includes(f.sourceType)) continue;
+
+        // Non-negotiable policy: assetId null check
+        if (f.assetId === null) {
+          // Skip universe/signal/trial findings to prevent misleading asset warnings
+          continue;
+        }
+
+        if (!targetAssetIds.has(f.assetId)) continue;
+        if (input?.since && f.detectedAt < input.since) continue;
+
+        const wlItem = watchlists.find((w) => w.assetId === f.assetId);
+        if (!wlItem) continue;
+
+        // Map severity
+        let reportSeverity: WatchlistReportSeverity = "info";
+        if (f.severity === "critical") reportSeverity = "critical";
+        else if (f.severity === "warning") reportSeverity = "warning";
+        else if (f.severity === "watch") reportSeverity = "watch";
+
+        const dedupeKey = `${f.assetId}|${f.sourceType}|${f.sourceId}`;
+        candidateItems.push({
+          id: `report_finding_${f.id}`,
+          assetId: f.assetId,
+          symbol: f.symbol || wlItem.symbol,
+          assetName: wlItem.nameKo || wlItem.nameEn,
+          title: f.title,
+          summary: f.summary,
+          category: "signal",
+          severity: reportSeverity,
+          source: {
+            sourceType: f.sourceType,
+            sourceId: f.sourceId,
+            sourceTitle: f.title,
+            sourceUrl: f.sourceUrl,
+            internalUrl: f.internalUrl,
+            sourceTier: f.sourceTier as any,
+            warnings: f.warnings,
+            publishedAt: f.detectedAt,
+            capturedAt: f.calculatedAt,
+          },
+          status: "unread",
+          tags: [],
+          detectedAt: f.detectedAt,
+          updatedAt: f.calculatedAt,
+          dedupeKey,
+        });
+      }
+    } catch {
+      // skip
+    }
+  }
 
   let created = 0;
   let skippedDuplicate = 0;

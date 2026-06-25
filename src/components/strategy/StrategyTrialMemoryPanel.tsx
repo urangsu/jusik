@@ -8,6 +8,7 @@ import { useI18n } from "@/i18n/use-i18n";
 import { DataEnvelope } from "@/domain/common/data-status";
 import IndividualSignalIcSummary from "./IndividualSignalIcSummary";
 import MarketExposureSummary from "./MarketExposureSummary";
+import StrategyTrialFindingsSummary from "./StrategyTrialFindingsSummary";
 
 
 export const StrategyTrialMemoryPanel: React.FC = () => {
@@ -69,6 +70,17 @@ export const StrategyTrialMemoryPanel: React.FC = () => {
                 {locale === "ko" ? "시장 노출도 감사 (Market Exposure Audit)" : "Market Exposure Audit"}
               </h3>
               <MarketExposureSummary trialId={selectedTrial.id} />
+            </div>
+
+            <div className="bg-kt-bg-surface-100 border border-kt-border-panel rounded-kt-card p-4 space-y-4">
+              <h3 className="text-xs font-semibold text-kt-text-primary border-b border-kt-border-panel/40 pb-2">
+                {locale === "ko" ? "통합 감사 Finding (Unified Audit Findings)" : "Unified Audit Findings"}
+              </h3>
+              <StrategyTrialFindingsSummary
+                trialId={selectedTrial.id}
+                strategyId={selectedTrial.strategyId}
+                universeId={selectedTrial.universeId}
+              />
             </div>
 
 

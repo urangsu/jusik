@@ -13,6 +13,7 @@ import { DataEnvelope } from "@/domain/common/data-status";
 import { Play, Loader2, Info, Calculator } from "lucide-react";
 import { CorrelationAuditPanel } from "./CorrelationAuditPanel";
 import { IndividualSignalIcAuditPanel } from "./IndividualSignalIcAuditPanel";
+import { AuditFindingsPanel } from "./AuditFindingsPanel";
 
 
 export const ReliabilityWorkspace: React.FC = () => {
@@ -20,7 +21,7 @@ export const ReliabilityWorkspace: React.FC = () => {
   const isKo = locale === "ko";
 
   // State
-  const [activeSubTab, setActiveSubTab] = useState<"reliability" | "signal_ic" | "correlation">("reliability");
+  const [activeSubTab, setActiveSubTab] = useState<"reliability" | "signal_ic" | "correlation" | "findings">("reliability");
   const [universe, setUniverse] = useState<"KOSPI_SAMPLE" | "SP500_SAMPLE">("KOSPI_SAMPLE");
 
   const [horizon, setHorizon] = useState<"1w" | "1m" | "3m">("1m");
@@ -172,6 +173,16 @@ export const ReliabilityWorkspace: React.FC = () => {
         >
           {isKo ? "상관관계 감사" : "Correlation Audit"}
         </button>
+        <button
+          onClick={() => setActiveSubTab("findings")}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-kt-pill transition-colors cursor-pointer border ${
+            activeSubTab === "findings"
+              ? "bg-kt-bg-surface-100 text-kt-text-primary border-kt-border-panel"
+              : "text-kt-text-secondary border-transparent hover:text-kt-text-primary"
+          }`}
+        >
+          {isKo ? "감사 Finding" : "Audit Findings"}
+        </button>
       </div>
 
       {/* Warnings compliance banner */}
@@ -312,8 +323,10 @@ export const ReliabilityWorkspace: React.FC = () => {
           </>
         ) : activeSubTab === "signal_ic" ? (
           <IndividualSignalIcAuditPanel universeId={universe} />
-        ) : (
+        ) : activeSubTab === "correlation" ? (
           <CorrelationAuditPanel universeId={universe} />
+        ) : (
+          <AuditFindingsPanel universeId={universe} />
         )}
       </div>
     </div>

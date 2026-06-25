@@ -7,7 +7,9 @@ export type WatchlistReportSourceType =
   | "provider_health"
   | "manual_link"
   | "manual_upload"
-  | "individual_signal_ic";
+  | "individual_signal_ic"
+  | "factor_correlation"
+  | "market_exposure";
 
 export type WatchlistReportSource = {
   sourceType: WatchlistReportSourceType;
