@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { createSafeResponse } from "@/server/security/safe-api-response";
 import { listAuditFindings } from "@/server/audit/audit-finding-store";
-import { buildAuditFindingContextPack, AiContextPack } from "@/server/ai/ai-context-pack-builder";
+import { buildAuditFindingContextPack } from "@/server/ai/ai-context-pack-builder";
+import { AiContextPack } from "@/domain/ai/structured-ai-output";
 import { DataEnvelope } from "@/domain/common/data-status";
 
 export async function GET(request: NextRequest) {

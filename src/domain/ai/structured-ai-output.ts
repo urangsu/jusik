@@ -64,3 +64,24 @@ export type StructuredAiOutput = {
   generatedAt: string;
   engineVersion: string;
 };
+
+export type AiContextPack = {
+  id: string;
+  intent: AiOutputIntent;
+  sourceRefs: {
+    sourceType: string;
+    sourceId: string;
+    source: string;
+    status: string;
+    updatedAt: string | null;
+    warnings: string[];
+  }[];
+  facts: {
+    key: string;
+    value: string | number | null;
+    unit?: string;
+  }[];
+  limitations: string[];
+  createdAt: string;
+};
+

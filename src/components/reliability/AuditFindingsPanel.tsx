@@ -11,7 +11,7 @@ import { DataEnvelope } from "@/domain/common/data-status";
 import { useI18n } from "@/i18n/use-i18n";
 import { BarChart3, Info, ShieldAlert, RefreshCw, Loader2, Link as LinkIcon, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { AiContextPack } from "@/server/ai/ai-context-pack-builder";
+import { AiContextPack } from "@/domain/ai/structured-ai-output";
 
 type Props = {
   universeId: "KOSPI_SAMPLE" | "SP500_SAMPLE";

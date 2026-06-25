@@ -1,25 +1,5 @@
-import { AiOutputIntent } from "@/domain/ai/structured-ai-output";
+import { AiOutputIntent, AiContextPack } from "@/domain/ai/structured-ai-output";
 import { AuditFinding } from "@/domain/audit/audit-finding";
-
-export type AiContextPack = {
-  id: string;
-  intent: AiOutputIntent;
-  sourceRefs: {
-    sourceType: string;
-    sourceId: string;
-    source: string;
-    status: string;
-    updatedAt: string | null;
-    warnings: string[];
-  }[];
-  facts: {
-    key: string;
-    value: string | number | null;
-    unit?: string;
-  }[];
-  limitations: string[];
-  createdAt: string;
-};
 
 export function buildAuditFindingContextPack(finding: AuditFinding): AiContextPack {
   const sourceRefs = [
