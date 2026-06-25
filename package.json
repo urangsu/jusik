@@ -31,7 +31,8 @@
     "audit:factor-correlation": "tsx scripts/audit/audit-factor-correlation.ts",
     "audit:strategy-correlation": "tsx scripts/audit/audit-strategy-correlation.ts",
     "audit:market-exposure": "tsx scripts/audit/audit-market-exposure.ts",
-    "audit:findings": "tsx scripts/audit/audit-findings.ts"
+    "audit:findings": "tsx scripts/audit/audit-findings.ts",
+    "ai:replay": "tsx scripts/ai/replay-ai-explanation.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",

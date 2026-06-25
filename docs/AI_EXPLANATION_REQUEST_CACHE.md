@@ -47,3 +47,7 @@ To verify the E2E validation pipeline and safety rules without invoking external
     *   Mock runs in `safe` mode successfully pass validation and write a normal `AiExplanationCacheRecord` to `data/ai/explanation-cache/normal/`.
     *   Deviated modes fail validation, resulting in `isBlocked = true`, and save an `AiExplanationBlockedRecord` to `data/ai/explanation-cache/blocked/`.
 
+## 6. Golden Replay Ledger Storage
+*   Replay records are saved in the Replay Ledger directory `data/ai/explanation-replay-ledger/` (including `latest.json`, `history/` and `by-finding/`). They are kept strictly separate from the main Request Cache directory.
+
+

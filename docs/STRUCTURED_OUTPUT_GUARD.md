@@ -26,4 +26,6 @@ This document details the architecture and operational rules of the **Structured
 - If `isBlocked` is evaluated to `true`, the UI **must not** display the generated explanation contents (`summary` or `claims`).
 - Instead, it must show a clear safety warning banner alongside the parsed `blockReasons`.
 - To test the E2E behavior of this safety layer, the findings panel includes a "Mock 설명 검증" control. This runs mock requests across various modes (safe, forbidden wording, ungrounded claims, missing disclaimer) to verify both safe and blocked rendering behaviors.
+- To prevent regression of safety rules over time, a "Mock 리플레이" control triggers E2E regression testing against Golden Cases, recording outcomes in the Replay Ledger.
+
 

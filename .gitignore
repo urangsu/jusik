@@ -62,7 +62,10 @@ data/sentiment/
 data/settings/
 data/strategy-trials/
 data/signal-postmortems/
-data/ai/
+data/ai/*
+!data/ai/explanation-replay-ledger/
+data/ai/explanation-replay-ledger/*
+!data/ai/explanation-replay-ledger/.gitkeep
 
 
 # Keep directory structure placeholders
@@ -84,8 +87,20 @@ data/ai/
 !data/signal-postmortems/.gitkeep
 !data/ai/.gitkeep
 
+data/audits/*
+!data/audits/.gitkeep
+!data/audits/individual-signal-ic/
 data/audits/individual-signal-ic/*
 !data/audits/individual-signal-ic/.gitkeep
+!data/audits/factor-correlation/
+data/audits/factor-correlation/*
+!data/audits/factor-correlation/.gitkeep
+!data/audits/market-exposure/
+data/audits/market-exposure/*
+!data/audits/market-exposure/.gitkeep
+!data/audits/findings/
+data/audits/findings/*
+!data/audits/findings/.gitkeep
 
 # Test fixtures are allowed to be committed (keep small & synthetic)
 !test/fixtures/**

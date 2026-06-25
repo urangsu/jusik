@@ -13,6 +13,7 @@ import { BarChart3, Info, ShieldAlert, RefreshCw, Loader2, Link as LinkIcon, Ale
 import Link from "next/link";
 import { AiContextPack, StructuredAiOutput } from "@/domain/ai/structured-ai-output";
 import { AiPromptInput } from "@/domain/ai/ai-prompt-input";
+import { AiExplanationReplayRecord } from "@/domain/ai/ai-explanation-replay-ledger";
 
 type Props = {
   universeId: "KOSPI_SAMPLE" | "SP500_SAMPLE";
@@ -43,6 +44,11 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
   const [mockOutputData, setMockOutputData] = useState<Record<string, StructuredAiOutput>>({});
   const [loadingMockOutputs, setLoadingMockOutputs] = useState<Record<string, boolean>>({});
   const [mockModes, setMockModes] = useState<Record<string, "safe" | "forbidden_wording" | "ungrounded_claim" | "missing_disclaimer">>({});
+
+  // Expanded replay logs state
+  const [expandedReplayLogs, setExpandedReplayLogs] = useState<Record<string, boolean>>({});
+  const [replayLogData, setReplayLogData] = useState<Record<string, AiExplanationReplayRecord[]>>({});
+  const [loadingReplayLogs, setLoadingReplayLogs] = useState<Record<string, boolean>>({});
 
   // Local filters
   const [sourceTypeFilter, setSourceTypeFilter] = useState<string>("all");
@@ -237,6 +243,41 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
         console.error(err);
       } finally {
         setLoadingMockOutputs((prev) => ({ ...prev, [findingId]: false }));
+      }
+    }
+  };
+
+  const handleRunReplay = async (findingId: string) => {
+    const isExpanded = !!expandedReplayLogs[findingId];
+    setExpandedReplayLogs((prev) => ({ ...prev, [findingId]: !isExpanded }));
+
+    if (!isExpanded) {
+      setLoadingReplayLogs((prev) => ({ ...prev, [findingId]: true }));
+      try {
+        const res = await fetch("/api/ai/replay/audit-finding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            findingId,
+            modes: ["safe", "forbidden_wording", "ungrounded_claim", "missing_disclaimer"],
+            locale: isKo ? "ko" : "en",
+            userPrompt: null,
+          }),
+        });
+        if (!res.ok) {
+          throw new Error(`Replay API error: ${res.status}`);
+        }
+        const envelope = await res.json();
+        if (envelope.status === "error" && !envelope.value) {
+          throw new Error(envelope.message || "Failed to run replay");
+        }
+        if (envelope.value && envelope.value.records) {
+          setReplayLogData((prev) => ({ ...prev, [findingId]: envelope.value.records }));
+        }
+      } catch (err: any) {
+        console.error(err);
+      } finally {
+        setLoadingReplayLogs((prev) => ({ ...prev, [findingId]: false }));
       }
     }
   };
@@ -507,6 +548,18 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
                                   : isKo
                                   ? "Mock 설명 검증"
                                   : "Verify Mock"}
+                              </button>
+                              <button
+                                onClick={() => handleRunReplay(f.id)}
+                                className="px-2 py-0.5 bg-kt-bg-overlay-200 hover:bg-kt-bg-overlay-300 text-kt-text-secondary hover:text-kt-text-primary rounded text-[9px] font-semibold cursor-pointer border border-kt-border-panel/40 transition-colors flex items-center gap-1 select-none"
+                              >
+                                {expandedReplayLogs[f.id]
+                                  ? isKo
+                                    ? "리플레이 닫기"
+                                    : "Close Replay"
+                                  : isKo
+                                  ? "Mock 리플레이"
+                                  : "Mock Replay"}
                               </button>
                             </div>
                           </div>
@@ -904,6 +957,98 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
                                 </div>
                               ) : (
                                 <div className="text-kt-negative-text font-bold">Failed to load mock explanation output.</div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      {expandedReplayLogs[f.id] && (
+                        <tr className="bg-kt-bg-surface-100/10 border-t border-kt-border-panel/20">
+                          <td colSpan={7} className="px-4 py-3">
+                            <div className="bg-kt-bg-body border border-kt-border-panel rounded p-3 text-[10px] font-mono space-y-2.5 text-kt-text-primary">
+                              <div className="flex items-center justify-between border-b border-kt-border-panel/30 pb-1.5">
+                                <span className="font-bold text-kt-text-secondary">
+                                  AI Safety & Alignment Regression Replay Ledger (E2E Validation Checks)
+                                </span>
+                                <span className="text-[8px] text-kt-text-muted font-bold tracking-wider uppercase">
+                                  Goldens Regression Suite
+                                </span>
+                              </div>
+
+                              {loadingReplayLogs[f.id] ? (
+                                <div className="flex items-center gap-1.5 py-1 text-kt-text-muted">
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Running safety goldens replay regression suite...</span>
+                                </div>
+                              ) : replayLogData[f.id] ? (
+                                <div className="space-y-3">
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                      <thead>
+                                        <tr className="border-b border-kt-border-panel/30 text-kt-text-muted text-[8px] uppercase tracking-wider">
+                                          <th className="py-1.5 pr-2">Mode</th>
+                                          <th className="py-1.5 px-2">Expected Blocked</th>
+                                          <th className="py-1.5 px-2">Actual Blocked</th>
+                                          <th className="py-1.5 px-2">Outcome</th>
+                                          <th className="py-1.5 px-2">Passed</th>
+                                          <th className="py-1.5 pl-2">Failure Reasons</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {replayLogData[f.id].map((record) => (
+                                          <tr
+                                            key={record.mode}
+                                            className="border-b border-kt-border-panel/10 hover:bg-kt-bg-overlay-100/50"
+                                          >
+                                            <td className="py-1.5 pr-2 font-bold text-kt-text-primary">
+                                              {record.mode}
+                                            </td>
+                                            <td className="py-1.5 px-2 text-kt-text-secondary">
+                                              {String(record.expectedBlocked)}
+                                            </td>
+                                            <td className="py-1.5 px-2 text-kt-text-secondary">
+                                              {String(record.actualBlocked)}
+                                            </td>
+                                            <td className="py-1.5 px-2">
+                                              <span
+                                                className={`px-1 py-0.5 rounded text-[8px] font-semibold ${
+                                                  record.outcome === "passed"
+                                                    ? "bg-kt-positive/10 text-kt-positive-text border border-kt-positive/20"
+                                                    : record.outcome === "blocked"
+                                                    ? "bg-kt-negative-weak/10 text-kt-negative-text border border-kt-negative-text/20"
+                                                    : "bg-kt-negative-weak/20 text-kt-negative-text font-bold"
+                                                }`}
+                                              >
+                                                {record.outcome}
+                                              </span>
+                                            </td>
+                                            <td className="py-1.5 px-2">
+                                              <span
+                                                className={
+                                                  record.passed
+                                                    ? "text-kt-positive-text font-bold"
+                                                    : "text-kt-negative-text font-bold"
+                                                }
+                                              >
+                                                {record.passed ? "✔" : "✘"}
+                                              </span>
+                                            </td>
+                                            <td className="py-1.5 pl-2 text-kt-negative-text text-[9px] max-w-[200px] truncate">
+                                              {record.failureReasons.join(", ") || "-"}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+
+                                  <div className="border-t border-kt-border-panel/20 pt-2 flex items-center justify-between text-[8px] text-kt-text-muted">
+                                    <span>Ledger Records Saved: data/ai/explanation-replay-ledger/</span>
+                                    <span>Engine: 1.0.0-mock</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-kt-negative-text font-bold">Failed to load replay ledger log.</div>
                               )}
                             </div>
                           </td>

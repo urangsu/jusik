@@ -38,3 +38,7 @@ This document explains the purpose, policies, and behavior of the **Mock AI Outp
 *   **`missing_disclaimer`**:
     *   Excludes the mandatory disclaimer block specified for the intent.
     *   Outcome: **Validation Blocked** (Missing Mandatory Disclaimer).
+
+## 3. Replay Regression Integration
+*   The regression runner (`ai-explanation-replay-runner`) triggers the Mock AI Output Adapter for each mode to compare expected and actual block states, recording findings in the Replay Ledger to prevent safety regressions.
+

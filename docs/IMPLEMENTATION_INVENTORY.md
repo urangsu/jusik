@@ -114,7 +114,8 @@
 | `GET /api/ai/explanation-cache` | **implemented (WO017-H)** | ✓ | - | 일반 AI 설명 캐시 내역 조회 및 필터링 |
 | `GET /api/ai/explanation-cache/blocked` | **implemented (WO017-H)** | ✓ | - | AI 설명 출력 차단(Blocked) 로그 기록 조회 |
 | `POST /api/ai/mock-output/audit-finding` | **implemented (WO017-I)** | ✓ | - | AI 설명 검증을 위한 Mock Structured Output 생성 및 가드 통합 테스트 |
-
+| `POST /api/ai/replay/audit-finding` | **implemented (WO017-J)** | ✓ | - | E2E 회귀 검증을 위한 Golden Cases 리플레이 분석 수행 |
+| `GET /api/ai/replay` | **implemented (WO017-J)** | ✓ | - | 리플레이 검증 결과 레저 기록 조회 및 필터링 |
 
 ---
 
