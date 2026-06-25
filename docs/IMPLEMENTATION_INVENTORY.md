@@ -38,6 +38,7 @@
 | Watchlist Store | **implemented** | `src/server/watchlist/watchlist-store.ts` | ✓ | 관심종목 저장소 및 CRUD |
 | Watchlist Report Inbox & Aggregator | **implemented** | `src/server/watchlist/watchlist-report-aggregator.ts` | ✓ | 관심종목 자산별 공시/경보/사후검토 취합 |
 | Market Exposure Audit | **implemented** | `src/server/audit/market-exposure-auditor.ts` | ✓ | 전략별 시장 노출도(Beta, capture 등) 감사 |
+| Audit Finding Router | **implemented** | `src/server/audit/audit-finding-aggregator.ts` | ✓ | 감사 결과 취합 및 Finding 라우팅 |
 | Signal Stability Gate | **missing_p0** | - | - | flipCount/consecutiveDays 미구현 |
 | StrategyTrialRecord | **implemented** | `src/domain/strategy/strategy-trial-record.ts`, `strategy-trial-store.ts` | ✓ | 전략 묘지/시도 기록 및 중복 감지 |
 | Structured Output Guard | **missing_p0** | - | - | LLM 출력 검증 가드 없음 |
@@ -105,6 +106,8 @@
 | `GET /api/watchlist/reports/unread-count` | **implemented** | ✓ | - | 읽지 않은 리포트 갯수 조회 |
 | `POST /api/watchlist/reports/aggregate` | **implemented** | ✓ | SettingsWriteGuard | 관심종목 관련 리포트 수집 실행 |
 | `PATCH /api/watchlist/reports/[id]/status` | **implemented** | ✓ | SettingsWriteGuard | 리포트 읽음/보관/숨김 상태 갱신 |
+| `GET /api/audit/findings` | **implemented** | ✓ | - | 필터링된 감사 Finding 조회 |
+| `POST /api/audit/findings/run` | **implemented** | ✓ | SettingsWriteGuard | 감사 Finding 생성/갱신 취합 실행 |
 
 ---
 
@@ -124,6 +127,7 @@
 | `sentiment:refresh` | **implemented_but_provider_disabled** | CNN/Crypto F&G 외부 API 의존 |
 | `alerts:evaluate` | **implemented** | `scripts/alerts/evaluate-alerts.ts` |
 | `reports:daily` | **implemented_but_sample_only** | 발송 채널 없음 (Console 출력만) |
+| `audit:findings` | **implemented** | `scripts/audit/audit-findings.ts` |
 | `docs:check` | **implemented** | ✓ pass |
 | `docs:quant` | **implemented** | ✓ pass |
 | `check:wording` | **implemented** | ✓ pass (docs 내 정책 설명 문구는 warn-only) |

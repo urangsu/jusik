@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
       return createSafeResponse(envelope, 400);
     }
 
-    if (sourceType !== undefined && !["opendart_filing", "alert_event", "backtest_result", "strategy_trial", "signal_postmortem", "provider_health", "manual_link", "manual_upload", "individual_signal_ic"].includes(sourceType)) {
+    if (sourceType !== undefined && !["opendart_filing", "alert_event", "backtest_result", "strategy_trial", "signal_postmortem", "provider_health", "manual_link", "manual_upload", "individual_signal_ic", "factor_correlation", "market_exposure"].includes(sourceType)) {
       const envelope: DataEnvelope<null> = {
         value: null,
         status: "error",
