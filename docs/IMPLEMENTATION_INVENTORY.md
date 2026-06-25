@@ -110,6 +110,9 @@
 | `POST /api/audit/findings/run` | **implemented** | ✓ | SettingsWriteGuard | 감사 Finding 생성/갱신 취합 실행 |
 | `POST /api/ai/structured-output/validate` | **implemented** | ✓ | - | AI 설명구조 출력 검증 |
 | `GET /api/ai/context-pack/audit-finding` | **implemented** | ✓ | - | 감사 Finding용 Context Pack 조회 |
+| `POST /api/ai/explanation-requests/audit-finding` | **implemented (WO017-H)** | ✓ | - | AI 설명 요청 접수, 계약 수립 및 캐시 처리 |
+| `GET /api/ai/explanation-cache` | **implemented (WO017-H)** | ✓ | - | 일반 AI 설명 캐시 내역 조회 및 필터링 |
+| `GET /api/ai/explanation-cache/blocked` | **implemented (WO017-H)** | ✓ | - | AI 설명 출력 차단(Blocked) 로그 기록 조회 |
 
 ---
 

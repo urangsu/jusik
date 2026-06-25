@@ -12,6 +12,7 @@ import { useI18n } from "@/i18n/use-i18n";
 import { BarChart3, Info, ShieldAlert, RefreshCw, Loader2, Link as LinkIcon, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { AiContextPack } from "@/domain/ai/structured-ai-output";
+import { AiPromptInput } from "@/domain/ai/ai-prompt-input";
 
 type Props = {
   universeId: "KOSPI_SAMPLE" | "SP500_SAMPLE";
@@ -30,6 +31,12 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
   const [expandedContextPacks, setExpandedContextPacks] = useState<Record<string, boolean>>({});
   const [contextPackData, setContextPackData] = useState<Record<string, AiContextPack>>({});
   const [loadingContextPacks, setLoadingContextPacks] = useState<Record<string, boolean>>({});
+
+  // Expanded prompt inputs state
+  const [expandedPromptInputs, setExpandedPromptInputs] = useState<Record<string, boolean>>({});
+  const [promptInputData, setPromptInputData] = useState<Record<string, AiPromptInput>>({});
+  const [cachedBadgeData, setCachedBadgeData] = useState<Record<string, boolean>>({});
+  const [loadingPromptInputs, setLoadingPromptInputs] = useState<Record<string, boolean>>({});
 
   // Local filters
   const [sourceTypeFilter, setSourceTypeFilter] = useState<string>("all");
@@ -123,6 +130,41 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
         console.error(err);
       } finally {
         setLoadingContextPacks((prev) => ({ ...prev, [findingId]: false }));
+      }
+    }
+  };
+
+  const handleTogglePromptInput = async (findingId: string) => {
+    const isExpanded = !!expandedPromptInputs[findingId];
+    setExpandedPromptInputs((prev) => ({ ...prev, [findingId]: !isExpanded }));
+
+    if (!isExpanded && !promptInputData[findingId]) {
+      setLoadingPromptInputs((prev) => ({ ...prev, [findingId]: true }));
+      try {
+        const res = await fetch("/api/ai/explanation-requests/audit-finding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            findingId,
+            locale: isKo ? "ko" : "en",
+            userPrompt: "이 Finding을 감사 관점에서 설명해줘",
+          }),
+        });
+        if (!res.ok) {
+          throw new Error(`Prompt input API error: ${res.status}`);
+        }
+        const envelope = await res.json();
+        if (envelope.status === "error") {
+          throw new Error(envelope.message || "Failed to fetch prompt contract");
+        }
+        if (envelope.value) {
+          setPromptInputData((prev) => ({ ...prev, [findingId]: envelope.value.promptInput }));
+          setCachedBadgeData((prev) => ({ ...prev, [findingId]: !!envelope.value.cached }));
+        }
+      } catch (err: any) {
+        console.error(err);
+      } finally {
+        setLoadingPromptInputs((prev) => ({ ...prev, [findingId]: false }));
       }
     }
   };
@@ -324,6 +366,7 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
 
                   const isAssetScoped = f.assetId !== null;
                   const isExpanded = !!expandedContextPacks[f.id];
+                  const isPromptExpanded = !!expandedPromptInputs[f.id];
 
                   return (
                     <React.Fragment key={f.id}>
@@ -357,6 +400,18 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
                                 : isKo
                                 ? "검증 컨텍스트 보기"
                                 : "View Context"}
+                            </button>
+                            <button
+                              onClick={() => handleTogglePromptInput(f.id)}
+                              className="px-2 py-0.5 bg-kt-bg-overlay-200 hover:bg-kt-bg-overlay-300 text-kt-text-secondary hover:text-kt-text-primary rounded text-[9px] font-semibold cursor-pointer border border-kt-border-panel/40 transition-colors flex items-center gap-1 select-none"
+                            >
+                              {isPromptExpanded
+                                ? isKo
+                                  ? "요청 닫기"
+                                  : "Close Request"
+                                : isKo
+                                ? "설명 요청 준비"
+                                : "Prepare Request"}
                             </button>
                           </div>
                         </td>
@@ -480,6 +535,99 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
                                 </div>
                               ) : (
                                 <div className="text-kt-negative-text font-bold">Failed to load context pack data.</div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      {isPromptExpanded && (
+                        <tr className="bg-kt-bg-surface-100/10">
+                          <td colSpan={7} className="px-4 py-3 border-t border-kt-border-panel/20">
+                            <div className="bg-kt-bg-body border border-kt-border-panel rounded p-3 text-[10px] font-mono space-y-2.5 text-kt-text-primary">
+                              <div className="flex items-center justify-between border-b border-kt-border-panel/30 pb-1.5">
+                                <span className="font-bold text-kt-text-secondary flex items-center gap-1.5">
+                                  <span>AI Prompt Input Contract (Verification & Input Policy)</span>
+                                  {cachedBadgeData[f.id] && (
+                                    <span className="px-1.5 py-0.5 rounded-[3px] text-[8px] bg-kt-positive/10 text-kt-positive-text border border-kt-positive/20 font-bold uppercase tracking-wider">
+                                      {isKo ? "캐시 있음 (Cached)" : "Cached"}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="text-[8px] text-kt-text-muted font-bold tracking-wider uppercase">
+                                  No LLM Call executed
+                                </span>
+                              </div>
+                              <div className="p-2 bg-kt-negative-weak/5 border border-kt-negative-text/20 rounded text-[9px] text-kt-negative-text flex items-start gap-1.5">
+                                <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                                <span>
+                                  {isKo
+                                    ? "이 단계는 실제 AI 호출이 아니라, 설명 요청에 필요한 검증 입력을 구성하는 단계입니다."
+                                    : "This step does not run a real AI call, but constructs the validated input required for the explanation request."}
+                                </span>
+                              </div>
+                              {loadingPromptInputs[f.id] ? (
+                                <div className="flex items-center gap-1.5 py-1 text-kt-text-muted">
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Building prompt contract...</span>
+                                </div>
+                              ) : promptInputData[f.id] ? (
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 leading-relaxed text-[10px]">
+                                    <div>
+                                      <span className="text-kt-text-muted block border-b border-kt-border-panel/20 pb-0.5 mb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                                        System Policy & Forbidden Actions
+                                      </span>
+                                      <ul className="list-decimal list-inside space-y-1 text-kt-text-secondary leading-normal">
+                                        {promptInputData[f.id].systemPolicy.forbiddenActions.map((action, idx) => (
+                                          <li key={idx} className="pl-0.5">
+                                            {action}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                    <div>
+                                      <span className="text-kt-text-muted block border-b border-kt-border-panel/20 pb-0.5 mb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                                        Required Disclaimers & Schema
+                                      </span>
+                                      <div className="space-y-1.5">
+                                        <div className="bg-kt-bg-overlay-100 p-2 rounded border border-kt-border-panel/30">
+                                          <strong className="text-kt-text-secondary block mb-0.5">Disclaimer:</strong>
+                                          <span className="text-kt-text-primary leading-normal">
+                                            {promptInputData[f.id].systemPolicy.requiredDisclaimers.join(", ") || "-"}
+                                          </span>
+                                        </div>
+                                        <div className="bg-kt-bg-overlay-100 p-1.5 rounded border border-kt-border-panel/30 text-[9px]">
+                                          <div>
+                                            <strong className="text-kt-text-secondary">Output Schema:</strong>{" "}
+                                            {promptInputData[f.id].requiredOutputSchema}
+                                          </div>
+                                          <div>
+                                            <strong className="text-kt-text-secondary">Language:</strong>{" "}
+                                            {promptInputData[f.id].systemPolicy.language}
+                                          </div>
+                                          <div>
+                                            <strong className="text-kt-text-secondary">Allowed Claims:</strong>{" "}
+                                            {promptInputData[f.id].allowedClaimSourceIds.join(", ") || "-"}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {promptInputData[f.id].userInstruction && (
+                                    <div className="border-t border-kt-border-panel/20 pt-2 text-[10px]">
+                                      <strong className="text-kt-text-secondary">User Instruction Hint:</strong>{" "}
+                                      <span className="text-kt-text-muted italic">
+                                        &quot;{promptInputData[f.id].userInstruction}&quot;
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div className="border-t border-kt-border-panel/20 pt-2 flex items-center justify-between text-[8px] text-kt-text-muted">
+                                    <span>Contract ID: {promptInputData[f.id].id}</span>
+                                    <span>Intent: {promptInputData[f.id].intent}</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-kt-negative-text font-bold">Failed to load prompt contract.</div>
                               )}
                             </div>
                           </td>
