@@ -14,6 +14,7 @@ import Link from "next/link";
 import { AiContextPack, StructuredAiOutput } from "@/domain/ai/structured-ai-output";
 import { AiPromptInput } from "@/domain/ai/ai-prompt-input";
 import { AiExplanationReplayRecord } from "@/domain/ai/ai-explanation-replay-ledger";
+import type { AiProviderDescriptor } from "@/domain/ai/ai-provider";
 
 type Props = {
   universeId: "KOSPI_SAMPLE" | "SP500_SAMPLE";
@@ -50,6 +51,10 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
   const [replayLogData, setReplayLogData] = useState<Record<string, AiExplanationReplayRecord[]>>({});
   const [loadingReplayLogs, setLoadingReplayLogs] = useState<Record<string, boolean>>({});
 
+  // Provider policy status state
+  const [providerDescriptors, setProviderDescriptors] = useState<AiProviderDescriptor[]>([]);
+  const [showProviderStatus, setShowProviderStatus] = useState(false);
+
   // Local filters
   const [sourceTypeFilter, setSourceTypeFilter] = useState<string>("all");
   const [scopeFilter, setScopeFilter] = useState<string>("all");
@@ -78,6 +83,15 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
   useEffect(() => {
     fetchFindings();
   }, [universeId]);
+
+  useEffect(() => {
+    fetch("/api/ai/providers")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.value) setProviderDescriptors(data.value);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleRefreshFindings = async () => {
     setCalculating(true);
@@ -338,12 +352,59 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
         </button>
       </div>
 
+      {/* Provider Policy Status */}
+      <div className="bg-kt-bg-surface-100/40 border border-kt-border-panel/40 rounded-kt-card px-4 py-2.5">
+        <button
+          onClick={() => setShowProviderStatus((v) => !v)}
+          className="flex items-center gap-2 w-full text-left group select-none"
+        >
+          <ShieldAlert className="w-3.5 h-3.5 text-kt-text-muted group-hover:text-kt-text-secondary" />
+          <span className="text-[10px] font-bold text-kt-text-secondary uppercase tracking-wider">
+            {isKo ? "Provider 정책 상태" : "Provider Policy Status"}
+          </span>
+          <span className="ml-auto text-[9px] text-kt-text-muted">
+            {showProviderStatus ? (isKo ? "닫기" : "Hide") : (isKo ? "보기" : "Show")}
+          </span>
+        </button>
+        {showProviderStatus && (
+          <div className="mt-2.5 border-t border-kt-border-panel/30 pt-2.5 flex flex-wrap gap-2">
+            {providerDescriptors.length === 0 ? (
+              <span className="text-[9px] text-kt-text-muted">Loading provider status...</span>
+            ) : (
+              providerDescriptors.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded border border-kt-border-panel/40 bg-kt-bg-overlay-100/60"
+                >
+                  <span className="text-[9px] font-mono text-kt-text-secondary">{p.id}</span>
+                  <span
+                    className={`text-[8px] font-bold px-1 py-0.5 rounded ${
+                      p.status === "available"
+                        ? "bg-kt-positive/10 text-kt-positive-text border border-kt-positive/20"
+                        : "bg-kt-bg-overlay-200 text-kt-text-muted border border-kt-border-panel/30"
+                    }`}
+                  >
+                    {p.status}
+                  </span>
+                </div>
+              ))
+            )}
+            <p className="w-full text-[8px] text-kt-text-muted mt-1">
+              {isKo
+                ? "Mock Provider만 검증 가능. 외부 Provider는 정책상 비활성화 상태입니다."
+                : "Only Mock Provider is available. External providers are disabled by policy."}
+            </p>
+          </div>
+        )}
+      </div>
+
       {error && (
         <div className="p-3 bg-kt-negative-weak/10 border border-kt-negative-text/20 rounded-kt-card text-kt-negative-text flex items-start gap-2">
           <ShieldAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <span className="text-xs">{error}</span>
         </div>
       )}
+
 
       {/* Counts dashboard */}
       {findings.length > 0 && (
