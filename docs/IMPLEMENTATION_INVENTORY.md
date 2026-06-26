@@ -116,6 +116,8 @@
 | `POST /api/ai/mock-output/audit-finding` | **implemented (WO017-I)** | ✓ | - | AI 설명 검증을 위한 Mock Structured Output 생성 및 가드 통합 테스트 |
 | `POST /api/ai/replay/audit-finding` | **implemented (WO017-J)** | ✓ | - | E2E 회귀 검증을 위한 Golden Cases 리플레이 분석 수행 |
 | `GET /api/ai/replay` | **implemented (WO017-J)** | ✓ | - | 리플레이 검증 결과 레저 기록 조회 및 필터링 |
+| `GET /api/ai/providers` | **implemented (WO017-K)** | ✓ | - | AI Provider 정책 상태 및 Registry 목록 조회 |
+| `POST /api/ai/providers/run` | **implemented (WO017-K)** | ✓ | - | Guarded Provider Pipeline 실행 (외부 disabled provider 포함, not_supported 반환) |
 
 ---
 
