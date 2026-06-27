@@ -118,6 +118,8 @@
 | `GET /api/ai/replay` | **implemented (WO017-J)** | ✓ | - | 리플레이 검증 결과 레저 기록 조회 및 필터링 |
 | `GET /api/ai/providers` | **implemented (WO017-K)** | ✓ | - | AI Provider 정책 상태 및 Registry 목록 조회 |
 | `POST /api/ai/providers/run` | **implemented (WO017-K)** | ✓ | - | Guarded Provider Pipeline 실행 (외부 disabled provider 포함, not_supported 반환) |
+| `POST /api/ops/smoke/run` | **implemented (WO017-L)** | ✓ | - | 운영 스모크 하네스 실행 (10개 대상, DataEnvelope 반환) |
+| `GET /api/ops/smoke/latest` | **implemented (WO017-L)** | ✓ | - | 최근 스모크 결과 조회 |
 
 ---
 
@@ -142,6 +144,8 @@
 | `docs:quant` | **implemented** | ✓ pass |
 | `check:wording` | **implemented** | ✓ pass (docs 내 정책 설명 문구는 warn-only) |
 | `check:alpha-ui` | **implemented** | ✓ pass |
+| `ops:smoke` | **implemented (WO017-L)** | 운영 스모크 하네스 CLI (서버 실행 필요) |
+| `ai:replay` | **implemented (WO017-J)** | Golden Case AI 처리 레플레이 |
 
 ---
 

@@ -104,3 +104,13 @@ data/audits/findings/*
 
 # Test fixtures are allowed to be committed (keep small & synthetic)
 !test/fixtures/**
+
+# Operational smoke runtime results
+data/ops/*
+!data/ops/.gitkeep
+!data/ops/smoke/
+data/ops/smoke/*
+!data/ops/smoke/.gitkeep
+!data/ops/smoke/history/
+data/ops/smoke/history/*
+!data/ops/smoke/history/.gitkeep

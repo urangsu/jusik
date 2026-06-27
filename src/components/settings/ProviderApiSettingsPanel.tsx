@@ -4,6 +4,7 @@ import { PROVIDER_SETTING_DEFINITIONS } from "../../domain/settings/provider-set
 import { ProviderSettingCard } from "./ProviderSettingCard";
 import { useI18n } from "../../i18n/use-i18n";
 import { Loader2, ShieldAlert } from "lucide-react";
+import { OperationalSmokePanel } from "../ops/OperationalSmokePanel";
 
 export const ProviderApiSettingsPanel: React.FC = () => {
   const { locale } = useI18n();
@@ -143,6 +144,9 @@ export const ProviderApiSettingsPanel: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Operational Smoke Check */}
+      <OperationalSmokePanel />
     </div>
   );
 };
