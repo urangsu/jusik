@@ -1,25 +1,25 @@
-import path from "path";
+import { resolveRuntimeDataPath } from "../storage/runtime-store-root";
 
 export function getAiExplanationCacheDir(): string {
-  return path.join(process.cwd(), "data", "ai", "explanation-cache");
+  return resolveRuntimeDataPath("data", "ai", "explanation-cache");
 }
 
 export function getAiExplanationCacheByHashDir(): string {
-  return path.join(getAiExplanationCacheDir(), "by-hash");
+  return resolveRuntimeDataPath("data", "ai", "explanation-cache", "by-hash");
 }
 
 export function getAiExplanationCacheByHashPath(hash: string): string {
-  return path.join(getAiExplanationCacheByHashDir(), `${hash}.json`);
+  return resolveRuntimeDataPath("data", "ai", "explanation-cache", "by-hash", `${hash}.json`);
 }
 
 export function getAiExplanationCacheLatestPath(): string {
-  return path.join(getAiExplanationCacheDir(), "latest.json");
+  return resolveRuntimeDataPath("data", "ai", "explanation-cache", "latest.json");
 }
 
 export function getAiExplanationCacheBlockedDir(): string {
-  return path.join(getAiExplanationCacheDir(), "blocked");
+  return resolveRuntimeDataPath("data", "ai", "explanation-cache", "blocked");
 }
 
 export function getAiExplanationCacheBlockedPath(hash: string): string {
-  return path.join(getAiExplanationCacheBlockedDir(), `${hash}.json`);
+  return resolveRuntimeDataPath("data", "ai", "explanation-cache", "blocked", `${hash}.json`);
 }

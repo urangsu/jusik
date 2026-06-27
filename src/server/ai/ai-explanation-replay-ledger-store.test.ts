@@ -1,18 +1,23 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import fs from "fs/promises";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   saveAiExplanationReplayRecord,
   listAiExplanationReplayRecords,
   getLatestAiExplanationReplayRecords,
 } from "./ai-explanation-replay-ledger-store";
-import { getAiExplanationReplayDir } from "./ai-explanation-replay-ledger-store-paths";
 import { AiExplanationReplayRecord } from "@/domain/ai/ai-explanation-replay-ledger";
+import { createTestDataRoot } from "@/test-utils/create-test-data-root";
 
 describe("ai-explanation-replay-ledger-store", () => {
-  const replayDir = getAiExplanationReplayDir();
+  let cleanup: () => Promise<void>;
 
   beforeEach(async () => {
-    await fs.rm(replayDir, { recursive: true, force: true });
+    const testRoot = await createTestDataRoot("replay-ledger");
+    process.env.JUSIK_TEST_DATA_ROOT = testRoot.root;
+    cleanup = testRoot.cleanup;
+  });
+
+  afterEach(async () => {
+    await cleanup();
   });
 
   const dummyRecord: AiExplanationReplayRecord = {

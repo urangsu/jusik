@@ -8,7 +8,6 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./vitest.setup.ts",
-    fileParallelism: false,
   },
   resolve: {
     alias: {

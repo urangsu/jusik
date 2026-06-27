@@ -1,21 +1,26 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createGuardedMockAiOutput } from "./guarded-ai-output-service";
 import { listAuditFindings } from "../audit/audit-finding-store";
 import { getAiExplanationCacheByHash, listAiExplanationBlockedRecords, listAiExplanationCacheRecords } from "./ai-explanation-cache-store";
 import { AuditFinding } from "@/domain/audit/audit-finding";
-import fs from "fs/promises";
-import { getAiExplanationCacheDir } from "./ai-explanation-cache-store-paths";
+import { createTestDataRoot } from "@/test-utils/create-test-data-root";
 
 vi.mock("../audit/audit-finding-store", () => ({
   listAuditFindings: vi.fn().mockResolvedValue([]),
 }));
 
 describe("guarded-ai-output-service", () => {
-  const cacheDir = getAiExplanationCacheDir();
+  let cleanup: () => Promise<void>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    await fs.rm(cacheDir, { recursive: true, force: true });
+    const testRoot = await createTestDataRoot("guarded-ai");
+    process.env.JUSIK_TEST_DATA_ROOT = testRoot.root;
+    cleanup = testRoot.cleanup;
+  });
+
+  afterEach(async () => {
+    await cleanup();
   });
 
   const mockFinding: AuditFinding = {

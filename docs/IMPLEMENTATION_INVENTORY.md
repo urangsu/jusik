@@ -41,7 +41,12 @@
 | Audit Finding Router | **implemented** | `src/server/audit/audit-finding-aggregator.ts` | ✓ | 감사 결과 취합 및 Finding 라우팅 |
 | Signal Stability Gate | **missing_p0** | - | - | flipCount/consecutiveDays 미구현 |
 | StrategyTrialRecord | **implemented** | `src/domain/strategy/strategy-trial-record.ts`, `strategy-trial-store.ts` | ✓ | 전략 묘지/시도 기록 및 중복 감지 |
-| Structured Output Guard | **missing_p0** | - | - | LLM 출력 검증 가드 없음 |
+| Structured Output Guard | **implemented (WO017-H)** | `src/server/ai/structured-output-validator.ts` | ✓ | StructuredAiOutput 검증, Forbidden Wording, Grounded Claim, Disclaimer |
+| AI Provider Interface | **implemented (WO017-K)** | `src/server/ai/providers/` | ✓ | Disabled-by-default registry, mock provider |
+| AI Replay Ledger | **implemented (WO017-J)** | `src/server/ai/ai-explanation-replay-ledger-store.ts` | ✓ | Golden safety regression suite |
+| Operational Smoke Harness | **implemented (WO017-L)** | `src/server/ops/operational-smoke-runner.ts` | ✓ | 10-target provider connectivity matrix |
+| Provider Readiness | **implemented (WO017-M)** | `src/server/ops/provider-readiness-resolver.ts` | ✓ | Per-provider config readiness, real data smoke profiles |
+| Runtime Store Isolation | **implemented (WO017-N)** | `src/server/storage/runtime-store-root.ts` | ✓ | JUSIK_TEST_DATA_ROOT / JUSIK_DATA_ROOT 분리 |
 | Earnings Event Minimal | **missing_p1** | - | - | 영업이익/순이익 이벤트 탐지 없음 |
 | Signal History Visualization | **missing_p1** | - | - | UI 컴포넌트 없음 |
 | Cross-horizon Tension UI | **missing_p1** | - | - | 타입 정의만 존재 |
@@ -120,6 +125,8 @@
 | `POST /api/ai/providers/run` | **implemented (WO017-K)** | ✓ | - | Guarded Provider Pipeline 실행 (외부 disabled provider 포함, not_supported 반환) |
 | `POST /api/ops/smoke/run` | **implemented (WO017-L)** | ✓ | - | 운영 스모크 하네스 실행 (10개 대상, DataEnvelope 반환) |
 | `GET /api/ops/smoke/latest` | **implemented (WO017-L)** | ✓ | - | 최근 스모크 결과 조회 |
+| `GET /api/ops/provider-readiness` | **implemented (WO017-M)** | ✓ | - | Provider 설정 준비 상태 조회 (key 값 노출 없음) |
+| `POST /api/ops/provider-readiness/smoke` | **implemented (WO017-M)** | ✓ | - | Provider 별 real data smoke 실행 (ready provider만) |
 
 ---
 
@@ -145,6 +152,7 @@
 | `check:wording` | **implemented** | ✓ pass (docs 내 정책 설명 문구는 warn-only) |
 | `check:alpha-ui` | **implemented** | ✓ pass |
 | `ops:smoke` | **implemented (WO017-L)** | 운영 스모크 하네스 CLI (서버 실행 필요) |
+| `ops:provider-readiness` | **implemented (WO017-M)** | Provider 설정 준비 + real data smoke CLI |
 | `ai:replay` | **implemented (WO017-J)** | Golden Case AI 처리 레플레이 |
 
 ---
@@ -231,7 +239,7 @@
 | Individual Signal IC Audit | **implemented (WO017-C)** | `src/server/audit/individual-signal-ic-auditor.ts` | 신호 추가 전 필수 |
 | Signal Stability Gate | **missing_p0** | flipCount/consecutiveDays 미구현 | 잦은 신호 반전 감지 |
 | StrategyTrialRecord | **implemented (WO017-B)** | `src/domain/strategy/strategy-trial-record.ts` | 다중검정 추적 기반 |
-| Structured Output Guard | **missing_p0** | LLM 출력 검증 없음 | LLM 기능 추가 전 필수 |
+| Structured Output Guard | **implemented (WO017-H)** | `src/server/ai/structured-output-validator.ts` | LLM 기능 추가 전 필수 |
 | Earnings Event Minimal | **missing_p1** | 영업이익/순이익 이벤트 탐지 없음 | OpenDART 재무 데이터 연결 시 |
 | Signal History Visualization | **missing_p1** | Store는 구현, UI 없음 | 신호 이력 분석 UI 필요 시 |
 | Cross-horizon Tension UI | **missing_p1** | 타입 정의만 존재, UI 없음 | horizon-segmented 신호 시각화 시 |
