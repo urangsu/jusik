@@ -34,7 +34,9 @@
     "audit:findings": "tsx scripts/audit/audit-findings.ts",
     "ai:replay": "tsx scripts/ai/replay-ai-explanation.ts",
     "ops:smoke": "tsx scripts/ops/run-operational-smoke.ts",
-    "ops:provider-readiness": "tsx scripts/ops/run-provider-readiness.ts"
+    "ops:provider-readiness": "tsx scripts/ops/run-provider-readiness.ts",
+    "outcomes:observe": "tsx scripts/outcome/observe-signal-outcomes.ts",
+    "surge:detect": "tsx scripts/surge/detect-surge-candidates.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",

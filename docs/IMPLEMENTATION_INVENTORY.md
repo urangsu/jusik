@@ -127,6 +127,25 @@
 | `GET /api/ops/smoke/latest` | **implemented (WO017-L)** | ✓ | - | 최근 스모크 결과 조회 |
 | `GET /api/ops/provider-readiness` | **implemented (WO017-M)** | ✓ | - | Provider 설정 준비 상태 조회 (key 값 노출 없음) |
 | `POST /api/ops/provider-readiness/smoke` | **implemented (WO017-M)** | ✓ | - | Provider 별 real data smoke 실행 (ready provider만) |
+| `GET /api/evidence/packs` | **implemented (WO017-O)** | ✓ | - | 증거 팩 목록 조회 |
+| `GET /api/evidence/packs/[id]` | **implemented (WO017-O)** | ✓ | - | 개별 증거 팩 정보 조회 |
+| `POST /api/evidence/packs/from-audit-finding` | **implemented (WO017-O)** | ✓ | - | 감사 Finding으로부터 증거 팩 생성 |
+| `GET /api/reports/finding-synthesis` | **implemented (WO017-P)** | ✓ | - | 진단 종합 보고서 목록 조회 |
+| `GET /api/reports/finding-synthesis/[id]` | **implemented (WO017-P)** | ✓ | - | 개별 진단 종합 보고서 조회 |
+| `POST /api/reports/finding-synthesis/from-evidence-pack` | **implemented (WO017-P)** | ✓ | - | 증거 팩으로부터 진단 종합 보고서 생성 (wording guard 적용) |
+| `GET /api/outcomes/signal-journal` | **implemented (WO017-Q)** | ✓ | - | 성과 분석 저널 목록 조회 |
+| `POST /api/outcomes/signal-journal/pending` | **implemented (WO017-Q)** | ✓ | - | 대기 중 성과 기록 등록 |
+| `POST /api/outcomes/signal-journal/observe` | **implemented (WO017-Q)** | ✓ | - | 사후 성과 및 benchmark index relative return 관찰 실행 |
+| `GET /api/debate/diagnostic/[id]` | **implemented (WO017-R)** | ✓ | - | 개별 진단 대비표 조회 |
+| `POST /api/debate/diagnostic/from-report` | **implemented (WO017-R)** | ✓ | - | 진단 보고서로부터 다각도 진단 대비표 생성 (wording guard 적용) |
+| `GET /api/surge/candidates` | **implemented (WO017-S)** | ✓ | - | 이상 변동 후보 종목 조회 |
+| `POST /api/surge/candidates/detect` | **implemented (WO017-S)** | ✓ | - | 이상 변동 후보 종목 탐지 스캐너 실행 |
+| `POST /api/surge/candidates/[id]/promote` | **implemented (WO017-S)** | ✓ | - | 후보 종목을 관심종목(Watchlist)으로 승격 및 증거 팩 생성 |
+| `POST /api/surge/candidates/[id]/dismiss` | **implemented (WO017-S)** | ✓ | - | 후보 종목을 제외 처리 |
+| `POST /api/evidence/packs/from-watchlist-report` | **implemented (WO017-T)** | ✓ | - | 관심종목 관련 리포트로부터 증거 팩 생성 |
+| `POST /api/reports/finding-synthesis/from-audit-finding` | **implemented (WO017-T)** | ✓ | - | 감사 Finding으로부터 종합 보고서 원스톱 생성 단축 경로 |
+| `GET /api/surge/candidates/[id]` | **implemented (WO017-T)** | ✓ | - | 개별 이상 변동 후보 종목 상세 조회 |
+
 
 ---
 
@@ -154,6 +173,8 @@
 | `ops:smoke` | **implemented (WO017-L)** | 운영 스모크 하네스 CLI (서버 실행 필요) |
 | `ops:provider-readiness` | **implemented (WO017-M)** | Provider 설정 준비 + real data smoke CLI |
 | `ai:replay` | **implemented (WO017-J)** | Golden Case AI 처리 레플레이 |
+| `outcomes:observe` | **implemented (WO017-Q)** | 사후 성과 검증 및 index relative alpha return 분석 |
+| `surge:detect` | **implemented (WO017-S)** | 이상 변동 후보 종목 탐지 스캐너 |
 
 ---
 
@@ -206,6 +227,11 @@
 | `FactorEnvironmentPanel` | **implemented** | ✓ | |
 | `RiskDecompositionPanel` | **implemented** | ✓ | |
 | `SignalHistory UI` | **missing_p1** | - | Signal History Store 존재하나 UI 없음 |
+| `EvidencePackPanel` | **implemented (WO017-O)** | ✓ | 증거 목록 수집 및 품질 현황 요약 카드 |
+| `FindingSynthesisReportPanel` | **implemented (WO017-P)** | ✓ | 로케일 대응 가드 적용 보고서 breakdown 패널 |
+| `SignalOutcomeJournalPanel` | **implemented (WO017-Q)** | ✓ | 사후 20/60d 성과 및 benchmark index relative return 요약 카드 |
+| `DiagnosticDebatePanel` | **implemented (WO017-R)** | ✓ | Bull/Bear side-by-side 상호 검증 대조 패널 |
+| `SurgeCandidateInbox` | **implemented (WO017-S)** | ✓ | 이상 변동 종목 모니터링 및 수동 승격 인박스 카드 |
 
 ---
 

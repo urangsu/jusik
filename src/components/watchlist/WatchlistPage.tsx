@@ -9,6 +9,7 @@ import { AddWatchlistAssetForm } from "./AddWatchlistAssetForm";
 import { WatchlistReportSummary } from "./WatchlistReportSummary";
 import { WatchlistReportFilters } from "./WatchlistReportFilters";
 import { WatchlistReportInbox } from "./WatchlistReportInbox";
+import { SurgeCandidateInbox } from "../surge/SurgeCandidateInbox";
 import { RefreshCw, Play, Loader2, Info, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
@@ -209,6 +210,8 @@ export const WatchlistPage: React.FC<WatchlistPageProps> = ({ onRefreshUnreadCou
         {/* Left pane: Watchlist List & Form */}
         <div className="lg:col-span-1 space-y-6">
           <AddWatchlistAssetForm onSuccess={handleAddSuccess} />
+
+          <SurgeCandidateInbox onPromotionSuccess={fetchWatchlist} />
 
           <div className="space-y-3">
             <h3 className="text-sm font-bold text-kt-text-primary">

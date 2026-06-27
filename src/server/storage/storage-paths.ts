@@ -1,7 +1,8 @@
 import path from "path";
+import { getRuntimeStoreRoot } from "./runtime-store-root";
 
 export function getDataDir(): string {
-  return path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
+  return path.join(getRuntimeStoreRoot(), "data");
 }
 
 export function getOhlcvHistoryDir(universeId: string): string {
