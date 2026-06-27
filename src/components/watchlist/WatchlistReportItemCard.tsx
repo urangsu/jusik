@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useI18n } from "@/i18n/use-i18n";
 import { WatchlistReportItem, WatchlistReportStatus } from "@/domain/watchlist/watchlist-report-item";
 import { ExternalLink, ArrowRight, Check, Archive, EyeOff, AlertTriangle, Info, Clock, Loader2 } from "lucide-react";
+import type { EvidencePack } from "@/domain/evidence/evidence-pack";
+import { EvidencePackPanel } from "../evidence/EvidencePackPanel";
 
 interface WatchlistReportItemCardProps {
   item: WatchlistReportItem;
@@ -12,6 +14,37 @@ interface WatchlistReportItemCardProps {
 export const WatchlistReportItemCard: React.FC<WatchlistReportItemCardProps> = ({ item, onStatusChange }) => {
   const { locale } = useI18n();
   const [updating, setUpdating] = useState(false);
+
+  const [expandedEvidence, setExpandedEvidence] = useState(false);
+  const [evidencePack, setEvidencePack] = useState<EvidencePack | null>(null);
+  const [loadingEvidence, setLoadingEvidence] = useState(false);
+
+  const handleToggleEvidence = async () => {
+    if (expandedEvidence) {
+      setExpandedEvidence(false);
+      return;
+    }
+    setExpandedEvidence(true);
+    if (!evidencePack) {
+      setLoadingEvidence(true);
+      try {
+        const res = await fetch("/api/evidence/packs/from-watchlist-report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reportId: item.id }),
+        });
+        if (!res.ok) throw new Error("Failed to load evidence pack.");
+        const data = await res.json();
+        if (data.value) {
+          setEvidencePack(data.value);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingEvidence(false);
+      }
+    }
+  };
 
   const changeStatus = async (targetStatus: WatchlistReportStatus) => {
     setUpdating(true);
@@ -186,6 +219,22 @@ export const WatchlistReportItemCard: React.FC<WatchlistReportItemCardProps> = (
               <span>{locale === "ko" ? "상세 보기" : "View Detail"}</span>
             </Link>
           )}
+
+          <button
+            onClick={handleToggleEvidence}
+            className="flex items-center gap-1 text-[11px] text-kt-text-secondary hover:text-kt-text-primary transition font-medium cursor-pointer border border-kt-border-panel/40 px-2 py-0.5 rounded bg-kt-bg-overlay-200 select-none"
+          >
+            <Info className="w-3.5 h-3.5 text-kt-text-muted" />
+            <span>
+              {expandedEvidence
+                ? locale === "ko"
+                  ? "근거 묶음 닫기"
+                  : "Close Evidence"
+                : locale === "ko"
+                ? "근거 묶음 보기"
+                : "View Evidence"}
+            </span>
+          </button>
         </div>
 
         {/* State Modifiers */}
@@ -233,6 +282,23 @@ export const WatchlistReportItemCard: React.FC<WatchlistReportItemCardProps> = (
           )}
         </div>
       </div>
+
+      {expandedEvidence && (
+        <div className="mt-3 pt-3 border-t border-kt-border-panel/30">
+          {loadingEvidence ? (
+            <div className="flex items-center gap-1.5 py-3 text-kt-text-muted justify-center text-[10px]">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Loading evidence pack...</span>
+            </div>
+          ) : evidencePack ? (
+            <EvidencePackPanel evidencePack={evidencePack} />
+          ) : (
+            <div className="text-kt-negative-text font-bold text-[10px] text-center py-2 bg-kt-negative-weak/10 rounded border border-kt-negative-weak/20">
+              Failed to load evidence pack.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

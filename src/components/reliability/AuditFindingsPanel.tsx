@@ -16,6 +16,15 @@ import { AiPromptInput } from "@/domain/ai/ai-prompt-input";
 import { AiExplanationReplayRecord } from "@/domain/ai/ai-explanation-replay-ledger";
 import type { AiProviderDescriptor } from "@/domain/ai/ai-provider";
 
+// Integration imports
+import type { EvidencePack } from "@/domain/evidence/evidence-pack";
+import type { FindingSynthesisReport } from "@/domain/report/report-section";
+import type { DiagnosticDebateReport } from "@/domain/debate/diagnostic-debate";
+import { EvidencePackPanel } from "../evidence/EvidencePackPanel";
+import { FindingSynthesisReportPanel } from "../report/FindingSynthesisReportPanel";
+import { DiagnosticDebatePanel } from "../debate/DiagnosticDebatePanel";
+
+
 type Props = {
   universeId: "KOSPI_SAMPLE" | "SP500_SAMPLE";
 };
@@ -50,6 +59,14 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
   const [expandedReplayLogs, setExpandedReplayLogs] = useState<Record<string, boolean>>({});
   const [replayLogData, setReplayLogData] = useState<Record<string, AiExplanationReplayRecord[]>>({});
   const [loadingReplayLogs, setLoadingReplayLogs] = useState<Record<string, boolean>>({});
+
+  // Integration states
+  const [expandedIntegration, setExpandedIntegration] = useState<Record<string, boolean>>({});
+  const [loadingIntegration, setLoadingIntegration] = useState<Record<string, boolean>>({});
+  const [evidencePackDataMap, setEvidencePackDataMap] = useState<Record<string, EvidencePack>>({});
+  const [synthesisDataMap, setSynthesisDataMap] = useState<Record<string, FindingSynthesisReport>>({});
+  const [debateDataMap, setDebateDataMap] = useState<Record<string, DiagnosticDebateReport>>({});
+
 
   // Provider policy status state
   const [providerDescriptors, setProviderDescriptors] = useState<AiProviderDescriptor[]>([]);
@@ -292,6 +309,58 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
         console.error(err);
       } finally {
         setLoadingReplayLogs((prev) => ({ ...prev, [findingId]: false }));
+      }
+    }
+  };
+
+  const handleToggleIntegration = async (findingId: string) => {
+    const isExpanded = !!expandedIntegration[findingId];
+    setExpandedIntegration((prev) => ({ ...prev, [findingId]: !isExpanded }));
+
+    if (!isExpanded && !evidencePackDataMap[findingId]) {
+      setLoadingIntegration((prev) => ({ ...prev, [findingId]: true }));
+      try {
+        // Step 1: Create Evidence Pack from Finding
+        const resPack = await fetch("/api/evidence/packs/from-audit-finding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ findingId }),
+        });
+        if (!resPack.ok) throw new Error("Failed to generate evidence pack.");
+        const envPack = await resPack.json();
+        if (!envPack.value) throw new Error(envPack.message || "No evidence pack returned.");
+
+        const pack = envPack.value;
+        setEvidencePackDataMap((prev) => ({ ...prev, [findingId]: pack }));
+
+        // Step 2: Compose & Synthesize Finding Report
+        const resSynth = await fetch("/api/reports/finding-synthesis/from-evidence-pack", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ evidencePackId: pack.id }),
+        });
+        if (!resSynth.ok) throw new Error("Failed to run synthesis.");
+        const envSynth = await resSynth.json();
+        if (!envSynth.value) throw new Error(envSynth.message || "No synthesis report returned.");
+
+        const report = envSynth.value;
+        setSynthesisDataMap((prev) => ({ ...prev, [findingId]: report }));
+
+        // Step 3: Run Diagnostic Debate
+        const resDebate = await fetch("/api/debate/diagnostic/from-report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reportId: report.id }),
+        });
+        if (!resDebate.ok) throw new Error("Failed to run debate.");
+        const envDebate = await resDebate.json();
+        if (envDebate.value) {
+          setDebateDataMap((prev) => ({ ...prev, [findingId]: envDebate.value }));
+        }
+      } catch (err) {
+        console.error("Integration pipeline error:", err);
+      } finally {
+        setLoadingIntegration((prev) => ({ ...prev, [findingId]: false }));
       }
     }
   };
@@ -621,6 +690,18 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
                                   : isKo
                                   ? "Mock 리플레이"
                                   : "Mock Replay"}
+                              </button>
+                              <button
+                                onClick={() => handleToggleIntegration(f.id)}
+                                className="px-2 py-0.5 bg-kt-bg-overlay-200 hover:bg-kt-bg-overlay-300 text-kt-text-secondary hover:text-kt-text-primary rounded text-[9px] font-semibold cursor-pointer border border-kt-border-panel/40 transition-colors flex items-center gap-1 select-none"
+                              >
+                                {expandedIntegration[f.id]
+                                  ? isKo
+                                    ? "진단 종합 닫기"
+                                    : "Close Diagnosis"
+                                  : isKo
+                                  ? "진단 종합 보기"
+                                  : "View Integration"}
                               </button>
                             </div>
                           </div>
@@ -1110,6 +1191,32 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
                                 </div>
                               ) : (
                                 <div className="text-kt-negative-text font-bold">Failed to load replay ledger log.</div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      {expandedIntegration[f.id] && (
+                        <tr className="bg-kt-bg-surface-100/10 border-t border-kt-border-panel/20">
+                          <td colSpan={7} className="px-4 py-3">
+                            <div className="space-y-4">
+                              {loadingIntegration[f.id] ? (
+                                <div className="flex items-center gap-1.5 py-3 text-kt-text-muted justify-center">
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  <span className="text-xs font-semibold">Running Integration Diagnosis Pipeline (O, P, R)...</span>
+                                </div>
+                              ) : (
+                                <div className="space-y-4">
+                                  {evidencePackDataMap[f.id] && (
+                                    <EvidencePackPanel evidencePack={evidencePackDataMap[f.id]} />
+                                  )}
+                                  {synthesisDataMap[f.id] && (
+                                    <FindingSynthesisReportPanel report={synthesisDataMap[f.id]} />
+                                  )}
+                                  {debateDataMap[f.id] && (
+                                    <DiagnosticDebatePanel initialReport={debateDataMap[f.id]} />
+                                  )}
+                                </div>
                               )}
                             </div>
                           </td>

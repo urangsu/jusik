@@ -10,10 +10,11 @@ import { ReliabilityMetricCards } from "./ReliabilityMetricCards";
 import { WeightMultiplierPreview } from "./WeightMultiplierPreview";
 import { KOSPI_SAMPLE_CONSTITUENTS, SP500_SAMPLE_CONSTITUENTS } from "@/domain/universe/market-universe";
 import { DataEnvelope } from "@/domain/common/data-status";
-import { Play, Loader2, Info, Calculator } from "lucide-react";
+import { Play, Loader2, Info, Calculator, RefreshCw } from "lucide-react";
 import { CorrelationAuditPanel } from "./CorrelationAuditPanel";
 import { IndividualSignalIcAuditPanel } from "./IndividualSignalIcAuditPanel";
 import { AuditFindingsPanel } from "./AuditFindingsPanel";
+import { SignalOutcomeJournalPanel } from "../outcome/SignalOutcomeJournalPanel";
 
 
 export const ReliabilityWorkspace: React.FC = () => {
@@ -28,6 +29,28 @@ export const ReliabilityWorkspace: React.FC = () => {
   const [summary, setSummary] = useState<ReliabilitySummary | null>(null);
   const [selectedAssetId, setSelectedAssetId] = useState<string>("");
   const [preview, setPreview] = useState<ReliabilityAdjustedMomentumPreview | null>(null);
+
+  const [outcomes, setOutcomes] = useState<any[]>([]);
+  const [loadingOutcomes, setLoadingOutcomes] = useState(false);
+
+  const fetchOutcomes = async () => {
+    setLoadingOutcomes(true);
+    try {
+      const res = await fetch("/api/outcomes/signal-journal");
+      const data = await res.json();
+      if (data.value) {
+        setOutcomes(data.value);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingOutcomes(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOutcomes();
+  }, []);
 
   // Loading / Error states
   const [isLoading, setIsLoading] = useState(false);
@@ -327,6 +350,52 @@ export const ReliabilityWorkspace: React.FC = () => {
           <CorrelationAuditPanel universeId={universe} />
         ) : (
           <AuditFindingsPanel universeId={universe} />
+        )}
+      </div>
+
+      {/* Outcome Journal Section */}
+      <hr className="my-6 border-kt-border-panel/40" />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-kt-text-primary uppercase tracking-wider">
+              {isKo ? "사후 관찰 일지 (Signal Outcome Journal)" : "Signal Outcome Journal"}
+            </span>
+            <p className="text-[11px] text-kt-text-muted leading-relaxed max-w-xl">
+              {isKo
+                ? "과거 발송 신호의 사후 성과 관찰 결과입니다. 표시된 수익률은 사후 통계 지표이며, 향후 수익을 보장하지 않습니다."
+                : "Post-mortem performance tracking logs. Returns shown are historical metrics and do not guarantee future returns."}
+            </p>
+          </div>
+          <button
+            onClick={fetchOutcomes}
+            disabled={loadingOutcomes}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-kt-bg-overlay-200 hover:bg-kt-bg-overlay-300 text-kt-text-secondary hover:text-kt-text-primary rounded text-[9px] font-semibold border border-kt-border-panel/40 cursor-pointer select-none"
+          >
+            {loadingOutcomes ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3 h-3" />
+            )}
+            <span>{isKo ? "새로고침" : "Refresh"}</span>
+          </button>
+        </div>
+
+        {loadingOutcomes && outcomes.length === 0 ? (
+          <div className="py-6 text-center text-xs text-kt-text-muted">
+            <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
+            Loading outcomes...
+          </div>
+        ) : outcomes.length === 0 ? (
+          <div className="py-6 text-center text-[11px] text-kt-text-muted border border-dashed border-kt-border-panel/80 rounded-kt-card bg-kt-bg-overlay-300/10">
+            {isKo ? "사후 관찰 일지가 비어 있습니다." : "No outcome records available."}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3.5">
+            {outcomes.map((record) => (
+              <SignalOutcomeJournalPanel key={record.id} initialRecord={record} />
+            ))}
+          </div>
         )}
       </div>
     </div>
