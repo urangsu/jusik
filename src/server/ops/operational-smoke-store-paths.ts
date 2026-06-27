@@ -1,17 +1,17 @@
-import path from "path";
+import { resolveRuntimeDataPath } from "../storage/runtime-store-root";
 
 export function getOpsSmokeDir(): string {
-  return path.join(process.cwd(), "data", "ops", "smoke");
+  return resolveRuntimeDataPath("data", "ops", "smoke");
 }
 
 export function getOpsSmokeLatestPath(): string {
-  return path.join(getOpsSmokeDir(), "latest.json");
+  return resolveRuntimeDataPath("data", "ops", "smoke", "latest.json");
 }
 
 export function getOpsSmokeHistoryDir(): string {
-  return path.join(getOpsSmokeDir(), "history");
+  return resolveRuntimeDataPath("data", "ops", "smoke", "history");
 }
 
 export function getOpsSmokeHistoryPath(reportId: string): string {
-  return path.join(getOpsSmokeHistoryDir(), `${reportId}.json`);
+  return resolveRuntimeDataPath("data", "ops", "smoke", "history", `${reportId}.json`);
 }

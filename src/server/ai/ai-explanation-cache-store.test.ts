@@ -1,6 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import fs from "fs/promises";
-import path from "path";
 import {
   saveAiExplanationCacheRecord,
   saveAiExplanationBlockedRecord,
@@ -8,20 +6,20 @@ import {
   listAiExplanationCacheRecords,
   listAiExplanationBlockedRecords,
 } from "./ai-explanation-cache-store";
-import { getAiExplanationCacheDir } from "./ai-explanation-cache-store-paths";
 import { AiExplanationCacheRecord, AiExplanationBlockedRecord } from "@/domain/ai/ai-explanation-request";
+import { createTestDataRoot } from "@/test-utils/create-test-data-root";
 
 describe("ai-explanation-cache-store", () => {
-  const testDir = getAiExplanationCacheDir();
+  let cleanup: () => Promise<void>;
 
   beforeEach(async () => {
-    // Clean up if it exists
-    await fs.rm(testDir, { recursive: true, force: true });
+    const testRoot = await createTestDataRoot("cache-store");
+    process.env.JUSIK_TEST_DATA_ROOT = testRoot.root;
+    cleanup = testRoot.cleanup;
   });
 
   afterEach(async () => {
-    // Clean up after test
-    await fs.rm(testDir, { recursive: true, force: true });
+    await cleanup();
   });
 
   const sampleCacheRecord: AiExplanationCacheRecord = {
