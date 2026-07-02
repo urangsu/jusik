@@ -191,3 +191,25 @@ validateOhlcvCandle -> chart / StdDev / strategy input gate
 ```
 
 Provider classes must accept `AbortSignal` and must not surface fake prices or fake candles when credentials or provider connections are missing.
+
+---
+
+## 10. Real Provider Smoke Boundary
+
+WO017-U adds a smoke boundary for real provider readiness. It does not mark the terminal as production-data complete.
+
+```txt
+Provider HTTP endpoint
+-> DataEnvelope contract validation
+-> EvidencePackFromDataEnvelope
+-> RealProviderSmokeReport
+-> /api/ops/real-provider-smoke/latest
+```
+
+The smoke runner fails closed when:
+
+* `value` is `null` while the envelope claims `real_time`, `delayed`, `eod`, `cached`, or `stale`.
+* `source`, `sourceTier`, `warnings`, or `updatedAt` is missing.
+* a provider response is not a DataEnvelope.
+
+`api_required` is an acceptable no-key state. It is stored as missing evidence, not as successful market data.
