@@ -5,10 +5,12 @@ describe("REAL_PROVIDER_SMOKE_TARGETS", () => {
   it("contains required real provider smoke targets", () => {
     const ids = REAL_PROVIDER_SMOKE_TARGETS.map((target) => target.id);
 
-    expect(ids).toContain("kis_quote_kr");
-    expect(ids).toContain("kis_ohlcv_kr");
-    expect(ids).toContain("opendart_disclosures_kr");
-    expect(ids).toContain("opendart_financials_kr");
+    expect(ids).toContain("kis_quote_kr_005930");
+    expect(ids).toContain("kis_ohlcv_kr_005930");
+    expect(ids).toContain("opendart_disclosures_kr_00126380");
+    expect(ids).toContain("opendart_financials_kr_00126380");
+    expect(ids).toContain("fmp_quote_us_aapl");
+    expect(ids).toContain("fmp_ohlcv_us_aapl");
     expect(ids).toContain("provider_health");
   });
 

@@ -2,7 +2,10 @@
 
 import { runRealProviderSmoke } from "../../src/server/ops/real-provider-smoke-runner";
 import { saveRealProviderSmokeReport } from "../../src/server/ops/real-provider-smoke-store";
-import type { RealProviderSmokeResult } from "../../src/domain/ops/real-provider-smoke";
+import type {
+  RealProviderSmokeExpectationMode,
+  RealProviderSmokeResult,
+} from "../../src/domain/ops/real-provider-smoke";
 
 const args = process.argv.slice(2);
 
@@ -10,6 +13,11 @@ function getArg(name: string): string | null {
   const prefix = `--${name}=`;
   const arg = args.find((item) => item.startsWith(prefix));
   return arg ? arg.slice(prefix.length) : null;
+}
+
+function parseMode(value: string | null): RealProviderSmokeExpectationMode {
+  if (value === "auto" || value === "without_key" || value === "with_key") return value;
+  return "auto";
 }
 
 function pad(value: string, width: number): string {
@@ -23,9 +31,10 @@ function formatRow(result: RealProviderSmokeResult): string {
   const failure = result.failures.length > 0 ? result.failures[0].slice(0, 50) : "—";
 
   return (
-    pad(result.targetId, 28) +
+    pad(result.targetId, 38) +
     pad(result.providerId, 22) +
     pad(result.capability, 16) +
+    pad(result.expectationMode, 14) +
     pad(status, 16) +
     pad(data, 8) +
     pad(passed, 8) +
@@ -35,17 +44,20 @@ function formatRow(result: RealProviderSmokeResult): string {
 
 async function main() {
   const baseUrl = getArg("base-url") ?? "http://localhost:3000";
+  const mode = parseMode(getArg("mode"));
   console.log("\n[Real Provider Smoke]");
   console.log(`Base URL: ${baseUrl}`);
+  console.log(`Mode: ${mode}`);
   console.log("");
 
-  const report = await runRealProviderSmoke({ baseUrl });
+  const report = await runRealProviderSmoke({ baseUrl, mode });
   await saveRealProviderSmokeReport(report);
 
   const header =
-    pad("Target", 28) +
+    pad("Target", 38) +
     pad("Provider", 22) +
     pad("Capability", 16) +
+    pad("Mode", 14) +
     pad("Status", 16) +
     pad("Data", 8) +
     pad("Pass", 8) +

@@ -2,7 +2,7 @@ import type { RealProviderSmokeTarget } from "@/domain/ops/real-provider-smoke";
 
 export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
   {
-    id: "kis_quote_kr",
+    id: "kis_quote_kr_005930",
     providerId: "kis",
     capability: "quote",
     method: "GET",
@@ -14,7 +14,7 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     expectedWithKey: "data_available",
   },
   {
-    id: "kis_ohlcv_kr",
+    id: "kis_ohlcv_kr_005930",
     providerId: "kis",
     capability: "ohlcv",
     method: "GET",
@@ -26,7 +26,7 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     expectedWithKey: "data_available",
   },
   {
-    id: "opendart_disclosures_kr",
+    id: "opendart_disclosures_kr_00126380",
     providerId: "opendart",
     capability: "filings",
     method: "GET",
@@ -38,7 +38,7 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     expectedWithKey: "data_available",
   },
   {
-    id: "opendart_financials_kr",
+    id: "opendart_financials_kr_00126380",
     providerId: "opendart",
     capability: "financials",
     method: "GET",
@@ -50,7 +50,7 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     expectedWithKey: "not_supported_allowed",
   },
   {
-    id: "fmp_quote_us",
+    id: "fmp_quote_us_aapl",
     providerId: "fmp_free",
     capability: "quote",
     method: "GET",
@@ -62,7 +62,7 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     expectedWithKey: "data_available",
   },
   {
-    id: "fmp_ohlcv_us",
+    id: "fmp_ohlcv_us_aapl",
     providerId: "fmp_free",
     capability: "ohlcv",
     method: "GET",
@@ -74,7 +74,7 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     expectedWithKey: "data_available",
   },
   {
-    id: "finnhub_quote_us",
+    id: "finnhub_quote_us_aapl",
     providerId: "finnhub_free",
     capability: "quote",
     method: "GET",
@@ -86,7 +86,7 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     expectedWithKey: "data_available",
   },
   {
-    id: "alpha_vantage_quote_us",
+    id: "alpha_vantage_quote_us_aapl",
     providerId: "alpha_vantage_free",
     capability: "quote",
     method: "GET",
