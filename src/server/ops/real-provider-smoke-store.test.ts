@@ -19,6 +19,7 @@ function report(id: string): RealProviderSmokeReport {
     failureCount: 0,
     dataAvailableCount: 0,
     apiRequiredCount: 0,
+    expectationMode: "auto",
     createdAt: new Date().toISOString(),
     engineVersion: "test",
   };

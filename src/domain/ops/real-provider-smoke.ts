@@ -19,6 +19,12 @@ export type RealProviderSmokeTarget = {
   expectedWithKey: "data_available" | "not_supported_allowed";
 };
 
+export type RealProviderSmokeExpectation =
+  | RealProviderSmokeTarget["expectedWithoutKey"]
+  | RealProviderSmokeTarget["expectedWithKey"];
+
+export type RealProviderSmokeExpectationMode = "auto" | "without_key" | "with_key";
+
 export type DataEnvelopeContractValidation = {
   passed: boolean;
   status: DataStatus | null;
@@ -37,6 +43,8 @@ export type RealProviderSmokeResult = {
   symbol: string | null;
   region: "KR" | "US" | null;
   attempted: boolean;
+  expectationMode: Exclude<RealProviderSmokeExpectationMode, "auto">;
+  expected: RealProviderSmokeExpectation;
   httpStatus: number | null;
   envelopeStatus: DataStatus | null;
   dataAvailable: boolean;
@@ -61,6 +69,7 @@ export type RealProviderSmokeReport = {
   failureCount: number;
   dataAvailableCount: number;
   apiRequiredCount: number;
+  expectationMode: RealProviderSmokeExpectationMode;
   createdAt: string;
   engineVersion: string;
 };

@@ -1,11 +1,15 @@
 import type { DataEnvelope, DataStatus } from "@/domain/common/data-status";
 import type {
+  RealProviderSmokeExpectation,
+  RealProviderSmokeExpectationMode,
   RealProviderSmokeReport,
   RealProviderSmokeResult,
   RealProviderSmokeTarget,
 } from "@/domain/ops/real-provider-smoke";
+import type { ProviderReadinessCheck } from "@/domain/ops/provider-readiness";
 import { buildEvidencePackFromDataEnvelope } from "@/server/evidence/evidence-pack-from-data-envelope";
 import { validateDataEnvelopeContract } from "./data-envelope-contract-validator";
+import { resolveProviderReadiness } from "./provider-readiness-resolver";
 import { REAL_PROVIDER_SMOKE_TARGETS } from "./real-provider-smoke-targets";
 
 const ENGINE_VERSION = "real-provider-smoke-v1";
@@ -30,15 +34,43 @@ function claimTypeFor(target: RealProviderSmokeTarget) {
   return "unknown" as const;
 }
 
-function evaluateExpectation(target: RealProviderSmokeTarget, status: DataStatus | null, dataAvailable: boolean) {
-  const expectation = target.expectedWithoutKey;
+function resolveExpectationMode(
+  target: RealProviderSmokeTarget,
+  readiness: ProviderReadinessCheck[],
+  requestedMode: RealProviderSmokeExpectationMode,
+): Exclude<RealProviderSmokeExpectationMode, "auto"> {
+  if (requestedMode === "with_key" || requestedMode === "without_key") {
+    return requestedMode;
+  }
+
+  if (!target.requiresApiKey) {
+    return "without_key";
+  }
+
+  const providerReadiness = readiness.find((check) => check.providerId === target.providerId);
+  return providerReadiness?.canRunSmoke ? "with_key" : "without_key";
+}
+
+function expectedForMode(
+  target: RealProviderSmokeTarget,
+  mode: Exclude<RealProviderSmokeExpectationMode, "auto">,
+): RealProviderSmokeExpectation {
+  return mode === "with_key" ? target.expectedWithKey : target.expectedWithoutKey;
+}
+
+function evaluateExpectation(
+  expectation: RealProviderSmokeExpectation,
+  expectationMode: Exclude<RealProviderSmokeExpectationMode, "auto">,
+  status: DataStatus | null,
+  dataAvailable: boolean,
+) {
 
   if (expectation === "api_required_allowed") {
     return status === "api_required" || dataAvailable;
   }
 
   if (expectation === "not_supported_allowed") {
-    return status === "not_supported" || status === "api_required" || dataAvailable;
+    return status === "not_supported" || (expectationMode === "without_key" && status === "api_required") || dataAvailable;
   }
 
   return dataAvailable;
@@ -62,6 +94,7 @@ async function runTarget(
   target: RealProviderSmokeTarget,
   baseUrl: string,
   fetcher: FetchLike,
+  expectationMode: Exclude<RealProviderSmokeExpectationMode, "auto">,
 ): Promise<RealProviderSmokeResult> {
   const checkedAt = new Date().toISOString();
   const url = `${baseUrl}${target.endpoint}`;
@@ -86,11 +119,12 @@ async function runTarget(
     ? (raw as DataEnvelope<unknown>)
     : makeFallbackEnvelope(target, "error", "Response did not satisfy DataEnvelope contract.");
 
+  const expected = expectedForMode(target, expectationMode);
   const expectationPassed =
     httpStatus !== null &&
     httpStatus < 500 &&
     validation.passed &&
-    evaluateExpectation(target, validation.status, validation.dataAvailable);
+    evaluateExpectation(expected, expectationMode, validation.status, validation.dataAvailable);
   const passed = validation.passed && expectationPassed;
   const failures = [
     ...validation.failures,
@@ -104,6 +138,8 @@ async function runTarget(
     symbol: target.symbol,
     region: target.region,
     attempted: true,
+    expectationMode,
+    expected,
     httpStatus,
     envelopeStatus: validation.status,
     dataAvailable: validation.dataAvailable,
@@ -134,14 +170,18 @@ export async function runRealProviderSmoke(input?: {
   baseUrl?: string;
   targets?: RealProviderSmokeTarget[];
   fetcher?: FetchLike;
+  readiness?: ProviderReadinessCheck[];
+  mode?: RealProviderSmokeExpectationMode;
 }): Promise<RealProviderSmokeReport> {
   const baseUrl = input?.baseUrl ?? "http://localhost:3000";
   const targets = input?.targets ?? REAL_PROVIDER_SMOKE_TARGETS;
   const fetcher = input?.fetcher ?? fetch;
+  const readiness = input?.readiness ?? resolveProviderReadiness();
+  const mode = input?.mode ?? "auto";
   const results: RealProviderSmokeResult[] = [];
 
   for (const target of targets) {
-    results.push(await runTarget(target, baseUrl, fetcher));
+    results.push(await runTarget(target, baseUrl, fetcher, resolveExpectationMode(target, readiness, mode)));
   }
 
   const createdAt = new Date().toISOString();
@@ -155,6 +195,7 @@ export async function runRealProviderSmoke(input?: {
     failureCount,
     dataAvailableCount: results.filter((result) => result.dataAvailable).length,
     apiRequiredCount: results.filter((result) => result.envelopeStatus === "api_required").length,
+    expectationMode: mode,
     createdAt,
     engineVersion: ENGINE_VERSION,
   };
