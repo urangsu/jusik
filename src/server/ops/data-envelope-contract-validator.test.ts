@@ -58,6 +58,20 @@ describe("validateDataEnvelopeContract", () => {
     expect(result.failures).toContain("warnings must be an array.");
   });
 
+  it("fails when warnings contain values outside SourceWarning union", () => {
+    const result = validateDataEnvelopeContract({
+      value: null,
+      status: "api_required",
+      source: "opendart",
+      sourceTier: "official",
+      warnings: ["unknown_warning"],
+      updatedAt: null,
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.failures).toContain("warnings contains invalid SourceWarning: unknown_warning.");
+  });
+
   it("passes not_found with an empty provider payload", () => {
     const result = validateDataEnvelopeContract({
       value: { list: [] },

@@ -1,5 +1,6 @@
 import type { DataEnvelope, DataStatus } from "@/domain/common/data-status";
 import type { DataEnvelopeContractValidation } from "@/domain/ops/real-provider-smoke";
+import type { SourceWarning } from "@/domain/source/provider-tier";
 
 const VALID_STATUSES = new Set<DataStatus>([
   "real_time",
@@ -32,6 +33,15 @@ const NULL_VALUE_ALLOWED_STATUSES = new Set<DataStatus>([
   "insufficient_data",
 ]);
 
+const VALID_SOURCE_WARNINGS = new Set<SourceWarning>([
+  "none",
+  "unofficial",
+  "personal_use_only",
+  "license_review_required",
+  "commercial_use_not_allowed",
+  "manual_import_required",
+]);
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -62,9 +72,16 @@ export function validateDataEnvelopeContract(raw: unknown): DataEnvelopeContract
   const sourceTier =
     typeof envelope.sourceTier === "string" && envelope.sourceTier.trim() ? envelope.sourceTier : null;
   const rawWarnings = raw["warnings"];
-  const warnings = Array.isArray(rawWarnings)
-    ? rawWarnings.filter((warning): warning is string => typeof warning === "string")
-    : [];
+  const warnings: string[] = [];
+  if (Array.isArray(rawWarnings)) {
+    for (const warning of rawWarnings) {
+      if (typeof warning !== "string" || !VALID_SOURCE_WARNINGS.has(warning as SourceWarning)) {
+        failures.push(`warnings contains invalid SourceWarning: ${String(warning)}.`);
+      } else {
+        warnings.push(warning);
+      }
+    }
+  }
   const updatedAt =
     typeof envelope.updatedAt === "string" || envelope.updatedAt === null ? envelope.updatedAt : null;
   const dataAvailable =
