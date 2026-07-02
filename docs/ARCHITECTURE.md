@@ -210,6 +210,7 @@ The smoke runner fails closed when:
 
 * `value` is `null` while the envelope claims `real_time`, `delayed`, `eod`, `cached`, or `stale`.
 * `source`, `sourceTier`, `warnings`, or `updatedAt` is missing.
+* `warnings` contains a value outside the `SourceWarning` union.
 * a provider response is not a DataEnvelope.
 
-`api_required` is an acceptable no-key state. It is stored as missing evidence, not as successful market data.
+`api_required` is an acceptable no-key state. It is stored as missing evidence, not as successful market data. In `auto` or `with_key` mode, a provider marked ready by readiness checks must satisfy `expectedWithKey`; it cannot pass solely because the no-key fallback would have allowed `api_required`.

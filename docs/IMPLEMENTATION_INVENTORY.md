@@ -127,6 +127,8 @@
 | `GET /api/ops/smoke/latest` | **implemented (WO017-L)** | ✓ | - | 최근 스모크 결과 조회 |
 | `GET /api/ops/provider-readiness` | **implemented (WO017-M)** | ✓ | - | Provider 설정 준비 상태 조회 (key 값 노출 없음) |
 | `POST /api/ops/provider-readiness/smoke` | **implemented (WO017-M)** | ✓ | - | Provider 별 real data smoke 실행 (ready provider만) |
+| `POST /api/ops/real-provider-smoke/run` | **implemented (WO017-U)** | ✓ | - | 실제 Provider smoke 실행 |
+| `GET /api/ops/real-provider-smoke/latest` | **implemented (WO017-U)** | ✓ | - | 최근 실제 Provider smoke 결과 조회 |
 | `GET /api/evidence/packs` | **implemented (WO017-O)** | ✓ | - | 증거 팩 목록 조회 |
 | `GET /api/evidence/packs/[id]` | **implemented (WO017-O)** | ✓ | - | 개별 증거 팩 정보 조회 |
 | `POST /api/evidence/packs/from-audit-finding` | **implemented (WO017-O)** | ✓ | - | 감사 Finding으로부터 증거 팩 생성 |
@@ -172,6 +174,7 @@
 | `check:alpha-ui` | **implemented** | ✓ pass |
 | `ops:smoke` | **implemented (WO017-L)** | 운영 스모크 하네스 CLI (서버 실행 필요) |
 | `ops:provider-readiness` | **implemented (WO017-M)** | Provider 설정 준비 + real data smoke CLI |
+| `ops:real-provider-smoke` | **implemented (WO017-U)** | 실제 Provider smoke + DataEnvelope contract validation CLI |
 | `ai:replay` | **implemented (WO017-J)** | Golden Case AI 처리 레플레이 |
 | `outcomes:observe` | **implemented (WO017-Q)** | 사후 성과 검증 및 index relative alpha return 분석 |
 | `surge:detect` | **implemented (WO017-S)** | 이상 변동 후보 종목 탐지 스캐너 |
@@ -343,4 +346,3 @@ PR #2 Codex Review:
 - WO016-B Hardening:
   - Strict ISO datetime component/overflow checks (month/day/hour/minute/second bounds) added to `validate-ohlcv.ts`.
   - Canonical format requirements (`YYYY-MM-DD` and `YYYY-MM-DDTHH:mm:ss.sssZ` only) added to `createPitRecord` validation inside `pit-record.ts`.
-

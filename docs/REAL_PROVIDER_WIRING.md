@@ -70,9 +70,16 @@ Both endpoints return DataEnvelope. They do not expose secret values.
 ```bash
 npm run ops:real-provider-smoke
 npm run ops:real-provider-smoke -- --base-url=http://localhost:3000
+npm run ops:real-provider-smoke -- --mode=without_key
 ```
 
 The CLI requires a running Next.js server for HTTP target checks. It saves the latest report under the runtime data root.
+
+Expectation mode:
+
+- `auto`: default. Uses provider readiness. If keys are configured and smoke can run, `expectedWithKey` is enforced.
+- `without_key`: validates disconnected/no-key fallback states such as `api_required` or `not_supported`.
+- `with_key`: forces key-backed expectations and fails if a connected provider still returns no data.
 
 ## Current Limitations
 
