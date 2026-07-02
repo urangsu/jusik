@@ -22,6 +22,7 @@ function makeReport(overrides: Partial<RealProviderSmokeReport> = {}): RealProvi
     failureCount: 0,
     dataAvailableCount: 0,
     apiRequiredCount: 1,
+    expectationMode: "auto",
     createdAt: "2026-07-02T00:00:00.000Z",
     engineVersion: "test",
     ...overrides,
@@ -61,5 +62,22 @@ describe("POST /api/ops/real-provider-smoke/run", () => {
 
     expect(data.status).toBe("error");
     expect(data.value.failureCount).toBe(2);
+  });
+
+  it("passes requested expectation mode to runner", async () => {
+    vi.mocked(runRealProviderSmoke).mockResolvedValue(makeReport());
+
+    await POST(
+      new NextRequest("http://localhost/api/ops/real-provider-smoke/run", {
+        method: "POST",
+        body: JSON.stringify({ mode: "without_key" }),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    expect(runRealProviderSmoke).toHaveBeenLastCalledWith({
+      baseUrl: "http://localhost",
+      mode: "without_key",
+    });
   });
 });

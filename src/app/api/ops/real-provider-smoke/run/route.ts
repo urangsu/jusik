@@ -3,7 +3,15 @@ import { createSafeResponse } from "@/server/security/safe-api-response";
 import { runRealProviderSmoke } from "@/server/ops/real-provider-smoke-runner";
 import { saveRealProviderSmokeReport } from "@/server/ops/real-provider-smoke-store";
 import type { DataEnvelope } from "@/domain/common/data-status";
-import type { RealProviderSmokeReport } from "@/domain/ops/real-provider-smoke";
+import type {
+  RealProviderSmokeExpectationMode,
+  RealProviderSmokeReport,
+} from "@/domain/ops/real-provider-smoke";
+
+function parseMode(value: unknown): RealProviderSmokeExpectationMode {
+  if (value === "auto" || value === "without_key" || value === "with_key") return value;
+  return "auto";
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +21,7 @@ export async function POST(request: NextRequest) {
         ? body.baseUrl
         : `${request.nextUrl.protocol}//${request.nextUrl.host}`;
 
-    const report = await runRealProviderSmoke({ baseUrl });
+    const report = await runRealProviderSmoke({ baseUrl, mode: parseMode(body?.mode) });
     await saveRealProviderSmokeReport(report).catch(() => {
       // Smoke result is still useful even if runtime store is unavailable.
     });
