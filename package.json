@@ -35,6 +35,7 @@
     "ai:replay": "tsx scripts/ai/replay-ai-explanation.ts",
     "ops:smoke": "tsx scripts/ops/run-operational-smoke.ts",
     "ops:provider-readiness": "tsx scripts/ops/run-provider-readiness.ts",
+    "ops:real-provider-smoke": "tsx scripts/ops/run-real-provider-smoke.ts",
     "outcomes:observe": "tsx scripts/outcome/observe-signal-outcomes.ts",
     "surge:detect": "tsx scripts/surge/detect-surge-candidates.ts"
   },
