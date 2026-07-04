@@ -21,3 +21,8 @@ Market backfill is a contract-first runner for storing provider `DataEnvelope` r
 - No production database adapter.
 - No complete universe coverage.
 - Provider output quality depends on configured provider credentials and free-tier limits.
+
+## Manifest
+
+Each backfill run writes a manifest with generated paths and `productionStore: false`.
+This is an audit marker that the file store is runtime data, not a production database.

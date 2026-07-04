@@ -11,6 +11,7 @@ import {
   saveMarketBackfillReport,
   saveMarketEnvelope,
 } from "./market-data-backfill-store";
+import { saveMarketBackfillManifest } from "./market-backfill-manifest-store";
 import { getRuntimeStoreRoot } from "@/server/storage/runtime-store-root";
 
 const ENGINE_VERSION = "market-backfill-v1";
@@ -119,5 +120,15 @@ export async function runMarketDataBackfill(input: MarketBackfillRequest): Promi
   };
 
   await saveMarketBackfillReport(report);
+  await saveMarketBackfillManifest({
+    manifestId: `market_backfill_manifest_${Date.now()}`,
+    backfillReportId: report.id,
+    universe: request.universe,
+    capability: request.capability,
+    generatedDataRoot: report.generatedDataRoot,
+    generatedPaths: results.flatMap((result) => (result.storedPath ? [result.storedPath] : [])),
+    productionStore: false,
+    createdAt,
+  });
   return report;
 }

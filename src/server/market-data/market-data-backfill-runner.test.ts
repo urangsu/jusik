@@ -3,6 +3,7 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import { runMarketDataBackfill } from "./market-data-backfill-runner";
+import { getLatestMarketBackfillManifest } from "./market-backfill-manifest-store";
 
 vi.mock("@/server/services/market-data-service", () => ({
   marketDataService: {
@@ -46,5 +47,9 @@ describe("runMarketDataBackfill", () => {
 
     const stored = await fs.readFile(report.results[0].storedPath!, "utf8");
     expect(JSON.parse(stored).status).toBe("api_required");
+
+    const manifest = await getLatestMarketBackfillManifest();
+    expect(manifest?.productionStore).toBe(false);
+    expect(manifest?.generatedPaths.length).toBeGreaterThan(0);
   });
 });
