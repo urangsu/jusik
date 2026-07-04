@@ -29,7 +29,7 @@ describe("symbol-master-store", () => {
   });
 
   it("imports manual records without replacing seed records by symbol only", async () => {
-    await importSymbolMasterRecords([
+    const result = await importSymbolMasterRecords([
       {
         assetId: "US_MSFT",
         symbol: "MSFT",
@@ -44,7 +44,27 @@ describe("symbol-master-store", () => {
       },
     ]);
 
+    expect(result).toEqual({ imported: 1, rejected: 0 });
     await expect(getSymbolMasterRecord("US_MSFT")).resolves.toMatchObject({ symbol: "MSFT" });
     await expect(getSymbolMasterRecord("AAPL")).resolves.toBeNull();
+  });
+
+  it("rejects non-canonical imported asset ids", async () => {
+    const result = await importSymbolMasterRecords([
+      {
+        assetId: "AAPL",
+        symbol: "AAPL",
+        market: "US",
+        exchange: "NASDAQ",
+        currency: "USD",
+        assetType: "common_stock",
+        status: "active",
+        source: "manual_import",
+        updatedAt: "2026-07-05T00:00:00.000Z",
+      },
+    ]);
+
+    expect(result.imported).toBe(0);
+    expect(result.rejected).toBe(1);
   });
 });

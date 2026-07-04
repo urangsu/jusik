@@ -18,6 +18,13 @@ Symbol Master maps display/query symbols to canonical internal `assetId` values 
 Manual imports are stored under `data/symbols/`.
 This is generated runtime data and is not a production symbol database.
 
+## Import Guard
+
+Imports reject non-canonical asset ids:
+
+- KR records must use `KR_` prefix and `KRW`.
+- US records must use `US_` prefix and `USD`.
+
 ## API
 
 - `GET /api/symbols/search`

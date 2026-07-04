@@ -10,7 +10,7 @@ import { importSymbolMasterRecords } from "@/server/symbols/symbol-master-store"
 
 describe("POST /api/symbols/import", () => {
   it("imports provided symbol master records through the store", async () => {
-    vi.mocked(importSymbolMasterRecords).mockResolvedValue({ imported: 1 });
+    vi.mocked(importSymbolMasterRecords).mockResolvedValue({ imported: 1, rejected: 0 });
 
     const response = await POST(
       new NextRequest("http://localhost/api/symbols/import", {
@@ -37,6 +37,7 @@ describe("POST /api/symbols/import", () => {
 
     expect(data.status).toBe("cached");
     expect(data.value.imported).toBe(1);
+    expect(data.value.rejected).toBe(0);
     expect(importSymbolMasterRecords).toHaveBeenCalledWith([
       expect.objectContaining({ assetId: "KR_TEST" }),
     ]);

@@ -3,6 +3,7 @@ import path from "path";
 import type { SymbolMasterRecord, SymbolSearchResult } from "@/domain/symbols/symbol-master";
 import { resolveRuntimeDataPath } from "@/server/storage/runtime-store-root";
 import { writeAtomic } from "@/server/storage/atomic-write";
+import { validateSymbolMasterImport } from "./symbol-master-import-validator";
 
 const SEED_UPDATED_AT = "2026-07-02T00:00:00.000Z";
 
@@ -87,10 +88,11 @@ export async function searchSymbolMaster(query: string): Promise<SymbolSearchRes
   return { records: filtered, query, total: filtered.length };
 }
 
-export async function importSymbolMasterRecords(records: SymbolMasterRecord[]): Promise<{ imported: number }> {
+export async function importSymbolMasterRecords(records: SymbolMasterRecord[]): Promise<{ imported: number; rejected: number }> {
+  const validation = validateSymbolMasterImport(records);
   const existing = await readManualRecords();
   const map = new Map(existing.map((record) => [record.assetId, record]));
-  for (const record of records) map.set(record.assetId, { ...record, source: record.source ?? "manual_import" });
+  for (const record of validation.validRecords) map.set(record.assetId, { ...record, source: record.source ?? "manual_import" });
   await writeManualRecords(Array.from(map.values()));
-  return { imported: records.length };
+  return { imported: validation.validRecords.length, rejected: validation.rejectedRecords.length };
 }
