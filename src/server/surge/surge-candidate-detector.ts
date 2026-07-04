@@ -1,6 +1,7 @@
 import { saveSurgeCandidate } from "./surge-candidate-store";
 import type { SurgeCandidate, SurgeCandidateReason } from "@/domain/surge/surge-candidate";
 import { loadOhlcvHistory } from "../factors/ohlcv-history-loader";
+import { getSurgeContext } from "./surge-context-store";
 
 const UNIVERSE_ASSETS: Record<"KR" | "US", string[]> = {
   KR: [
@@ -47,6 +48,11 @@ export async function detectSurgeCandidates(input: {
       const close20dAgo = bars[bars.length - 21]?.close ?? null;
       const return5dPct = close5dAgo && close5dAgo > 0 ? (close - close5dAgo) / close5dAgo : null;
       const return20dPct = close20dAgo && close20dAgo > 0 ? (close - close20dAgo) / close20dAgo : null;
+      const context = await getSurgeContext(assetId);
+      const sectorRelativeStrength =
+        return20dPct !== null && context?.sectorReturn20dPct !== null && context?.sectorReturn20dPct !== undefined
+          ? return20dPct - context.sectorReturn20dPct
+          : null;
 
       // Avg volume of previous 5 bars (excluding the latest bar)
       const prev20Bars = bars.slice(bars.length - 21, bars.length - 1);
@@ -82,8 +88,13 @@ export async function detectSurgeCandidates(input: {
       if (volatilityRatio >= 0.04) {
         reasons.push("volatility_expansion");
       }
-      if (return20dPct !== null && return20dPct >= 0.1 && priceChangePct > 0) {
+      if (sectorRelativeStrength !== null && sectorRelativeStrength >= 0.05 && priceChangePct > 0) {
         reasons.push("relative_strength");
+      } else if (return20dPct !== null && return20dPct >= 0.1 && priceChangePct > 0) {
+        reasons.push("relative_strength");
+      }
+      if (context?.hasRecentFilingEvent) {
+        reasons.push("filing_event");
       }
 
       // If any reason triggers, register as candidate
@@ -91,9 +102,11 @@ export async function detectSurgeCandidates(input: {
         const priceScore = Math.min(Math.abs(priceChangePct) * 10, 1.0);
         const volumeScore = Math.min(Math.max(volumeRatio / 5.0, (volumeZScore ?? 0) / 5), 1.0);
         const volatilityScore = Math.min(volatilityRatio * 20, 1.0);
-        const relativeStrengthScore = return20dPct !== null ? Math.min(Math.max(return20dPct * 3, 0), 1) : 0;
+        const relativeStrengthBase = sectorRelativeStrength ?? return20dPct ?? 0;
+        const relativeStrengthScore = Math.min(Math.max(relativeStrengthBase * 3, 0), 1);
         const liquidityScore = Math.min(tradingValue / (minTradingValue * 5), 1);
-        const score = (priceScore + volumeScore + volatilityScore + relativeStrengthScore + liquidityScore) / 5.0;
+        const filingEventScore = context?.hasRecentFilingEvent ? 0.2 : 0;
+        const score = (priceScore + volumeScore + volatilityScore + relativeStrengthScore + liquidityScore + filingEventScore) / 6.0;
 
         const symbol = assetId.split("_")[1] || assetId;
         const candidate: SurgeCandidate = {
@@ -110,7 +123,7 @@ export async function detectSurgeCandidates(input: {
             volumeZScore,
             tradingValue,
             volatilityRatio,
-            relativeStrength: return20dPct,
+            relativeStrength: sectorRelativeStrength ?? return20dPct,
             closeLocationValue,
             gapPct,
           },
@@ -121,9 +134,12 @@ export async function detectSurgeCandidates(input: {
             volatilityScore,
             relativeStrengthScore,
             liquidityScore,
-            filingEventScore: 0,
+            filingEventScore,
           },
-          sourceRefs: [`ohlcv_history_${universeId}_${assetId}`],
+          sourceRefs: [
+            `ohlcv_history_${universeId}_${assetId}`,
+            ...(context?.filingEventIds ?? []),
+          ],
           evidencePackId: null,
           status: "new",
           detectedAt: nowStr,

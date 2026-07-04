@@ -9,7 +9,12 @@ vi.mock("../factors/ohlcv-history-loader", () => ({
   loadOhlcvHistory: vi.fn(),
 }));
 
+vi.mock("./surge-context-store", () => ({
+  getSurgeContext: vi.fn().mockResolvedValue(null),
+}));
+
 import { loadOhlcvHistory } from "../factors/ohlcv-history-loader";
+import { getSurgeContext } from "./surge-context-store";
 
 function bars(assetId: string, latestVolume: number, latestClose = 130) {
   return Array.from({ length: 21 }, (_, index) => {
@@ -31,6 +36,8 @@ function bars(assetId: string, latestVolume: number, latestClose = 130) {
 describe("detectSurgeCandidates v2", () => {
   beforeEach(() => {
     vi.mocked(loadOhlcvHistory).mockReset();
+    vi.mocked(getSurgeContext).mockReset();
+    vi.mocked(getSurgeContext).mockResolvedValue(null);
   });
 
   it("filters low liquidity candidates", async () => {
@@ -64,5 +71,29 @@ describe("detectSurgeCandidates v2", () => {
     expect(candidates[0].metrics.volumeZScore).not.toBeNull();
     expect(candidates[0].scoreBreakdown.liquidityScore).toBeGreaterThan(0);
     expect(candidates[0].status).toBe("new");
+  });
+
+  it("adds filing event context and sector-relative strength when context exists", async () => {
+    vi.mocked(getSurgeContext).mockResolvedValue({
+      assetId: "US_AAPL",
+      sectorReturn20dPct: 0.02,
+      hasRecentFilingEvent: true,
+      filingEventIds: ["filing_1"],
+      updatedAt: "2026-07-05T00:00:00.000Z",
+    });
+    vi.mocked(loadOhlcvHistory).mockResolvedValue({
+      value: bars("US_AAPL", 10_000_000, 140),
+      status: "cached",
+      source: "test",
+      sourceTier: "manual_import",
+      warnings: [],
+      updatedAt: "2026-07-05T00:00:00.000Z",
+    });
+
+    const candidates = await detectSurgeCandidates({ market: "US" });
+    expect(candidates[0].reasons).toContain("filing_event");
+    expect(candidates[0].sourceRefs).toContain("filing_1");
+    expect(candidates[0].scoreBreakdown.filingEventScore).toBe(0.2);
+    expect(candidates[0].metrics.relativeStrength).not.toBeNull();
   });
 });

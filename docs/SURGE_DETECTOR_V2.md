@@ -21,7 +21,12 @@ Surge Detector v2 identifies unusual movement candidates for review. It does not
 - Promotion to Watchlist remains explicit user action.
 - No buy/sell, target price, or expected return wording.
 
+## Optional Context
+
+Sector-relative strength and filing-event boost are only applied when `SurgeContextRecord` exists.
+Missing context does not create fake filing or sector signals.
+
 ## Current Limitations
 
-- Sector-relative strength is a placeholder field until sector benchmark coverage is added.
-- Filing-event boost requires filing event integration.
+- Sector-relative strength quality depends on upstream sector benchmark coverage.
+- Filing-event boost quality depends on upstream filing event integration.
