@@ -37,7 +37,7 @@ describe("O~S Integration E2E Smoke Workflow", () => {
       high: 105,
       low: 95,
       close: i === 4 ? 100 : i === 24 ? 110 : 105, // return 10%
-      volume: 1000,
+      volume: i === 24 ? 300_000 : 100_000,
     }));
 
     const spyBars = Array.from({ length: 25 }, (_, i) => ({

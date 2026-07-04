@@ -1,74 +1,68 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { detectSurgeCandidates } from "./surge-candidate-detector";
-import { loadOhlcvHistory } from "../factors/ohlcv-history-loader";
-
-vi.mock("../factors/ohlcv-history-loader", () => ({
-  loadOhlcvHistory: vi.fn(),
-}));
 
 vi.mock("./surge-candidate-store", () => ({
   saveSurgeCandidate: vi.fn().mockResolvedValue(undefined),
 }));
 
-describe("surge-candidate-detector", () => {
+vi.mock("../factors/ohlcv-history-loader", () => ({
+  loadOhlcvHistory: vi.fn(),
+}));
+
+import { loadOhlcvHistory } from "../factors/ohlcv-history-loader";
+
+function bars(assetId: string, latestVolume: number, latestClose = 130) {
+  return Array.from({ length: 21 }, (_, index) => {
+    const day = index + 1;
+    const close = index === 20 ? latestClose : 100 + index;
+    const prevClose = index === 19 ? 119 : close;
+    return {
+      assetId,
+      date: `2026-06-${String(day).padStart(2, "0")}`,
+      open: index === 20 ? prevClose * 1.02 : close - 1,
+      high: index === 20 ? latestClose * 1.02 : close + 1,
+      low: index === 20 ? latestClose * 0.96 : close - 2,
+      close,
+      volume: index === 20 ? latestVolume : 800_000 + index * 20_000,
+    };
+  });
+}
+
+describe("detectSurgeCandidates v2", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.mocked(loadOhlcvHistory).mockReset();
   });
 
-  it("detects candidates with price changes (>5%)", async () => {
-    const mockBars = [
-      { assetId: "US_AAPL", date: "2026-06-01", open: 100, high: 100, low: 100, close: 100, volume: 100 },
-      { assetId: "US_AAPL", date: "2026-06-02", open: 100, high: 100, low: 100, close: 100, volume: 100 },
-      { assetId: "US_AAPL", date: "2026-06-03", open: 100, high: 100, low: 100, close: 100, volume: 100 },
-      { assetId: "US_AAPL", date: "2026-06-04", open: 100, high: 100, low: 100, close: 100, volume: 100 },
-      { assetId: "US_AAPL", date: "2026-06-05", open: 100, high: 100, low: 100, close: 100, volume: 100 },
-      { assetId: "US_AAPL", date: "2026-06-06", open: 100, high: 100, low: 100, close: 100, volume: 100 },
-      // latest bar price surges by 6% (106)
-      { assetId: "US_AAPL", date: "2026-06-07", open: 100, high: 107, low: 99, close: 106, volume: 100 },
-    ];
-
+  it("filters low liquidity candidates", async () => {
     vi.mocked(loadOhlcvHistory).mockResolvedValue({
-      value: mockBars,
+      value: bars("US_AAPL", 1_000, 130),
       status: "cached",
-      source: "Mock",
-      sourceTier: "official",
+      source: "test",
+      sourceTier: "manual_import",
       warnings: [],
-      updatedAt: new Date().toISOString(),
+      updatedAt: "2026-07-02T00:00:00.000Z",
     });
 
     const candidates = await detectSurgeCandidates({ market: "US" });
-    // AAPL or MSFT should trigger since we stubbed it for the whole US universe list in detector
-    expect(candidates.length).toBeGreaterThan(0);
-    const candidate = candidates[0];
-    expect(candidate.reasons).toContain("price_change");
-    expect(candidate.metrics.priceChangePct).toBeCloseTo(0.06);
+    expect(candidates).toHaveLength(0);
   });
 
-  it("detects candidates with volume spikes (>3x average)", async () => {
-    const mockBars = [
-      { assetId: "US_AAPL", date: "2026-06-01", open: 100, high: 100, low: 100, close: 100, volume: 10 },
-      { assetId: "US_AAPL", date: "2026-06-02", open: 100, high: 100, low: 100, close: 100, volume: 10 },
-      { assetId: "US_AAPL", date: "2026-06-03", open: 100, high: 100, low: 100, close: 100, volume: 10 },
-      { assetId: "US_AAPL", date: "2026-06-04", open: 100, high: 100, low: 100, close: 100, volume: 10 },
-      { assetId: "US_AAPL", date: "2026-06-05", open: 100, high: 100, low: 100, close: 100, volume: 10 },
-      { assetId: "US_AAPL", date: "2026-06-06", open: 100, high: 100, low: 100, close: 100, volume: 10 },
-      // latest bar volume spikes to 50 (>3x of previous average which was 10)
-      { assetId: "US_AAPL", date: "2026-06-07", open: 100, high: 100, low: 100, close: 100, volume: 50 },
-    ];
-
+  it("adds score breakdown and deterministic id for liquid abnormal moves", async () => {
     vi.mocked(loadOhlcvHistory).mockResolvedValue({
-      value: mockBars,
+      value: bars("US_AAPL", 10_000_000, 140),
       status: "cached",
-      source: "Mock",
-      sourceTier: "official",
+      source: "test",
+      sourceTier: "manual_import",
       warnings: [],
-      updatedAt: new Date().toISOString(),
+      updatedAt: "2026-07-02T00:00:00.000Z",
     });
 
     const candidates = await detectSurgeCandidates({ market: "US" });
     expect(candidates.length).toBeGreaterThan(0);
-    const candidate = candidates.find((c) => c.reasons.includes("volume_spike"));
-    expect(candidate).toBeDefined();
-    expect(candidate!.metrics.volumeRatio).toBe(5.0);
+    expect(candidates[0].id).toContain("cnd_US_AAPL_");
+    expect(candidates[0].metrics.tradingValue).toBeGreaterThan(20_000_000);
+    expect(candidates[0].metrics.volumeZScore).not.toBeNull();
+    expect(candidates[0].scoreBreakdown.liquidityScore).toBeGreaterThan(0);
+    expect(candidates[0].status).toBe("new");
   });
 });

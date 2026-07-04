@@ -24,9 +24,15 @@ export type SurgeCandidate = {
 
   metrics: {
     priceChangePct: number | null;
+    return5dPct?: number | null;
+    return20dPct?: number | null;
     volumeRatio: number | null;
+    volumeZScore?: number | null;
+    tradingValue?: number | null;
     volatilityRatio: number | null;
     relativeStrength: number | null;
+    closeLocationValue?: number | null;
+    gapPct?: number | null;
   };
 
   score: number;
@@ -35,6 +41,8 @@ export type SurgeCandidate = {
     volumeScore: number;
     volatilityScore: number;
     relativeStrengthScore: number;
+    liquidityScore?: number;
+    filingEventScore?: number;
   };
 
   sourceRefs: string[];
