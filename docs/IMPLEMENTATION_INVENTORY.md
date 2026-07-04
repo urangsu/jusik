@@ -46,6 +46,11 @@
 | AI Replay Ledger | **implemented (WO017-J)** | `src/server/ai/ai-explanation-replay-ledger-store.ts` | ✓ | Golden safety regression suite |
 | Operational Smoke Harness | **implemented (WO017-L)** | `src/server/ops/operational-smoke-runner.ts` | ✓ | 10-target provider connectivity matrix |
 | Provider Readiness | **implemented (WO017-M)** | `src/server/ops/provider-readiness-resolver.ts` | ✓ | Per-provider config readiness, real data smoke profiles |
+| Market Data Backfill | **implemented (WO017-V)** | `src/server/market-data/market-data-backfill-runner.ts` | ✓ | Quote/OHLCV envelope persistence; actual API availability still provider-dependent |
+| Provider Runtime Gate | **implemented (WO017-W)** | `src/server/providers/provider-runtime-gate.ts` | ✓ | Cache/retry/rate-limit/stale fallback boundary |
+| AI Provider Dry-run | **implemented (WO017-X)** | `src/server/ai/ai-provider-dry-run-service.ts` | ✓ | No external LLM call; EvidencePack/sourceRefs required |
+| Symbol Master | **implemented (WO017-Y)** | `src/server/symbols/symbol-master-store.ts` | ✓ | KR_005930/OpenDART corpCode and US_AAPL canonical mapping foundation |
+| Surge Detector v2 | **implemented (WO017-Z)** | `src/server/surge/surge-candidate-detector.ts` | ✓ | Liquidity filter, 1d/5d/20d returns, volume z-score, deterministic candidate ids |
 | Runtime Store Isolation | **implemented (WO017-N)** | `src/server/storage/runtime-store-root.ts` | ✓ | JUSIK_TEST_DATA_ROOT / JUSIK_DATA_ROOT 분리 |
 | Earnings Event Minimal | **missing_p1** | - | - | 영업이익/순이익 이벤트 탐지 없음 |
 | Signal History Visualization | **missing_p1** | - | - | UI 컴포넌트 없음 |
@@ -129,6 +134,12 @@
 | `POST /api/ops/provider-readiness/smoke` | **implemented (WO017-M)** | ✓ | - | Provider 별 real data smoke 실행 (ready provider만) |
 | `POST /api/ops/real-provider-smoke/run` | **implemented (WO017-U)** | ✓ | - | 실제 Provider smoke 실행 |
 | `GET /api/ops/real-provider-smoke/latest` | **implemented (WO017-U)** | ✓ | - | 최근 실제 Provider smoke 결과 조회 |
+| `POST /api/market/backfill/run` | **implemented (WO017-V)** | ✓ | - | Quote/OHLCV backfill 실행 및 DataEnvelope 저장 |
+| `GET /api/market/backfill/latest` | **implemented (WO017-V)** | ✓ | - | 최근 market backfill 결과 조회 |
+| `POST /api/ai/providers/dry-run` | **implemented (WO017-X)** | ✓ | - | 외부 LLM 호출 없이 provider 가능성/근거 sourceRef 검증 |
+| `GET /api/symbols/search` | **implemented (WO017-Y)** | ✓ | - | Symbol Master 검색 |
+| `GET /api/symbols/[assetId]` | **implemented (WO017-Y)** | ✓ | - | canonical assetId 기반 종목 상세 조회 |
+| `POST /api/symbols/import` | **implemented (WO017-Y)** | ✓ | - | 수동 Symbol Master record import |
 | `GET /api/evidence/packs` | **implemented (WO017-O)** | ✓ | - | 증거 팩 목록 조회 |
 | `GET /api/evidence/packs/[id]` | **implemented (WO017-O)** | ✓ | - | 개별 증거 팩 정보 조회 |
 | `POST /api/evidence/packs/from-audit-finding` | **implemented (WO017-O)** | ✓ | - | 감사 Finding으로부터 증거 팩 생성 |
@@ -175,6 +186,7 @@
 | `ops:smoke` | **implemented (WO017-L)** | 운영 스모크 하네스 CLI (서버 실행 필요) |
 | `ops:provider-readiness` | **implemented (WO017-M)** | Provider 설정 준비 + real data smoke CLI |
 | `ops:real-provider-smoke` | **implemented (WO017-U)** | 실제 Provider smoke + DataEnvelope contract validation CLI |
+| `market:backfill` | **implemented (WO017-V)** | Quote/OHLCV envelope backfill CLI (`api_required`도 결과로 기록) |
 | `ai:replay` | **implemented (WO017-J)** | Golden Case AI 처리 레플레이 |
 | `outcomes:observe` | **implemented (WO017-Q)** | 사후 성과 검증 및 index relative alpha return 분석 |
 | `surge:detect` | **implemented (WO017-S)** | 이상 변동 후보 종목 탐지 스캐너 |
