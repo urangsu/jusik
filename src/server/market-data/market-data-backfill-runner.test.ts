@@ -28,6 +28,12 @@ vi.mock("@/server/services/market-data-service", () => ({
   },
 }));
 
+vi.mock("@/server/services/market-data-runtime-wrapper", () => ({
+  withMarketDataRuntimeGate: vi.fn(async ({ fetcher }) => fetcher()),
+}));
+
+import { withMarketDataRuntimeGate } from "@/server/services/market-data-runtime-wrapper";
+
 describe("runMarketDataBackfill", () => {
   let tmpDir: string;
 
@@ -44,6 +50,13 @@ describe("runMarketDataBackfill", () => {
     expect(report.apiRequiredCount).toBe(3);
     expect(report.dataAvailableCount).toBe(0);
     expect(report.results[0].storedPath).toContain("data/market/ohlcv/SP500_SAMPLE");
+    expect(withMarketDataRuntimeGate).toHaveBeenCalledWith(expect.objectContaining({
+      providerId: "fmp_free",
+      assetId: "US_AAPL",
+      capability: "ohlcv",
+      range: "1M",
+      interval: "1D",
+    }));
 
     const stored = await fs.readFile(report.results[0].storedPath!, "utf8");
     expect(JSON.parse(stored).status).toBe("api_required");

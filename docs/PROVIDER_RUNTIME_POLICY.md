@@ -18,3 +18,7 @@ Provider runtime policy controls cache, retry, rate-limit, and stale fallback be
 - Null success-shaped envelopes are not cached.
 - Cached responses preserve source and warning metadata.
 - Runtime gate is a boundary; it does not make disconnected providers available.
+
+## Market Data Boundary
+
+Market backfill calls route through the runtime gate with cache keys scoped by provider, market, assetId, symbol, capability, range, and interval.

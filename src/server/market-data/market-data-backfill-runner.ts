@@ -13,6 +13,7 @@ import {
 } from "./market-data-backfill-store";
 import { saveMarketBackfillManifest } from "./market-backfill-manifest-store";
 import { getRuntimeStoreRoot } from "@/server/storage/runtime-store-root";
+import { withMarketDataRuntimeGate } from "@/server/services/market-data-runtime-wrapper";
 
 const ENGINE_VERSION = "market-backfill-v1";
 
@@ -49,12 +50,29 @@ async function runAssetBackfill(
   try {
     const envelope =
       request.capability === "quote"
-        ? await marketDataService.getQuote(asset.symbol, asset.market)
-        : await marketDataService.getOhlcv({
+        ? await withMarketDataRuntimeGate({
+            providerId: asset.market === "KR" ? "kis" : "fmp_free",
+            market: asset.market,
+            assetId: asset.assetId,
             symbol: asset.symbol,
-            region: asset.market,
+            capability: "quote",
+            fetcher: () => marketDataService.getQuote(asset.symbol, asset.market),
+          })
+        : await withMarketDataRuntimeGate({
+            providerId: asset.market === "KR" ? "kis" : "fmp_free",
+            market: asset.market,
+            assetId: asset.assetId,
+            symbol: asset.symbol,
+            capability: "ohlcv",
             range: request.range,
             interval: request.interval,
+            fetcher: () =>
+              marketDataService.getOhlcv({
+                symbol: asset.symbol,
+                region: asset.market,
+                range: request.range,
+                interval: request.interval,
+              }),
           });
 
     const storedPath = getMarketEnvelopePath({

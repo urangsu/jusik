@@ -2,11 +2,13 @@ import type { DataEnvelope } from "@/domain/common/data-status";
 import type { ProviderRuntimePolicy } from "@/domain/providers/provider-runtime-policy";
 import { providerResponseCacheStore, ProviderResponseCacheStore } from "./provider-response-cache-store";
 
+export type ProviderRuntimeCacheStore = Pick<ProviderResponseCacheStore, "get" | "put">;
+
 type GateOptions<T> = {
   cacheKey: string;
   policy: ProviderRuntimePolicy;
   now?: string;
-  cacheStore?: ProviderResponseCacheStore;
+  cacheStore?: ProviderRuntimeCacheStore;
   fetcher: () => Promise<DataEnvelope<T>>;
 };
 
