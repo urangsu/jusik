@@ -60,6 +60,10 @@ npm run build
 * Real provider smoke checks exist for DataEnvelope/EvidencePack contract validation, but they do not imply stable production data coverage.
 * Market backfill, provider runtime gate/cache/retry, AI dry-run, symbol master, and Surge v2 foundations exist as contract-first boundaries.
 * Backfill and symbol master stores are runtime/generated data paths; they are not production-grade database adapters.
+* Provider key smoke exists, but passing no-key smoke does not mean live provider coverage.
+* Market backfill writes a non-production manifest with generated runtime paths.
+* Symbol imports reject non-canonical KR/US asset ids.
+* Surge sector and filing context are optional; missing context does not create fake signals.
 
 ## 5. 관련 상세 문서
 * 아키텍처 및 폴더 구조: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)

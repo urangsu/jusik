@@ -51,6 +51,10 @@
 | AI Provider Dry-run | **implemented (WO017-X)** | `src/server/ai/ai-provider-dry-run-service.ts` | ✓ | No external LLM call; EvidencePack/sourceRefs required |
 | Symbol Master | **implemented (WO017-Y)** | `src/server/symbols/symbol-master-store.ts` | ✓ | KR_005930/OpenDART corpCode and US_AAPL canonical mapping foundation |
 | Surge Detector v2 | **implemented (WO017-Z)** | `src/server/surge/surge-candidate-detector.ts` | ✓ | Liquidity filter, 1d/5d/20d returns, volume z-score, deterministic candidate ids |
+| Provider Key Smoke | **implemented** | `src/server/ops/provider-key-smoke-runner.ts` | ✓ | Key/no-key provider contract validation |
+| Backfill Manifest | **implemented** | `src/server/market-data/market-backfill-manifest-store.ts` | ✓ | Marks generated file store as `productionStore: false` |
+| Symbol Import Guard | **implemented** | `src/server/symbols/symbol-master-import-validator.ts` | ✓ | Rejects non-canonical KR/US imports |
+| Surge Context | **implemented** | `src/server/surge/surge-context-store.ts` | ✓ | Optional sector/filing context without fake signals |
 | Runtime Store Isolation | **implemented (WO017-N)** | `src/server/storage/runtime-store-root.ts` | ✓ | JUSIK_TEST_DATA_ROOT / JUSIK_DATA_ROOT 분리 |
 | Earnings Event Minimal | **missing_p1** | - | - | 영업이익/순이익 이벤트 탐지 없음 |
 | Signal History Visualization | **missing_p1** | - | - | UI 컴포넌트 없음 |
@@ -186,6 +190,7 @@
 | `ops:smoke` | **implemented (WO017-L)** | 운영 스모크 하네스 CLI (서버 실행 필요) |
 | `ops:provider-readiness` | **implemented (WO017-M)** | Provider 설정 준비 + real data smoke CLI |
 | `ops:real-provider-smoke` | **implemented (WO017-U)** | 실제 Provider smoke + DataEnvelope contract validation CLI |
+| `ops:provider-key-smoke` | **implemented** | Provider key/no-key smoke CLI |
 | `market:backfill` | **implemented (WO017-V)** | Quote/OHLCV envelope backfill CLI (`api_required`도 결과로 기록) |
 | `ai:replay` | **implemented (WO017-J)** | Golden Case AI 처리 레플레이 |
 | `outcomes:observe` | **implemented (WO017-Q)** | 사후 성과 검증 및 index relative alpha return 분석 |
