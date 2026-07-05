@@ -35,7 +35,9 @@ export class RegimeStore {
       .filter((s) => s.market === market && s.calculatedAt.substring(0, 10) <= asOf)
       .sort((a, b) => b.calculatedAt.localeCompare(a.calculatedAt));
     if (filtered.length > 0) return filtered[0];
-    return this.getLatestSnapshot(market);
+    // No historical snapshot for this date — return null (insufficient_data)
+    // instead of falling back to latest snapshot which may be from the future.
+    return null;
   }
 
   async getLatestSnapshot(market: "US" | "KR"): Promise<RegimeSnapshot | null> {

@@ -22,7 +22,14 @@ export class StrategySuitabilityService {
     const warnings: string[] = [];
 
     // Query canonical original label/score from signal history store first
-    const historyRecords = await getSignalHistory().catch(() => []);
+    let historyLoadFailed = false;
+    let historyRecords: Awaited<ReturnType<typeof getSignalHistory>> = [];
+    try {
+      historyRecords = await getSignalHistory();
+    } catch {
+      historyLoadFailed = true;
+      warnings.push("signal_history_load_failed");
+    }
     
     function defaultSignalId(sig: unknown): string {
       if (!sig || typeof sig !== "object") return "unknown";
@@ -70,6 +77,11 @@ export class StrategySuitabilityService {
 
       canonicalLabel = extractedLabel as StrategyAgreementLabel;
       canonicalScore = extractedScore;
+    } else if (historyLoadFailed) {
+      // History store was unavailable — cannot verify canonical data
+      canonicalLabel = "insufficient_data";
+      canonicalScore = null;
+      warnings.push("canonical_lookup_unavailable");
     } else if (!originalLabel) {
       canonicalLabel = "insufficient_data";
       canonicalScore = null;
@@ -119,7 +131,9 @@ export class StrategySuitabilityService {
         adjustedLabel = "insufficient_data";
         warnings.push("레짐 패닉 상태로 인해 적합도 점수가 차단되었습니다.");
       } else if (regime === "risk_off") {
-        if (canonicalLabel === "strong_watch" || canonicalLabel === "watch" && adjustedLabel !== "insufficient_data") {
+        // P0-3: Stability Gate가 이미 차단한 경우 regime이 부활시키지 않음
+        // P0-2: operator precedence 수정 — 괄호 추가
+        if ((canonicalLabel === "strong_watch" || canonicalLabel === "watch") && adjustedLabel !== "insufficient_data") {
           adjustedLabel = "caution";
           warnings.push("시장 리스크 오프 국면으로 인해 등급이 caution으로 감쇄되었습니다.");
         }

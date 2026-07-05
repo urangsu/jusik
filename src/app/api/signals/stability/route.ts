@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const assetId = searchParams.get("assetId");
   const signalId = searchParams.get("signalId");
+  const universeId = searchParams.get("universeId") || undefined;
   // Default to today's date if not provided
   const date = searchParams.get("date") || new Date().toISOString().slice(0, 10);
 
@@ -29,6 +30,7 @@ export async function GET(request: NextRequest) {
       assetId,
       signalId,
       date,
+      universeId,
     });
 
     const isInsufficient = stability.status === "insufficient_data";

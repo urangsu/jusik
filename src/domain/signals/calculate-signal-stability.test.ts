@@ -64,6 +64,7 @@ describe("calculateSignalStability", () => {
         record("2026-07-05", "positive_watch", 60),
       ],
       getRankValue: (entry) => entry.signal.rank,
+      rankAutocorrelation: 0.85, // Precalculated cross-sectional rank correlation
       minRankAutocorrelation: -1,
     });
 
@@ -128,10 +129,11 @@ describe("calculateSignalStability", () => {
         record("2026-07-05", "positive_watch", 30),
       ],
       getRankValue: (entry) => entry.signal.rank,
+      rankAutocorrelation: 0.15, // Precalculated low cross-sectional rank correlation
       minRankAutocorrelation: 0.5,
     });
 
-    expect(result.rankAutocorrelation).not.toBeNull();
+    expect(result.rankAutocorrelation).toBe(0.15);
     expect(result.actionableThresholdMet).toBe(false);
     expect(result.warnings).toContain("rank_autocorrelation_low");
     expect(result.status).toBe("blocked");

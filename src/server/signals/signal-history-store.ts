@@ -25,19 +25,30 @@ export async function saveSignalHistory(
 
   const existing = await signalHistoryStore.read();
   
-  // Merge by overwriting entries with same assetId, signal's factorId (or standard identifier), and date
+  // Merge by overwriting entries with same assetId, signalId, and date.
+  // signalId extraction matches the logic in calculateCrossSectionalRankCorrelation
+  // and calculateSignalStability: signalId → strategyId → factorId → id → "unknown".
+  function extractSignalId(sig: unknown): string {
+    if (!sig || typeof sig !== "object") return "unknown";
+    const candidate = sig as Record<string, unknown>;
+    return String(
+      candidate.signalId ??
+        candidate.strategyId ??
+        candidate.factorId ??
+        candidate.id ??
+        "unknown"
+    );
+  }
+
   const recordMap = new Map<string, SignalHistoryRecord<any>>();
   
   for (const r of existing) {
-    // Unique key: assetId + factorId + date
-    const factorId = r.signal?.factorId || "unknown";
-    const key = `${r.assetId}_${factorId}_${r.date}`;
+    const key = `${r.assetId}_${extractSignalId(r.signal)}_${r.date}`;
     recordMap.set(key, r);
   }
 
   for (const r of records) {
-    const factorId = r.signal?.factorId || "unknown";
-    const key = `${r.assetId}_${factorId}_${r.date}`;
+    const key = `${r.assetId}_${extractSignalId(r.signal)}_${r.date}`;
     recordMap.set(key, r);
   }
 

@@ -76,6 +76,7 @@ function createStrategyAgreementSignal(asset: Asset | null, views: StrategyViewS
     assetId: asset?.id ?? "unselected",
     symbol: asset?.symbol ?? "N/A",
     date: new Date().toISOString().slice(0, 10),
+    signalId: "strategy_agreement",
     views,
   });
 }

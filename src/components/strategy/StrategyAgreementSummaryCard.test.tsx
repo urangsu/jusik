@@ -218,6 +218,7 @@ describe("StrategyAgreementSummaryCard", () => {
     const nullScoreWithAssetSignal: StrategyAgreementSignal = {
       ...insufficientAgreement,
       assetId: "KR:005930", // triggers fetch
+      signalId: "custom_factor", // required for fetch after P0-5 fix
       agreementScore: null,
       status: "insufficient_data",
     };

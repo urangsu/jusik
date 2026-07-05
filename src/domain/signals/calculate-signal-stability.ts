@@ -126,25 +126,12 @@ export function calculateSignalStability<TSignal>(
     }
   }
 
-  // Use precalculated rank autocorrelation if provided; otherwise fallback to time-series rank correlation
-  let rankAutocorrelation = params.rankAutocorrelation !== undefined ? params.rankAutocorrelation : null;
-  if (params.rankAutocorrelation === undefined) {
-    const rankPairs = params.getRankValue
-      ? labels
-          .map((entry) => params.getRankValue?.(entry.record) ?? null)
-          .map((value) => (value !== null && Number.isFinite(value) ? value : null))
-      : [];
-    const xs: number[] = [];
-    const ys: number[] = [];
-    for (let index = 1; index < rankPairs.length; index += 1) {
-      const previous = rankPairs[index - 1];
-      const current = rankPairs[index];
-      if (previous !== null && current !== null) {
-        xs.push(previous);
-        ys.push(current);
-      }
-    }
-    rankAutocorrelation = pearson(xs, ys);
+  // Use precalculated cross-sectional rank autocorrelation if provided.
+  // Single-asset time-series autocorrelation is forbidden (WO017-U3).
+  // If no precalculated value is provided, rankAutocorrelation is null.
+  const rankAutocorrelation = params.rankAutocorrelation !== undefined ? params.rankAutocorrelation : null;
+  if (params.rankAutocorrelation === undefined && params.getRankValue) {
+    warnings.push("rank_autocorrelation_not_provided");
   }
 
   if (labels.length < minConsecutiveObservations) warnings.push("insufficient_consecutive_history");
