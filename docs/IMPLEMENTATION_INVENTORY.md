@@ -39,7 +39,7 @@
 | Watchlist Report Inbox & Aggregator | **implemented** | `src/server/watchlist/watchlist-report-aggregator.ts` | ✓ | 관심종목 자산별 공시/경보/사후검토 취합 |
 | Market Exposure Audit | **implemented** | `src/server/audit/market-exposure-auditor.ts` | ✓ | 전략별 시장 노출도(Beta, capture 등) 감사 |
 | Audit Finding Router | **implemented** | `src/server/audit/audit-finding-aggregator.ts` | ✓ | 감사 결과 취합 및 Finding 라우팅 |
-| Signal Stability Gate | **missing_p0** | - | - | flipCount/consecutiveDays 미구현 |
+| Signal Stability Gate | **implemented** | `src/domain/signals/calculate-signal-stability.ts` | ✓ | flipCount/consecutiveDays/rank autocorrelation 기반 안정성 가드 |
 | StrategyTrialRecord | **implemented** | `src/domain/strategy/strategy-trial-record.ts`, `strategy-trial-store.ts` | ✓ | 전략 묘지/시도 기록 및 중복 감지 |
 | Structured Output Guard | **implemented (WO017-H)** | `src/server/ai/structured-output-validator.ts` | ✓ | StructuredAiOutput 검증, Forbidden Wording, Grounded Claim, Disclaimer |
 | AI Provider Interface | **implemented (WO017-K)** | `src/server/ai/providers/` | ✓ | Disabled-by-default registry, mock provider |
@@ -281,9 +281,9 @@
 
 | Item | Classification | Reason | Trigger |
 |---|---|---|---|
-| Factor Correlation Audit | **missing_p0** | 팩터 간 다중공선성 감지 없음 | 팩터 추가 전 필수 |
+| Factor Correlation Audit | **implemented** | `src/server/audit/factor-correlation-auditor.ts` | 팩터 간 다중공선성 감지 |
 | Individual Signal IC Audit | **implemented (WO017-C)** | `src/server/audit/individual-signal-ic-auditor.ts` | 신호 추가 전 필수 |
-| Signal Stability Gate | **missing_p0** | flipCount/consecutiveDays 미구현 | 잦은 신호 반전 감지 |
+| Signal Stability Gate | **implemented** | `src/domain/signals/calculate-signal-stability.ts` | 잦은 신호 반전 감지 |
 | StrategyTrialRecord | **implemented (WO017-B)** | `src/domain/strategy/strategy-trial-record.ts` | 다중검정 추적 기반 |
 | Structured Output Guard | **implemented (WO017-H)** | `src/server/ai/structured-output-validator.ts` | LLM 기능 추가 전 필수 |
 | Earnings Event Minimal | **missing_p1** | 영업이익/순이익 이벤트 탐지 없음 | OpenDART 재무 데이터 연결 시 |

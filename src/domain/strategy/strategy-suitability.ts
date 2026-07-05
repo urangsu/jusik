@@ -23,6 +23,7 @@ export type StrategySuitability = {
   assetId: string;
   symbol: string;
   date: string;
+  signalId: string;
 
   suitabilityScore: number | null;
   originalLabel: StrategyAgreementLabel;

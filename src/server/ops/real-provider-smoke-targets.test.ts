@@ -31,4 +31,24 @@ describe("REAL_PROVIDER_SMOKE_TARGETS", () => {
       expect(target.endpoint).not.toContain("/broker");
     }
   });
+
+  // P0-1: All market targets include providerId param for provider-specific routing
+  it("market quote and ohlcv targets include ?providerId= to prevent generic fallback mismatch", () => {
+    const marketTargets = REAL_PROVIDER_SMOKE_TARGETS.filter(
+      (t) => t.capability === "quote" || t.capability === "ohlcv",
+    );
+
+    for (const target of marketTargets) {
+      expect(target.endpoint).toContain("providerId=");
+      // The providerId in the URL must match the target's providerId
+      expect(target.endpoint).toContain(`providerId=${target.providerId}`);
+    }
+  });
+
+  // P1-2: provider_health target should not be attributed to KIS
+  it("provider_health target is not attributed to KIS (system-level check, not KIS-specific)", () => {
+    const healthTarget = REAL_PROVIDER_SMOKE_TARGETS.find((t) => t.id === "provider_health");
+    expect(healthTarget).toBeDefined();
+    expect(healthTarget?.providerId).toBe("system");
+  });
 });

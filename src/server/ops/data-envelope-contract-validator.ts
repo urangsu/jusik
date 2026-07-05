@@ -42,6 +42,16 @@ const VALID_SOURCE_WARNINGS = new Set<SourceWarning>([
   "manual_import_required",
 ]);
 
+import type { SourceUsagePolicy } from "@/domain/source/provider-tier";
+
+const VALID_SOURCE_USAGE_POLICIES = new Set<SourceUsagePolicy>([
+  "official",
+  "free_limited",
+  "licensed_free",
+  "personal_fallback",
+  "manual_import",
+]);
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -91,8 +101,16 @@ export function validateDataEnvelopeContract(raw: unknown): DataEnvelopeContract
     envelope.value !== undefined;
 
   if (!status) failures.push("status is missing or invalid.");
-  if (!source) failures.push("source is required.");
-  if (!sourceTier) failures.push("sourceTier is required.");
+  if (!source) {
+    failures.push("source is required.");
+  } else if (source.trim().toLowerCase() === "none") {
+    failures.push("source cannot be 'None'.");
+  }
+  if (!sourceTier) {
+    failures.push("sourceTier is required.");
+  } else if (!VALID_SOURCE_USAGE_POLICIES.has(sourceTier as SourceUsagePolicy)) {
+    failures.push(`sourceTier must be a valid SourceUsagePolicy: ${sourceTier}.`);
+  }
   if (!Array.isArray(rawWarnings)) failures.push("warnings must be an array.");
   if (!Object.prototype.hasOwnProperty.call(envelope, "updatedAt")) {
     failures.push("updatedAt is required.");

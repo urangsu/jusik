@@ -111,6 +111,8 @@ export function calculateStrategyAgreementSignal(
     assetId: params.assetId,
     symbol: params.symbol,
     date: params.date,
+    signalId: "momentum",
+    universeId: params.assetId.startsWith("KR") ? "KOSPI_SAMPLE" : "SP500_SAMPLE",
     agreementScore,
     agreementLabel,
     agreementRate,

@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { createSafeResponse } from "@/server/security/safe-api-response";
+import { checkJobRouteEnabled } from "@/server/security/job-route-guard";
 import { runRealProviderSmoke } from "@/server/ops/real-provider-smoke-runner";
 import { saveRealProviderSmokeReport } from "@/server/ops/real-provider-smoke-store";
 import type { DataEnvelope } from "@/domain/common/data-status";
@@ -14,12 +15,17 @@ function parseMode(value: unknown): RealProviderSmokeExpectationMode {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = checkJobRouteEnabled({
+    routeFlag: process.env.REAL_PROVIDER_SMOKE_ROUTE_ENABLED,
+    routeName: "real-provider-smoke/run",
+  });
+  if (guard) return guard;
+
   try {
+    // baseUrl is always derived from the incoming request — never accepted from body
+    // to prevent arbitrary outbound fetch to external hosts.
+    const baseUrl = request.nextUrl.origin;
     const body = await request.json().catch(() => ({}));
-    const baseUrl =
-      body && typeof body.baseUrl === "string"
-        ? body.baseUrl
-        : `${request.nextUrl.protocol}//${request.nextUrl.host}`;
 
     const report = await runRealProviderSmoke({ baseUrl, mode: parseMode(body?.mode) });
     await saveRealProviderSmokeReport(report).catch(() => {

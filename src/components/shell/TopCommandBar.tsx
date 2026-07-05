@@ -31,7 +31,7 @@ export const TopCommandBar: React.FC<TopCommandBarProps> = ({
 
   const tabs = [
     { id: "markets", label: locale === "ko" ? "시장 보드" : "Markets" },
-    { id: "strategy", label: locale === "ko" ? "전략 점수" : "Strategy" },
+    { id: "strategy", label: locale === "ko" ? "전략 진단" : "Strategy Diagnostics" },
     { id: "backtest", label: locale === "ko" ? "백테스트" : "Backtest" },
     { id: "reliability", label: locale === "ko" ? "신호 신뢰도" : "Signal Reliability" },
     { id: "alerts", label: locale === "ko" ? "알림 설정" : "Alerts" },

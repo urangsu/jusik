@@ -33,4 +33,6 @@ export type StrategyAgreementSignal = {
   dataQualityScore: number;
   explanation: string;
   version?: SignalVersion;
+  signalId?: string;
+  universeId?: string;
 };

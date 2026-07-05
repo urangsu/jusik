@@ -1,298 +1,38 @@
-# K-Terminal Master Task Board
-
-## Product Direction
-
-K-Terminal은 개인 투자자가 미국주식과 한국주식을 분석하고, 백테스트하며, 신호 신뢰도를 판단하고 실시간 경보를 받아보는 고유의 금융 분석 시스템이다. 실거래 주문, 모의주문, 자동매매는 영구 제외다.
-
----
-
-## Non-Negotiable Principles
-
-1. **No Fake Data**: 가짜 금융 데이터 사용 금지. null 값을 0으로 변환 금지.
-2. **DataEnvelope\<T\>**: 모든 market, filing, financial, news, factor, strategy, portfolio API 응답에 사용.
-3. **No Direct Trading**: 실주문, 모의주문, 자동매매 영구 제외.
-4. **KR Finance Color Convention**: 상승/긍정 = RED, 하락/부정 = BLUE. 시맨틱 토큰만 사용. 직접 하드코드 금지.
-5. **No Emojis in UI**: `lucide-react` 아이콘만 사용.
-6. **No Box Shadows**: 반투명 border + 레이어 다크 서피스 사용.
-7. **Strategy Safety**: "매수 확정", "매도 확정", "수익 보장", "추천 확정" 레이블 금지. "검토", "관망", "주의", "위험", "데이터 부족" 사용.
-8. **CNN/Crypto Fear & Greed**: Reference Panel 표시 전용. 핵심 시그널/전략 계산 연결 금지.
-9. **YouTube Transcript API / GPT Vision / Selenium**: 제품 코드 추가 영구 금지.
-10. **LLM은 계산자가 아니다**: LLM은 이미 계산된 결과를 설명할 때만 사용. 향후 Structured Output으로만 허용.
-
----
-
-## Quant Architecture Decisions
-
-### 결정 1. LLM은 계산자가 아니다
-LLM은 퀀트 점수, 팩터값, 전략 선택, 백테스트 결과를 계산하지 않는다.
-LLM은 이미 계산된 결과를 사용자가 요청할 때만 설명한다.
-
-### 결정 2. 재무 팩터 백테스트는 Point-in-Time 인프라 전까지 금지
-ROE, PBR, PER, ROIC, FCF Yield 등 재무 팩터는 `dataAvailableAt`이 확보되기 전까지 백테스트에 사용하지 않는다.
-
-### 결정 3. 가격/기술 팩터를 먼저 구현한다
-가격/기술 팩터는 OHLCV 기반이므로 재무 팩터보다 먼저 검증 가능한 최소 엔진을 만들 수 있다.
-단, 운용 검증용 백테스트에는 수정주가와 과거 유니버스 멤버십이 필요하다.
-
-### 결정 4. 전략 묘지를 남긴다
-활성 전략뿐 아니라 폐기된 전략, 실패한 파라미터 조합, rejected 전략까지 모두 기록한다.
-그래야 다중검정과 과최적화 위험을 추적할 수 있다.
-
-### 결정 5. 신호 합의는 horizon별로 분리한다
-단기, 중기, 장기 신호를 단일 평균으로 뭉개지 않는다.
-예: 단기 과열 + 장기 저평가 = neutral이 아니라 cross-horizon tension이다.
-
-### 결정 6. 적용 불가와 중립은 다르다
-특정 뷰가 종목에 적용 불가능하면 neutral이 아니라 denominator에서 제외한다.
-
-### 결정 7. 유명 기술분석법은 Atomic Signal로 흡수한다
-일목균형표, 다윈 박스, 터틀 채널, 와인스타인 스테이지는 별도 구루 뷰가 아니라 검증 가능한 Atomic Signal로 추가한다.
-
-### 결정 8. Research Intake는 초안 작성 보조다
-LLM이 문서에서 전략을 추출하더라도 `StrategySpecDraft`까지만 생성한다.
-자동 백테스트 큐 진입 또는 active 전략 등록은 human review 이후에만 가능하다.
-
----
-
-## Work Order Roadmap (Completed Milestones)
-
-- **WO-001**: Market Board UI 기반, Dark Terminal 스타일, 유니버스 데이터 그리드.
-- **WO-002**: Provider Registry 및 Budget Management.
-- **WO-003**: yfinance Direct Fallback Worker, Snapshot Loader, Fallback Guardrails.
-- **WO-004**: 한국어/영어 i18n, KIS Open API Read-only 연결, 보안 레이어.
-- **WO-005**: Alert Rule Engine 기반, Notification Hub 인프라, Daily Report 스켈레톤.
-- **WO-006**: App Preferences, 시스템 폴리시, TopCommandBar Settings, 문서화.
-- **WO-007**: Quant Spec 통합, Technical Factor 기반 (Ichimoku, Darvas Box, Turtle Channel, Weinstein Stage), Factor Store/Registry/Signal Ensemble Types.
-- **WO-008**: Technical Factor Engine 통합, AtomicSignal 계산, Momentum v1.
-- **WO-009**: 가격 전용 Walk-forward Backtest Engine + UI.
-- **WO-010**: Signal Reliability Engine (Spearman IC, ICIR, Bayesian Shrinkage) + Weight Preview.
-- **WO-011**: 추가 신호 신뢰도 및 horizon-segmented agreement 타입 정의.
-- **WO-012**: Provider API Settings Center, OpenDART E2E 안정화, Secret 암호화 저장.
-- **WO-013**: Alert Rule Engine 실데이터 연결, Filing/Provider/Signal/Macro/Price/Volume 이벤트 탐지, Web Inbox 안정화.
-- **WO-014**: Macro Playbook Intake, Regime Gate v1, Sentiment Reference Panel (CNN/Crypto Fear & Greed 격리).
-- **WO-015**: Theme Hydration Mismatch 수정, data-theme/data-theme-preference 정책 정립, SSR 날짜 안전화, Product Scope Policy 문서화.
-- **WO-016**: State Reconciliation + Missing Implementation Audit + Task Board Reset.
-- **WO-016-A**: Codex Review Fix (PIT As-Of Ordering + Strict OHLCV Timestamp Validation).
-- **WO-016-B**: Final Hardening (Strict ISO Datetime Overflow Check + PIT Timestamp Canonical Policy + Task Board Correction).
-- **WO-017-A**: Backtest Validity Hardening for `momentum_v1_long_only`.
-- **WO-017-B**: Strategy Trial Memory + Signal Postmortem Skeleton.
-- **WO-017-C**: Individual Signal IC Audit + Strategy Trial Memory Linkage.
-- **WO-017-D**: Factor Correlation Audit MVP + Market Exposure Backend Skeleton.
-- **WO-017-E**: Individual Signal IC Audit Polish + Watchlist Report Inbox Integration.
-- **WO-017-F**: Signal Audit Findings Router + Watchlist-safe Report Integration.
-- **WO-017-G**: Structured Output Guard + AI Explanation Safety Layer.
-- **WO-017-H**: AI Explanation Request Cache + Prompt Input Contract.
-- **WO-017-I**: Mock AI Output Adapter + Guarded Rendering.
-
----
-
-## Current Work Order: WO017-I — Mock AI Output Adapter + Guarded Rendering
-
-### 목적
-실제 LLM 호출 없이 Mock Structured AI Output Adapter를 개발하여 validation pipeline 및 cache 분리를 연동하고, UI에서 정상 및 차단(blocked)된 결과를 규칙에 맞춰 안전하게 렌더링하는지 검증한다.
-
-### Checklist
-- [x] Mock AI Output Adapter (`src/server/ai/mock-ai-output-adapter.ts` & `.test.ts`)
-- [x] Guarded AI Output Service (`src/server/ai/guarded-ai-output-service.ts` & `.test.ts`)
-- [x] API Route `POST /api/ai/mock-output/audit-finding` (`src/app/api/ai/mock-output/audit-finding/route.ts` & `.test.ts`)
-- [x] UI integration ("Mock 설명 검증" button + modes selector + guarded rendering in `AuditFindingsPanel.tsx`)
-- [x] Documentation & Policies (`docs/MOCK_AI_OUTPUT_ADAPTER.md`, `task.md`, etc.)
-- [x] Verification checks (typecheck, lint, test, build, wording, docs, alpha-ui)
-
----
-
-## Previous Work Order: WO017-H — AI Explanation Request Cache + Prompt Input Contract
-
-### 목적
-실제 LLM 호출을 붙이기 전에, AI 설명 요청을 안전하게 접수·정규화·캐시·차단 로그화하는 계층을 설계하고, AI Context Pack 기반의 Prompt Input Contract 빌더 및 UI 최소 연동 뷰를 구현한다.
-
-### Checklist
-- [x] AI Explanation Request Domain (`src/domain/ai/ai-explanation-request.ts`)
-- [x] Request Hash Utility (`src/server/ai/ai-explanation-request-hash.ts` & `.test.ts`)
-- [x] Prompt Input Contract & Builder (`src/domain/ai/ai-prompt-input.ts` & `src/server/ai/ai-prompt-input-builder.ts` & `.test.ts`)
-- [x] Cache Store & Paths (`src/server/ai/ai-explanation-cache-store-paths.ts` & `src/server/ai/ai-explanation-cache-store.ts` & `.test.ts`)
-- [x] Explanation Request Service (`src/server/ai/ai-explanation-request-service.ts` & `.test.ts`)
-- [x] API Routes (`/api/ai/explanation-requests/audit-finding`, `/api/ai/explanation-cache`, `/api/ai/explanation-cache/blocked`) and tests
-- [x] UI integration ("설명 요청 준비" button in `AuditFindingsPanel.tsx`)
-- [x] Verification checks (typecheck, lint, test, build, wording, docs, alpha-ui)
-- [x] Documentation updates (`docs/AI_EXPLANATION_REQUEST_CACHE.md`, etc.)
-
----
-
-## Previous Work Order: WO017-G — Structured Output Guard + AI Explanation Safety Layer
-
-### 목적
-LLM 또는 AI 설명 기능이 감사 결과와 시장 데이터를 설명할 때, 허용된 구조와 금지 문구를 벗어나지 않도록 출력 검증 계층을 설계하고, AI Context Pack 빌더 및 UI 최소 연동 뷰를 구현한다.
-
-### Checklist
-- [x] Domain Definition (`src/domain/ai/structured-ai-output.ts`)
-- [x] Forbidden Wording Guard (`src/server/ai/forbidden-wording-guard.ts` & `.test.ts`)
-- [x] Grounded Claim Guard (`src/server/ai/grounded-claim-guard.ts` & `.test.ts`)
-- [x] Structured Output Validator (`src/server/ai/structured-output-validator.ts` & `.test.ts`)
-- [x] AI Context Pack Builder (`src/server/ai/ai-context-pack-builder.ts` & `.test.ts`)
-- [x] API routes (`/api/ai/structured-output/validate`, `/api/ai/context-pack/audit-finding`) and tests
-- [x] UI minimal integration (`AuditFindingsPanel.tsx`)
-- [x] Verification checks (typecheck, lint, test, build, wording, docs, alpha-ui)
-- [x] Documentation updates (`STRUCTURED_OUTPUT_GUARD.md`, etc.)
-
----
-
-## Previous Work Order: WO017-F — Signal Audit Findings Router + Watchlist-safe Report Integration
-
-### 목적
-개별 감사(Signal IC, Factor Correlation, Market Exposure) 결과를 공통 Finding 구조로 단일화 및 저장하고, 전략 레벨 진단을 관심종목 개별 경보로 오해하지 않도록 assetId가 null인 Finding을 관심종목 Feed에서 제외하는 필터링 정책을 적용하고, UI 뷰를 연동한다.
-
-### Checklist
-- [x] Domain types 정의 (`AuditFinding`, scopes, source types, severities, actionabilities)
-- [x] Mappers 구현 (Individual Signal IC, Factor Correlation, Market Exposure mapping)
-- [x] Store & Aggregator 구현 (Deduplicated saving on latest, history, and by-source partitioning)
-- [x] API routes (`/api/audit/findings` & run route validation and guards)
-- [x] CLI script (`npm run audit:findings` & package.json scripts)
-- [x] ReliabilityWorkspace `감사 Finding` 탭 및 `AuditFindingsPanel` UI 구현
-- [x] Strategy Trial Memory SelectedTrial 관련 Finding 연동 및 non-asset 안내 문구 연동
-- [x] Watchlist Aggregator integration (filtering out null assetId findings)
-- [x] WatchlistPage 상단에 Findings 안내 banner 및 redirect link 제공
-- [x] Unit & integration tests 작성 및 검증 통과 (533 passed)
-- [x] Docs 작성 (`docs/AUDIT_FINDINGS.md`)
-- [x] Verification 완료 (typecheck, lint, test, build, wording, docs, alpha-ui)
-
----
-
-## Previous Work Order: WO017-E — Individual Signal IC Audit Polish + Watchlist Inbox Integration
-
-### 목적
-개별 atomic signal의 forward return 예측력을 Spearman/Pearson IC 및 Quantile Spread로 감사하고, 그 결과를 Strategy Trial Memory와 연동하며, Watchlist Report Inbox의 sourceType 지원을 연계하여 전략 진단 루프를 완성한다.
-
-### Checklist
-- [x] Domain types 보강 (`IndividualSignalIcHorizon`, `IndividualSignalIcSeverity`, `IndividualSignalIcWarning`)
-- [x] Auditor 계산식 개선 (Spearman IC, Pearson IC, Top-Bottom Quantile Spread)
-- [x] API Route GET 파라미터 유효성 검증 및 DataEnvelope sourceTier("manual_import") 적용
-- [x] CLI 테이블 출력 갱신 (Spearman/Pearson, Sample, Spread, Severity, Warnings)
-- [x] UI 연동 (`ReliabilityWorkspace` 내 `IndividualSignalIcAuditPanel` 추가 및 필터 구현)
-- [x] Strategy Trial Memory 내 selectedTrial universe/strategy 연동 및 요약 UI 구현
-- [x] Watchlist Report Inbox sourceType 추가 및 aggregator TODO 명시
-- [x] Unit & integration tests 작성 및 E2E 검증 통과
-- [x] Docs 작성 및 보완 (`docs/INDIVIDUAL_SIGNAL_IC_AUDIT.md`)
-- [x] Verification 완료 (typecheck, lint, test, build, wording, docs, alpha-ui)
-
----
-
-## Previous Work Order: WO017-D — Factor Correlation Audit MVP + Market Exposure Backend Skeleton
-
-### 목적
-atomic factor/signal 점수 간 상관관계를 계산하여 중복도가 높은 factor 조합을 경고하는 Factor Correlation Audit을 구현하고, Strategy Trial Memory에서 시장 노출을 분석할 수 있는 Market Exposure Audit backend skeleton 및 UI 연동을 구축한다.
-
-### Checklist
-- [x] Domain types 정의 (`FactorCorrelationResult`, `MarketExposureResult`)
-- [x] Factor Correlation Auditor 구현 (Spearman & Pearson)
-- [x] Factor Correlation Store 구현 (latest & history)
-- [x] Factor Correlation API (`GET /api/audit/factor-correlation` & run route) 및 CLI 구현
-- [x] Market Exposure Auditor 구현 (Beta, Capture ratios, Avg excess return)
-- [x] Market Exposure Store 및 API (`GET /api/audit/market-exposure` & run route) 및 CLI 구현
-- [x] UI 연동 (`CorrelationAuditPanel` sub-tab 추가 & `MarketExposureSummary` 전략 시도 기록 연동)
-- [x] Unit & integration tests 작성 및 검증 통과
-- [x] Docs 작성 (`docs/FACTOR_CORRELATION_AUDIT.md`, `docs/MARKET_EXPOSURE_AUDIT.md`)
-- [x] Verification (typecheck, lint, test, build, wording)
-
-
-
----
-
-## Previous Work Order: WO-016-B — Final Hardening: Strict ISO Datetime Overflow Check + PIT Timestamp Canonical Policy + Task Board Correction
-
-### 목적
-ISO datetime overflow/range 차단 보강, PIT timestamp canonical format 정책 추가 및 createPitRecord validator 적용, task.md 이정표 수정.
-
-### Checklist
-- [x] Phase 1: validateOhlcvCandle에서 ISO datetime 분/초/시/일/월 오버플로우 검증 보강
-- [x] Phase 2: PIT record timestamps canonical format 정책 정의 및 createPitRecord 검증 구현
-- [x] Phase 3: docs/PIT_DATA_POLICY.md, docs/IMPLEMENTATION_INVENTORY.md에 정책 및 구현 사항 추가
-- [x] Phase 4: task.md 완료 이정표에서 WO017 제거 및 candidate 지정
-- [x] Phase 5: Verification (typecheck, lint, test, build)
-
-
-
----
-
-## Product Scope
-
-### 유지 및 고도화 (Maintained & Core)
-- DataEnvelope\<T\> / DataStatus / SourceWarning
-- Provider Settings Center (API Key 입력/검증/암호화)
-- OpenDART Integration (공시 검색/이벤트)
-- KIS Read-Only (계좌 잔고/평가)
-- Market Board & Technical Signals (Ichimoku, Darvas Box, Weinstein Stage, Turtle Channel)
-- Momentum Factor v1 (단기/중기/장기)
-- Backtest Engine (Walk-forward OOS)
-- Signal Reliability Engine (IC, ICIR, Bayesian Shrinkage)
-- Regime Gate v1 (거시 필터 — 전략 적합도 제한 전용, 주문 판단 금지)
-- Alert Web Inbox (이벤트 탐지 → 대시보드 알림)
-- Sentiment Reference Panel (격리 표시 전용)
-
-### 동결 (Frozen — 현 상태 유지, 고도화 없음)
-- LLM Model Tier Router
-- Strategy Selector 자동화
-- Research Intake Engine
-- Multi-channel Notification Hub 확장 (Telegram/Kakao/Email)
-- Daily Report 자동 발송
-- Order Preview / Execution
-- Deflated Sharpe Ratio
-
-### 제외 (Excluded — 영구 제외)
-- YouTube Transcript API, GPT Vision, Selenium
-- 부동산 데이터
-- 예금/적금/대출/보험/카드 상품 비교
-- 금융회사 지점/ATM 정보
-- 금융민원 통계, 기관별 보도자료 단순 목록
-- 금융교육 콘텐츠
-
----
-
-## P0 — 즉시 구현 필요 (WO017-A 이후)
-
-1. [x] **WO017-B Strategy Trial Memory**: 전략 시도 기록 및 전략 묘지 지원.
-2. [x] **WO017-C Individual Signal IC Audit**: 개별 시그널별 IC 감사 리포트.
-3. [x] **WO017-D Factor/Strategy Correlation + Market Exposure**: 팩터/전략 상관관계 및 시장 익스포저 감사. (Factor Correlation Audit MVP + Market Exposure Skeleton 구현 완료)
-4. **WO017-E Signal Stability Gate**: `flipCount`, `consecutiveDays` 기반 신호 안정성 게이트.
-5. **WO017-F Structured Output Guard (Skeleton)**: LLM 설명 출력 구조화 가드 스켈레톤.
-6. **Parameter Plateau (후보)**: 파라미터 plateau 분석 — Signal Postmortem과 함께 후속 검토.
-
-## P1 — 단기 구현 예정
-
-1. **Earnings Event Minimal**: 영업이익/순이익 기반 최소 어닝 이벤트 탐지.
-2. **Signal History Visualization**: 신호 이력 시각화 컴포넌트.
-3. **Cross-horizon Tension Indicator**: 단기/중기/장기 신호 갈등 시각화.
-
-## P2 — 중기 검토
-
-1. **Portfolio / Sector Exposure**: 보유 포지션 섹터 익스포저 시각화.
-2. **SerpAPI On-demand News**: 외부 뉴스 온-디맨드 조회 (키워드 기반).
-
----
-
-## Verification Commands
-
-```bash
-npm install
-npm run typecheck
-npm run lint
-npm run test
-npm run build
-npm run docs:check
-npm run docs:quant
-npm run check:wording
-npm run check:alpha-ui
-```
-
----
-
-## Global Failure Criteria
-
-- TypeScript 컴파일 에러
-- ESLint 에러 (warning은 허용)
-- 필수 문서 누락
-- 테스트 실패
-- 비시맨틱 스타일링 또는 UI에 이모지 사용
-- `data-theme="system"` HTML 속성 출력
-- 제외 항목 코드 진입 (YouTube/Selenium/GPT Vision 등)
-- CNN/Crypto Fear & Greed가 Regime Score 계산에 연결
+# WO017-U4 Task Board
+
+## 1. Fail-closed Security
+- [x] Remove `internal_default_key` fallback in `src/app/api/market/quote/route.ts` & `ohlcv/route.ts`
+- [x] Disable provider override if `INTERNAL_SMOKE_KEY` is not set or empty
+- [x] Ensure smoke runner does not use fallback keys if env is missing
+- [x] Create tests to verify env missing, wrong key, and correct key behaviors
+
+## 2. Suitability Canonical Input & As-of consistency
+- [x] Add `getSnapshotAsOf(market, asOf)` to `RegimeStore`
+- [x] Update `StrategySuitabilityService` to accept `asOf` date and optional `universeId`
+- [x] Query canonical original label/score from `getSignalHistory()` inside suitability service, defaulting to strict parsing if fallback is used (using strict `Number` validation, range checks, and preventing `parseFloat`)
+- [x] Update `/api/strategy/suitability` route to accept `asOf` parameter, execute strict query parameter validation if needed, and map computed status to envelope
+
+## 3. UI Momentum Hardcoding Removal
+- [x] Add `signalId` and `universeId` to `StrategyAgreementSignal` type
+- [x] Add `universeId` to `SignalStability` type
+- [x] Update `calculateStrategyAgreementSignal` to output `signalId` and `universeId`
+- [x] Update `StrategyAgreementSummaryCard.tsx` to call API endpoints using `signal.signalId` and `signal.universeId`, passing `asOf=${signal.date}`
+- [x] Update `StrategyAgreementSummaryCard.test.tsx` to test with custom non-momentum signalId
+
+## 4. Rank Sample Floor & Universe Isolation
+- [x] Implement `getAssetsOfUniverse` and `universeMembershipRegistry` in `src/server/signals/signal-stability-service.ts`
+- [x] Enforce minCommonAssets sample floor of 5, warning for 5~9, failing under 5
+- [x] Update `calculateCrossSectionalRankCorrelation` to isolate ranks strictly within same `universeId`
+- [x] Add unit test verifying that KOSPI_SAMPLE and watchlist/KOSDAQ do not mix
+
+## 5. UI Test Realism & Envelope Limitation
+- [x] Add realistic UI test case in `StrategyAgreementSummaryCard.test.tsx` where assetId is present but agreementScore is null, verifying that scores are not displayed even after async loads settle
+- [x] Create limitation document `docs/SUITABILITY_ENVELOPE_LIMITATION.md` for manual_import/official source tier behavior
+
+## 6. Verification & Final Closure Commands
+- [x] npm run typecheck
+- [x] npm run lint
+- [x] npm run test
+- [x] npm run build
+- [x] run docs and wording checks
+- [x] Run git closure commands (pwd -P, git rev-parse HEAD, git remote -v, git status, git diff) and report

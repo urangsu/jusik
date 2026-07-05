@@ -6,7 +6,7 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     providerId: "kis",
     capability: "quote",
     method: "GET",
-    endpoint: "/api/market/quote?symbol=005930&region=KR",
+    endpoint: "/api/market/quote?symbol=005930&region=KR&providerId=kis",
     symbol: "005930",
     region: "KR",
     requiresApiKey: true,
@@ -18,7 +18,7 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     providerId: "kis",
     capability: "ohlcv",
     method: "GET",
-    endpoint: "/api/market/ohlcv?symbol=005930&region=KR&range=1M&interval=1D",
+    endpoint: "/api/market/ohlcv?symbol=005930&region=KR&range=1M&interval=1D&providerId=kis",
     symbol: "005930",
     region: "KR",
     requiresApiKey: true,
@@ -54,7 +54,8 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     providerId: "fmp_free",
     capability: "quote",
     method: "GET",
-    endpoint: "/api/market/quote?symbol=AAPL&region=US",
+    // providerId param ensures only FMP is called — prevents generic priority-chain fallback
+    endpoint: "/api/market/quote?symbol=AAPL&region=US&providerId=fmp_free",
     symbol: "AAPL",
     region: "US",
     requiresApiKey: true,
@@ -66,7 +67,7 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     providerId: "fmp_free",
     capability: "ohlcv",
     method: "GET",
-    endpoint: "/api/market/ohlcv?symbol=AAPL&region=US&range=1M&interval=1D",
+    endpoint: "/api/market/ohlcv?symbol=AAPL&region=US&range=1M&interval=1D&providerId=fmp_free",
     symbol: "AAPL",
     region: "US",
     requiresApiKey: true,
@@ -78,7 +79,8 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     providerId: "finnhub_free",
     capability: "quote",
     method: "GET",
-    endpoint: "/api/market/quote?symbol=AAPL&region=US",
+    // providerId param ensures only Finnhub is called — prevents mismatch via FMP or others
+    endpoint: "/api/market/quote?symbol=AAPL&region=US&providerId=finnhub_free",
     symbol: "AAPL",
     region: "US",
     requiresApiKey: true,
@@ -90,7 +92,8 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     providerId: "alpha_vantage_free",
     capability: "quote",
     method: "GET",
-    endpoint: "/api/market/quote?symbol=AAPL&region=US",
+    // providerId param ensures only Alpha Vantage is called — prevents fallback mismatch
+    endpoint: "/api/market/quote?symbol=AAPL&region=US&providerId=alpha_vantage_free",
     symbol: "AAPL",
     region: "US",
     requiresApiKey: true,
@@ -98,8 +101,10 @@ export const REAL_PROVIDER_SMOKE_TARGETS: RealProviderSmokeTarget[] = [
     expectedWithKey: "data_available",
   },
   {
+    // P1-2: provider_health is a system/registry health check, not KIS-specific.
+    // It verifies the system provider readiness endpoint, using "system" attribution.
     id: "provider_health",
-    providerId: "kis",
+    providerId: "system",
     capability: "provider_health",
     method: "GET",
     endpoint: "/api/ops/provider-readiness",

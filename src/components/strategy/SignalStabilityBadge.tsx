@@ -7,10 +7,11 @@ export const SignalStabilityBadge: React.FC<{ stability: SignalStability | null 
     return <StatusBadge status="insufficient_data" />;
   }
 
-  const isStable =
-    stability.consecutiveDays >= 3 &&
-    stability.flipCount30d <= 4 &&
-    stability.actionableThresholdMet;
-
-  return <StatusBadge status={isStable ? "cached" : "insufficient_data"} />;
+  if (stability.status === "passed") {
+    return <StatusBadge status="cached" />;
+  }
+  if (stability.status === "blocked") {
+    return <StatusBadge status="error" />;
+  }
+  return <StatusBadge status="insufficient_data" />;
 };

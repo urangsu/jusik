@@ -7,7 +7,7 @@ import type { EvidencePack } from "@/domain/evidence/evidence-pack";
 
 export type RealProviderSmokeTarget = {
   id: string;
-  providerId: RuntimeProviderId;
+  providerId: RuntimeProviderId | "system";
   capability: ProviderRealDataSmokeCapability | "provider_health";
   method: "GET" | "POST";
   endpoint: string;
@@ -38,7 +38,7 @@ export type DataEnvelopeContractValidation = {
 
 export type RealProviderSmokeResult = {
   targetId: string;
-  providerId: RuntimeProviderId;
+  providerId: RuntimeProviderId | "system";
   capability: RealProviderSmokeTarget["capability"];
   symbol: string | null;
   region: "KR" | "US" | null;

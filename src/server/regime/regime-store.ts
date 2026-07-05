@@ -29,6 +29,15 @@ export class RegimeStore {
     await this.latestStore.write(latest);
   }
 
+  async getSnapshotAsOf(market: "US" | "KR", asOf: string): Promise<RegimeSnapshot | null> {
+    const history = await this.store.read();
+    const filtered = history
+      .filter((s) => s.market === market && s.calculatedAt.substring(0, 10) <= asOf)
+      .sort((a, b) => b.calculatedAt.localeCompare(a.calculatedAt));
+    if (filtered.length > 0) return filtered[0];
+    return this.getLatestSnapshot(market);
+  }
+
   async getLatestSnapshot(market: "US" | "KR"): Promise<RegimeSnapshot | null> {
     const latest = await this.latestStore.read();
     return latest[market] || null;

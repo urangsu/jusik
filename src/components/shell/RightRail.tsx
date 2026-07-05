@@ -60,11 +60,11 @@ export const RightRail: React.FC<RightRailProps> = ({ selectedAsset }) => {
             </div>
             <div className="flex items-center justify-between gap-2 border-b border-kt-border-panel py-1">
               <span className="text-xs">수량</span>
-              <span className="text-sm font-semibold">0</span>
+              <span className="text-xs font-semibold text-kt-text-muted">비활성</span>
             </div>
             <div className="flex items-center justify-between gap-2 border-b border-kt-border-panel py-1">
               <span className="text-xs">단가</span>
-              <span className="text-sm font-semibold">0</span>
+              <span className="text-xs font-semibold text-kt-text-muted">비활성</span>
             </div>
             <button className="w-full py-2 bg-kt-positive text-white font-bold rounded-kt-card text-xs mt-2" disabled>
               주문 비활성화

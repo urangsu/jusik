@@ -85,4 +85,32 @@ describe("validateDataEnvelopeContract", () => {
     expect(result.passed).toBe(true);
     expect(result.dataAvailable).toBe(false);
   });
+
+  it("fails when source is 'None' (case-insensitive)", () => {
+    const result = validateDataEnvelopeContract({
+      value: { price: 100 },
+      status: "real_time",
+      source: "None",
+      sourceTier: "official",
+      warnings: [],
+      updatedAt: "2026-07-02T00:00:00.000Z",
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.failures).toContain("source cannot be 'None'.");
+  });
+
+  it("fails when sourceTier is not a valid SourceUsagePolicy", () => {
+    const result = validateDataEnvelopeContract({
+      value: { price: 100 },
+      status: "real_time",
+      source: "kis",
+      sourceTier: "invalid_tier",
+      warnings: [],
+      updatedAt: "2026-07-02T00:00:00.000Z",
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.failures.some(f => f.includes("sourceTier must be a valid SourceUsagePolicy"))).toBe(true);
+  });
 });

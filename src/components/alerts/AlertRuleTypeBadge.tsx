@@ -29,7 +29,7 @@ export const AlertRuleTypeBadge: React.FC<AlertRuleTypeBadgeProps> = ({
     reliability_deterioration: { ko: "신뢰도 악화", en: "Reliability Deterioration" },
     backtest_job_failed: { ko: "백테스트 실패", en: "Backtest Failed" },
     data_quality: { ko: "데이터 품질", en: "Data Quality" },
-    strategy_score_change: { ko: "전략 점수 변화", en: "Strategy Change" },
+    strategy_score_change: { ko: "전략 진단 변화", en: "Strategy Diagnostic Change" },
     portfolio_risk: { ko: "포트폴리오 리스크", en: "Portfolio Risk" },
     macro_regime_change: { ko: "거시 레짐 변경", en: "Macro Regime Change" },
     macro_risk_off: { ko: "거시 리스크 오프", en: "Macro Risk Off" },

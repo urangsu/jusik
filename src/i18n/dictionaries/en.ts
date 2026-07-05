@@ -2,13 +2,13 @@ export const en = {
   // Common
   appName: "K-Terminal",
   marketBoard: "Market Board",
-  marketBoardDesc: "Real-time data reception status and valuation screener dashboard for KOSPI and S&P 500 representative stocks.",
+  marketBoardDesc: "Data connection status and valuation screener dashboard for KOSPI and S&P 500 representative stocks.",
   close: "Close",
   language: "Language",
   
   // Navigation / Tabs
   tabMarkets: "Market Board",
-  tabStrategy: "Strategy score",
+  tabStrategy: "Strategy diagnostics",
 
   // Universe
   universeKospiSample: "KOSPI Sample",
@@ -63,11 +63,11 @@ export const en = {
   sector: "Sector",
   industry: "Industry",
   chartFrameTitle: "Chart Frame",
-  chartFrameMuted: "Real-time Chart Frame (Pending)",
+  chartFrameMuted: "Chart frame awaiting API connection",
   chartFrameMutedDesc: "Preparing price feeds using semantic tokens for rising (red) / falling (blue) indicators.",
   financialSnapshotTitle: "Financial Snapshot",
   newsFeedTitle: "News Feed",
-  newsFeedMuted: "Financial headlines pending",
+  newsFeedMuted: "Financial headlines awaiting API connection",
   financialInfoDisclaimer: "Financial schemas for mapping DART (KR) / SEC EDGAR (US) public filings are prepared. Analytics indicators activate upon API connection.",
   
   // Diagnostics

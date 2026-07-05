@@ -8,11 +8,24 @@ const target: RealProviderSmokeTarget = {
   providerId: "kis",
   capability: "quote",
   method: "GET",
-  endpoint: "/api/market/quote?symbol=005930&region=KR",
+  endpoint: "/api/market/quote?symbol=005930&region=KR&providerId=kis",
   symbol: "005930",
   region: "KR",
   requiresApiKey: true,
   expectedWithoutKey: "api_required_allowed",
+  expectedWithKey: "data_available",
+};
+
+const fmpTarget: RealProviderSmokeTarget = {
+  id: "fmp_quote_us_aapl",
+  providerId: "fmp_free",
+  capability: "quote",
+  method: "GET",
+  endpoint: "/api/market/quote?symbol=AAPL&region=US&providerId=fmp_free",
+  symbol: "AAPL",
+  region: "US",
+  requiresApiKey: true,
+  expectedWithoutKey: "not_supported_allowed",
   expectedWithKey: "data_available",
 };
 
@@ -46,6 +59,21 @@ const readyReadiness: ProviderReadinessCheck[] = [
     displayName: "KIS",
     requiredKeys: ["KIS_APP_KEY", "KIS_APP_SECRET"],
     configuredKeys: ["KIS_APP_KEY", "KIS_APP_SECRET"],
+    missingKeys: [],
+    secretsExposed: false,
+    status: "ready",
+    message: null,
+    canRunSmoke: true,
+    checkedAt: "2026-07-02T00:00:00.000Z",
+  },
+];
+
+const fmpReadyReadiness: ProviderReadinessCheck[] = [
+  {
+    providerId: "fmp_free",
+    displayName: "FMP",
+    requiredKeys: ["FMP_API_KEY"],
+    configuredKeys: ["FMP_API_KEY"],
     missingKeys: [],
     secretsExposed: false,
     status: "ready",
@@ -143,6 +171,7 @@ describe("runRealProviderSmoke", () => {
     expect(report.results[0].failures.join(" ")).toContain("value cannot be null");
   });
 
+  // P0-2: Key configured + api_required → must fail
   it("fails api_required when provider readiness says key-backed smoke should return data", async () => {
     const report = await runRealProviderSmoke({
       targets: [target],
@@ -202,5 +231,45 @@ describe("runRealProviderSmoke", () => {
     expect(report.results[0].failures).toContain("source is required.");
     expect(report.results[0].failures).toContain("sourceTier is required.");
     expect(report.results[0].failures).toContain("warnings must be an array.");
+  });
+
+  // P0-1: Provider mismatch — FMP target responded with Finnhub source
+  it("fails when response source does not match the target provider", async () => {
+    const report = await runRealProviderSmoke({
+      targets: [fmpTarget],
+      readiness: fmpReadyReadiness,
+      fetcher: () =>
+        response(200, {
+          value: { price: 150 },
+          status: "delayed",
+          source: "Finnhub Free",     // Wrong provider! FMP was expected.
+          sourceTier: "free_limited",
+          warnings: [],
+          updatedAt: "2026-07-05T00:00:00.000Z",
+        }),
+    });
+
+    expect(report.passed).toBe(false);
+    expect(report.results[0].failures.some((f) => f.includes("Provider mismatch"))).toBe(true);
+  });
+
+  // P0-1: Provider match — FMP source matches fmp_free target
+  it("passes when response source matches the target provider", async () => {
+    const report = await runRealProviderSmoke({
+      targets: [fmpTarget],
+      readiness: fmpReadyReadiness,
+      fetcher: () =>
+        response(200, {
+          value: { price: 150 },
+          status: "delayed",
+          source: "Financial Modeling Prep Free",
+          sourceTier: "free_limited",
+          warnings: [],
+          updatedAt: "2026-07-05T00:00:00.000Z",
+        }),
+    });
+
+    expect(report.passed).toBe(true);
+    expect(report.results[0].failures.some((f) => f.includes("Provider mismatch"))).toBe(false);
   });
 });

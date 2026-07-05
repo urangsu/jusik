@@ -19,6 +19,61 @@ type FetchLike = (input: string, init?: RequestInit) => Promise<{
   json: () => Promise<unknown>;
 }>;
 
+/**
+ * Expected source strings for each provider that a smoke response should carry.
+ * If the response source does not match any alias for the target provider,
+ * it indicates a generic priority-chain response — which is a mismatch failure.
+ *
+ * Comparison is case-insensitive and partial (source.toLowerCase().includes(alias)).
+ */
+const PROVIDER_SOURCE_ALIASES: Record<string, string[]> = {
+  kis: ["kis", "korea investment"],
+  opendart: ["opendart", "dart"],
+  fmp_free: ["fmp", "financial modeling", "financial modelling"],
+  finnhub_free: ["finnhub"],
+  alpha_vantage_free: ["alpha vantage", "alphavantage"],
+  // system-level targets (provider_health) skip mismatch check
+  system: [],
+};
+
+/**
+ * Checks whether the response source field matches the expected provider.
+ * Returns true when: provider has no aliases (system target), source is absent (api_required/error),
+ * or source matches one of the provider's known aliases.
+ */
+function checkProviderSourceMatch(
+  target: RealProviderSmokeTarget,
+  responseSource: string | null,
+  dataAvailable: boolean,
+): { matched: boolean; failure: string | null } {
+  // Skip mismatch check for non-market targets (provider_health etc.)
+  if (target.capability === "provider_health") {
+    return { matched: true, failure: null };
+  }
+
+  const aliases = PROVIDER_SOURCE_ALIASES[target.providerId];
+  if (!aliases || aliases.length === 0) {
+    return { matched: true, failure: null };
+  }
+
+  // If no data (api_required/error), the source field may still indicate the provider.
+  // We only flag mismatch when data is available from a different provider.
+  if (!dataAvailable || !responseSource) {
+    return { matched: true, failure: null };
+  }
+
+  const sourceLower = responseSource.toLowerCase();
+  const matched = aliases.some((alias) => sourceLower.includes(alias));
+  if (!matched) {
+    return {
+      matched: false,
+      failure: `Provider mismatch for target=${target.id}: expected source matching '${target.providerId}' (aliases: ${aliases.join(", ")}), got '${responseSource}'.`,
+    };
+  }
+
+  return { matched: true, failure: null };
+}
+
 function sourceTypeFor(target: RealProviderSmokeTarget) {
   if (target.capability === "quote") return "market_quote" as const;
   if (target.capability === "ohlcv") return "ohlcv" as const;
@@ -64,7 +119,6 @@ function evaluateExpectation(
   status: DataStatus | null,
   dataAvailable: boolean,
 ) {
-
   if (expectation === "api_required_allowed") {
     return status === "api_required" || dataAvailable;
   }
@@ -83,7 +137,7 @@ function makeFallbackEnvelope(target: RealProviderSmokeTarget, status: DataStatu
     source: target.providerId,
     sourceTier: target.providerId === "fmp_free" || target.providerId === "finnhub_free" || target.providerId === "alpha_vantage_free"
       ? "free_limited"
-      : "official",
+      : "manual_import",
     warnings: [],
     updatedAt: null,
     message,
@@ -103,9 +157,13 @@ async function runTarget(
   let raw: unknown = null;
 
   try {
+    const internalKey = process.env.INTERNAL_SMOKE_KEY || "";
     const response = await fetcher(url, {
       method: target.method,
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        "x-internal-smoke-key": internalKey,
+      },
       body: target.method === "POST" && target.body ? JSON.stringify(target.body) : undefined,
     });
     httpStatus = response.status;
@@ -119,15 +177,21 @@ async function runTarget(
     ? (raw as DataEnvelope<unknown>)
     : makeFallbackEnvelope(target, "error", "Response did not satisfy DataEnvelope contract.");
 
+  // P0-1: Check that the response source matches the intended provider.
+  // A generic priority-chain response from a different provider is a mismatch failure.
+  const mismatch = checkProviderSourceMatch(target, validation.source, validation.dataAvailable);
+
   const expected = expectedForMode(target, expectationMode);
   const expectationPassed =
     httpStatus !== null &&
     httpStatus < 500 &&
     validation.passed &&
+    mismatch.matched &&
     evaluateExpectation(expected, expectationMode, validation.status, validation.dataAvailable);
-  const passed = validation.passed && expectationPassed;
+  const passed = validation.passed && mismatch.matched && expectationPassed;
   const failures = [
     ...validation.failures,
+    ...(mismatch.failure ? [mismatch.failure] : []),
     ...(expectationPassed ? [] : [`Expectation failed for target=${target.id}.`]),
   ];
 

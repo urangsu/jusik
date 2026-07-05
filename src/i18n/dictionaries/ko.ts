@@ -2,13 +2,13 @@ export const ko = {
   // Common
   appName: "K-Terminal",
   marketBoard: "시장 보드 (Market Board)",
-  marketBoardDesc: "KOSPI와 S&P 500 대표 주식들의 실시간 데이터 수신 상태 및 밸류에이션 스크리너 대시보드입니다.",
+  marketBoardDesc: "KOSPI와 S&P 500 대표 주식들의 데이터 연결 상태 및 밸류에이션 스크리너 대시보드입니다.",
   close: "닫기",
   language: "언어",
   
   // Navigation / Tabs
   tabMarkets: "시장 보드",
-  tabStrategy: "전략 점수",
+  tabStrategy: "전략 진단",
 
   // Universe
   universeKospiSample: "코스피 샘플",
@@ -63,16 +63,16 @@ export const ko = {
   sector: "섹터",
   industry: "산업",
   chartFrameTitle: "시세 차트 (Chart Frame)",
-  chartFrameMuted: "실시간 차트 프레임 (대기 중)",
+  chartFrameMuted: "차트 프레임 (API 연결 대기)",
   chartFrameMutedDesc: "상승(빨강)/하락(파랑)의 시맨틱 토큰 기반의 시세 데이터 수신을 준비하고 있습니다.",
   financialSnapshotTitle: "재무 및 밸류에이션 (Financial Snapshot)",
-  newsFeedTitle: "실시간 뉴스 (News Feed)",
-  newsFeedMuted: "실시간 금융 뉴스 헤드라인 대기 중",
+  newsFeedTitle: "뉴스 피드 (News Feed)",
+  newsFeedMuted: "금융 뉴스 헤드라인 API 연결 대기 중",
   financialInfoDisclaimer: "기업의 DART(한국) / SEC EDGAR(미국) 공시 보고서를 수집해 매핑하기 위한 재무 모델 데이터 스키마가 완비되어 있습니다. API 연결 후 분석 지표가 활성화됩니다.",
   
   // Diagnostics
   diagnosticsWarningTitle: "개인용 비공식 Fallback 활성화",
-  diagnosticsWarningDesc: "yfinance 또는 Stooq 등의 비공식 API 데이터가 연동되어 수신 중입니다. 이 값은 개인 교육/로컬 테스트 목적으로만 이용 가능하며, 전략 점수 조건 적격 판정에 단독 활용되지 않습니다.",
+  diagnosticsWarningDesc: "yfinance 또는 Stooq 등의 비공식 API 데이터가 연동되어 수신 중입니다. 이 값은 개인 교육/로컬 테스트 목적으로만 이용 가능하며, 전략 진단 조건 적격 판정에 단독 활용되지 않습니다.",
 
   // Sectors mapping
   sector_IT: "정보기술",
