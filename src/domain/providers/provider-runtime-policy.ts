@@ -5,7 +5,9 @@ export type RuntimeProviderId =
   | "opendart"
   | "fmp_free"
   | "finnhub_free"
-  | "alpha_vantage_free";
+  | "alpha_vantage_free"
+  | "yfinance_personal"
+  | "stooq_personal";
 
 export type ProviderRuntimePolicy = {
   providerId: RuntimeProviderId;
@@ -61,6 +63,22 @@ export const DEFAULT_PROVIDER_RUNTIME_POLICIES: Record<RuntimeProviderId, Provid
     staleTtlMs: 48 * 60 * 60_000,
     maxRetries: 0,
     retryableStatuses: ["rate_limited"],
+    staleAllowed: true,
+  },
+  yfinance_personal: {
+    providerId: "yfinance_personal",
+    cacheTtlMs: 5 * 60_000,
+    staleTtlMs: 60 * 60_000,
+    maxRetries: 0,
+    retryableStatuses: ["rate_limited", "error"],
+    staleAllowed: true,
+  },
+  stooq_personal: {
+    providerId: "stooq_personal",
+    cacheTtlMs: 5 * 60_000,
+    staleTtlMs: 60 * 60_000,
+    maxRetries: 0,
+    retryableStatuses: ["rate_limited", "error"],
     staleAllowed: true,
   },
 };

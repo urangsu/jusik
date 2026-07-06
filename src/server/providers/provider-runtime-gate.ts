@@ -12,8 +12,18 @@ type GateOptions<T> = {
   fetcher: () => Promise<DataEnvelope<T>>;
 };
 
+import type { SourceWarning } from "@/domain/source/provider-tier";
+
 function ageMs(cachedAt: string, now: string): number {
   return Math.max(0, new Date(now).getTime() - new Date(cachedAt).getTime());
+}
+
+function cleanWarnings(warnings: SourceWarning[]): SourceWarning[] {
+  const set = new Set(warnings);
+  if (set.size > 1 && set.has("none")) {
+    set.delete("none");
+  }
+  return Array.from(set);
 }
 
 export async function runWithProviderRuntimeGate<T>(options: GateOptions<T>): Promise<DataEnvelope<T>> {
@@ -25,7 +35,7 @@ export async function runWithProviderRuntimeGate<T>(options: GateOptions<T>): Pr
     return {
       ...cached.envelope,
       status: "cached",
-      warnings: Array.from(new Set([...cached.envelope.warnings, "none"])),
+      warnings: cleanWarnings(Array.from(new Set([...cached.envelope.warnings, "none"]))),
       message: cached.envelope.message ?? "Provider response cache hit.",
     };
   }
@@ -42,7 +52,7 @@ export async function runWithProviderRuntimeGate<T>(options: GateOptions<T>): Pr
     return {
       ...cached.envelope,
       status: "stale",
-      warnings: Array.from(new Set([...cached.envelope.warnings, "license_review_required"])),
+      warnings: cleanWarnings(Array.from(new Set([...cached.envelope.warnings, "license_review_required"]))),
       message: "Rate limited. Returning stale cached provider response.",
     };
   }

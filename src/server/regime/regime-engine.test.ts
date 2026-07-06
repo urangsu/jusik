@@ -109,4 +109,67 @@ describe("RegimeEngine", () => {
     expect(["risk_off", "panic"]).toContain(snapshot.regime);
     expect(snapshot.warnings.some(w => w.includes("급등"))).toBe(true);
   });
+
+  it("sets creditScore to null and adds VIX proxy warning for KR market", async () => {
+    // Mock nice index bars
+    const mockBars: PriceBar[] = Array.from({ length: 130 }, (_, i) => ({
+      assetId: "KR:KOSPI",
+      date: `2026-01-${String(i).padStart(3, "0")}`,
+      open: 100 + i,
+      high: 100 + i,
+      low: 100 + i,
+      close: 100 + i,
+      volume: 100,
+    }));
+
+    vi.mocked(loadOhlcvHistory).mockResolvedValue({
+      value: mockBars,
+      status: "real_time",
+      source: "Mock",
+      sourceTier: "official",
+      warnings: [],
+      updatedAt: new Date().toISOString(),
+    });
+
+    const snapshot = await regimeEngine.evaluateRegime("KR");
+
+    expect(snapshot.components.creditScore).toBeNull();
+    expect(snapshot.warnings).toContain("KR 변동성 계산에 US VIX가 대용지표로 사용되었습니다.");
+  });
+
+  it("classifies regime as overheated when score is 90 or above", async () => {
+    // Extremely bullish indicators
+    await regimeEngine.updateIndicators({
+      vix: 11.0,
+      vixZScore: 0.1,
+      highYieldSpread: 2.1,
+      yieldCurve10Y2Y: 1.2,
+      cnnFearGreed: 95,
+    });
+
+    // Mock nice index bars in strong uptrend above 125D MA
+    const mockBars: PriceBar[] = Array.from({ length: 130 }, (_, i) => ({
+      assetId: "US:SPX",
+      date: `2026-01-${String(i).padStart(3, "0")}`,
+      open: 100 + i * 2,
+      high: 100 + i * 2,
+      low: 100 + i * 2,
+      close: 100 + i * 2,
+      volume: 100,
+    }));
+
+    vi.mocked(loadOhlcvHistory).mockResolvedValue({
+      value: mockBars,
+      status: "real_time",
+      source: "Mock",
+      sourceTier: "official",
+      warnings: [],
+      updatedAt: new Date().toISOString(),
+    });
+
+    const snapshot = await regimeEngine.evaluateRegime("US");
+
+    expect(snapshot.score).toBeGreaterThanOrEqual(90);
+    expect(snapshot.regime).toBe("overheated");
+  });
 });

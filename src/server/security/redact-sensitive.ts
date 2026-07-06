@@ -25,6 +25,11 @@ export function redactSensitive(obj: any): any {
 
   const appKey = process.env.KIS_APP_KEY;
   const appSecret = process.env.KIS_APP_SECRET;
+  const smokeKey = process.env.INTERNAL_SMOKE_KEY;
+  const opendartKey = process.env.OPENDART_API_KEY;
+  const fmpKey = process.env.FMP_API_KEY;
+  const finnhubKey = process.env.FINNHUB_API_KEY;
+  const alphaVantageKey = process.env.ALPHA_VANTAGE_API_KEY;
 
   if (typeof obj === "string") {
     // Redact direct occurrences of known secrets
@@ -33,6 +38,21 @@ export function redactSensitive(obj: any): any {
     }
     if (appSecret && obj === appSecret) {
       return "[REDACTED_APP_SECRET]";
+    }
+    if (smokeKey && obj === smokeKey) {
+      return "[REDACTED_SMOKE_KEY]";
+    }
+    if (opendartKey && obj === opendartKey) {
+      return "[REDACTED_OPENDART_KEY]";
+    }
+    if (fmpKey && obj === fmpKey) {
+      return "[REDACTED_FMP_KEY]";
+    }
+    if (finnhubKey && obj === finnhubKey) {
+      return "[REDACTED_FINNHUB_KEY]";
+    }
+    if (alphaVantageKey && obj === alphaVantageKey) {
+      return "[REDACTED_ALPHAVANTAGE_KEY]";
     }
     return obj;
   }
@@ -67,7 +87,11 @@ export function redactSensitive(obj: any): any {
         lowerKey.includes("appsecret") ||
         lowerKey.includes("app_secret") ||
         lowerKey.includes("token") ||
-        lowerKey.includes("approval")
+        lowerKey.includes("approval") ||
+        lowerKey.includes("apikey") ||
+        lowerKey.includes("api_key") ||
+        lowerKey.includes("smoke_key") ||
+        lowerKey.includes("smoke-key")
       ) {
         redacted[key] = "[REDACTED_SENSITIVE]";
       } else {

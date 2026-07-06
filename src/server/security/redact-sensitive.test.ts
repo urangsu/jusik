@@ -7,6 +7,9 @@ describe("Sensitive Data Redaction and Masking Checks", () => {
   beforeEach(() => {
     process.env.KIS_APP_KEY = "my_app_key_123";
     process.env.KIS_APP_SECRET = "my_app_secret_456";
+    process.env.INTERNAL_SMOKE_KEY = "smoke_key_xyz";
+    process.env.OPENDART_API_KEY = "opendart_key_abc";
+    process.env.FMP_API_KEY = "fmp_key_def";
   });
 
   afterEach(() => {
@@ -27,6 +30,8 @@ describe("Sensitive Data Redaction and Masking Checks", () => {
         app_secret: "my_app_secret_456",
         accessToken: "some_secret_token",
       },
+      smoke_key: "smoke_key_xyz",
+      apiKey: "some_key_here",
       data: [
         {
           symbol: "005930",
@@ -42,6 +47,8 @@ describe("Sensitive Data Redaction and Masking Checks", () => {
     expect(redacted.appKey).toBe("[REDACTED_SENSITIVE]");
     expect(redacted.credentials.app_secret).toBe("[REDACTED_SENSITIVE]");
     expect(redacted.credentials.accessToken).toBe("[REDACTED_SENSITIVE]");
+    expect(redacted.smoke_key).toBe("[REDACTED_SENSITIVE]");
+    expect(redacted.apiKey).toBe("[REDACTED_SENSITIVE]");
     expect(redacted.data[0].cano).toBe("123******01");
   });
 
@@ -53,5 +60,17 @@ describe("Sensitive Data Redaction and Masking Checks", () => {
     };
     const redacted = redactSensitive(payload);
     expect(redacted.nested.someSecret).toBe("[REDACTED_APP_SECRET]");
+  });
+
+  it("should redact other API key matches like smoke key or opendart key", () => {
+    const payload = {
+      val1: "smoke_key_xyz",
+      val2: "opendart_key_abc",
+      val3: "fmp_key_def",
+    };
+    const redacted = redactSensitive(payload);
+    expect(redacted.val1).toBe("[REDACTED_SMOKE_KEY]");
+    expect(redacted.val2).toBe("[REDACTED_OPENDART_KEY]");
+    expect(redacted.val3).toBe("[REDACTED_FMP_KEY]");
   });
 });

@@ -152,10 +152,13 @@ export class RegimeEngine {
       volatilityScore = Math.max(0, Math.min(100, 100 - (indicators.vix - 12) * (100 / 18)));
     } else {
       volatilityScore = Math.max(0, Math.min(100, 100 - (indicators.vix - 12) * (100 / 18))); // KR also references VIX
+      warnings.push("KR 변동성 계산에 US VIX가 대용지표로 사용되었습니다.");
     }
 
-    // 3. Credit Score (0-100)
-    const creditScore = Math.max(0, Math.min(100, 100 - (indicators.highYieldSpread - 2.5) * (100 / 3.5)));
+    // 3. Credit Score (0-100) - isolated to US only
+    const creditScore = market === "US"
+      ? Math.max(0, Math.min(100, 100 - (indicators.highYieldSpread - 2.5) * (100 / 3.5)))
+      : null;
 
     // 4. Rate Score (0-100)
     let rateScore = 50;
@@ -179,7 +182,7 @@ export class RegimeEngine {
       score = Math.round(
         trendScore * 0.40 +
         volatilityScore * 0.30 +
-        creditScore * 0.20 +
+        creditScore! * 0.20 +
         rateScore * 0.10
       );
     } else {
@@ -192,7 +195,8 @@ export class RegimeEngine {
 
     // Determine initial regime
     let regime: MarketRegime = "neutral";
-    if (score >= 75) regime = "risk_on";
+    if (score >= 90) regime = "overheated";
+    else if (score >= 75) regime = "risk_on";
     else if (score >= 60) regime = "selective_risk_on";
     else if (score >= 45) regime = "neutral";
     else if (score >= 30) regime = "risk_off";
@@ -211,7 +215,7 @@ export class RegimeEngine {
 
     // Rule 2: 125D MA under -> forbid risk_on
     if (trendMetrics.positionAboveMA === false) {
-      if (regime === "risk_on") {
+      if (regime === "risk_on" || regime === "overheated") {
         regime = "selective_risk_on";
         warnings.push("주가지수가 125일 이동평균선 아래에 있어 risk_on이 금증(selective_risk_on으로 조정)되었습니다.");
       }

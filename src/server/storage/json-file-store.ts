@@ -16,6 +16,13 @@ export class JsonFileStore<T> {
     this.lock = new FileLock(this.filePath);
   }
 
+  private cloneDefault(): T {
+    if (this.defaultData === null || this.defaultData === undefined) {
+      return this.defaultData;
+    }
+    return JSON.parse(JSON.stringify(this.defaultData)) as T;
+  }
+
   async read(): Promise<T> {
     try {
       const content = await fs.readFile(this.filePath, "utf8");
@@ -24,7 +31,7 @@ export class JsonFileStore<T> {
       if (err.code === "ENOENT") {
         // Ensure parent directory exists for subsequent writes
         await fs.mkdir(path.dirname(this.filePath), { recursive: true });
-        return this.defaultData;
+        return this.cloneDefault();
       }
       // JSON parse failed or other read error
       console.warn(`[JsonFileStore] Failed to read/parse file: ${this.filePath}. Backing up to .corrupt`);
@@ -35,7 +42,7 @@ export class JsonFileStore<T> {
       } catch {
         // Ignore rename error
       }
-      return this.defaultData;
+      return this.cloneDefault();
     }
   }
 
