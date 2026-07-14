@@ -34,7 +34,8 @@ export const StrategyAgreementSummaryCard: React.FC<{ signal: StrategyAgreementS
   useEffect(() => {
     if (!signal.assetId || !signal.signalId) return;
     const signalId = signal.signalId;
-    const universeIdParam = signal.universeId ? `&universeId=${signal.universeId}` : "";
+    const universeId = signal.universeId;
+    const universeIdParam = universeId ? `&universeId=${universeId}` : "";
 
     fetch(`/api/signals/stability?assetId=${signal.assetId}&signalId=${signalId}&date=${signal.date}${universeIdParam}`)
       .then((res) => res.json())
@@ -49,11 +50,11 @@ export const StrategyAgreementSummaryCard: React.FC<{ signal: StrategyAgreementS
   useEffect(() => {
     if (!signal.symbol || !signal.assetId || !signal.signalId) return;
     const signalId = signal.signalId;
-    const universeIdParam = signal.universeId ? `&universeId=${signal.universeId}` : "";
+    const universeId = signal.universeId;
+    const universeIdParam = universeId ? `&universeId=${universeId}` : "";
 
-    const originalScoreParam = signal.agreementScore !== null ? `&originalScore=${signal.agreementScore}` : "";
     fetch(
-      `/api/strategy/suitability?assetId=${signal.assetId}&symbol=${signal.symbol}&signalId=${signalId}&originalLabel=${signal.agreementLabel}${originalScoreParam}&asOf=${signal.date}${universeIdParam}`
+      `/api/strategy/suitability?assetId=${signal.assetId}&symbol=${signal.symbol}&signalId=${signalId}&asOf=${signal.date}${universeIdParam}`
     )
       .then((res) => res.json())
       .then((envelope) => {
@@ -62,7 +63,7 @@ export const StrategyAgreementSummaryCard: React.FC<{ signal: StrategyAgreementS
         }
       })
       .catch((err) => console.error("Failed to load suitability from backend", err));
-  }, [signal.symbol, signal.assetId, signal.agreementLabel, signal.agreementScore, signal.signalId, signal.universeId, signal.date]);
+  }, [signal.symbol, signal.assetId, signal.signalId, signal.universeId, signal.date]);
 
   // Read values strictly from suitabilitySnap (canonical boundary)
   const adjustedLabel = suitabilitySnap ? suitabilitySnap.adjustedLabel : signal.agreementLabel;

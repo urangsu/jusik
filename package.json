@@ -39,7 +39,8 @@
     "ops:provider-key-smoke": "tsx scripts/ops/run-provider-key-smoke.ts",
     "market:backfill": "tsx scripts/market/backfill-market-data.ts",
     "outcomes:observe": "tsx scripts/outcome/observe-signal-outcomes.ts",
-    "surge:detect": "tsx scripts/surge/detect-surge-candidates.ts"
+    "surge:detect": "tsx scripts/surge/detect-surge-candidates.ts",
+    "test:live-providers": "tsx scripts/ops/test-live-providers.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",

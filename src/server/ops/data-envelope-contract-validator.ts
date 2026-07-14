@@ -14,6 +14,7 @@ const VALID_STATUSES = new Set<DataStatus>([
   "not_found",
   "error",
   "insufficient_data",
+  "plan_restricted",
 ]);
 
 const DATA_AVAILABLE_STATUSES = new Set<DataStatus>([
@@ -31,6 +32,7 @@ const NULL_VALUE_ALLOWED_STATUSES = new Set<DataStatus>([
   "not_found",
   "error",
   "insufficient_data",
+  "plan_restricted",
 ]);
 
 const VALID_SOURCE_WARNINGS = new Set<SourceWarning>([
@@ -40,6 +42,7 @@ const VALID_SOURCE_WARNINGS = new Set<SourceWarning>([
   "license_review_required",
   "commercial_use_not_allowed",
   "manual_import_required",
+  "plan_restricted",
 ]);
 
 import type { SourceUsagePolicy } from "@/domain/source/provider-tier";

@@ -32,29 +32,31 @@ export function redactSensitive(obj: any): any {
   const alphaVantageKey = process.env.ALPHA_VANTAGE_API_KEY;
 
   if (typeof obj === "string") {
-    // Redact direct occurrences of known secrets
-    if (appKey && obj === appKey) {
-      return "[REDACTED_APP_KEY]";
+    let redactedStr = obj;
+    const hasMinLength = (k: string | undefined): k is string => typeof k === "string" && k.trim().length >= 4;
+
+    if (hasMinLength(appKey) && redactedStr.includes(appKey)) {
+      redactedStr = redactedStr.replaceAll(appKey, "[REDACTED_APP_KEY]");
     }
-    if (appSecret && obj === appSecret) {
-      return "[REDACTED_APP_SECRET]";
+    if (hasMinLength(appSecret) && redactedStr.includes(appSecret)) {
+      redactedStr = redactedStr.replaceAll(appSecret, "[REDACTED_APP_SECRET]");
     }
-    if (smokeKey && obj === smokeKey) {
-      return "[REDACTED_SMOKE_KEY]";
+    if (hasMinLength(smokeKey) && redactedStr.includes(smokeKey)) {
+      redactedStr = redactedStr.replaceAll(smokeKey, "[REDACTED_SMOKE_KEY]");
     }
-    if (opendartKey && obj === opendartKey) {
-      return "[REDACTED_OPENDART_KEY]";
+    if (hasMinLength(opendartKey) && redactedStr.includes(opendartKey)) {
+      redactedStr = redactedStr.replaceAll(opendartKey, "[REDACTED_OPENDART_KEY]");
     }
-    if (fmpKey && obj === fmpKey) {
-      return "[REDACTED_FMP_KEY]";
+    if (hasMinLength(fmpKey) && redactedStr.includes(fmpKey)) {
+      redactedStr = redactedStr.replaceAll(fmpKey, "[REDACTED_FMP_KEY]");
     }
-    if (finnhubKey && obj === finnhubKey) {
-      return "[REDACTED_FINNHUB_KEY]";
+    if (hasMinLength(finnhubKey) && redactedStr.includes(finnhubKey)) {
+      redactedStr = redactedStr.replaceAll(finnhubKey, "[REDACTED_FINNHUB_KEY]");
     }
-    if (alphaVantageKey && obj === alphaVantageKey) {
-      return "[REDACTED_ALPHAVANTAGE_KEY]";
+    if (hasMinLength(alphaVantageKey) && redactedStr.includes(alphaVantageKey)) {
+      redactedStr = redactedStr.replaceAll(alphaVantageKey, "[REDACTED_ALPHAVANTAGE_KEY]");
     }
-    return obj;
+    return redactedStr;
   }
 
   if (Array.isArray(obj)) {

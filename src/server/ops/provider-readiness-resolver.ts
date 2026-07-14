@@ -3,6 +3,9 @@ import type {
   ProviderReadinessCheck,
   ProviderReadinessStatus,
 } from "@/domain/ops/provider-readiness";
+import { resolveProviderConfigSync } from "../settings/provider-config-resolver";
+import { ProviderId } from "@/domain/settings/provider-id";
+import { isMockKey } from "../providers/provider-registry";
 
 /**
  * Maps each RuntimeProviderId to its required + optional env keys.
@@ -57,12 +60,45 @@ const PERSONAL_FALLBACK_PROVIDERS = new Set<RuntimeProviderId>([
 ]);
 
 /**
- * Checks whether an env key has a non-empty value.
+ * Checks whether an env key or a stored secret/setting has a non-empty value.
  * Returns the key NAME only — never the value.
  */
-function isKeyConfigured(keyName: string): boolean {
+function isKeyConfigured(providerId: RuntimeProviderId, keyName: string): boolean {
   const val = process.env[keyName];
-  return typeof val === "string" && val.trim().length > 0;
+  const isSecret = keyName.endsWith("_KEY") || keyName.endsWith("_SECRET");
+
+  if (typeof val === "string" && val.trim().length > 0) {
+    if (isSecret && isMockKey(val)) {
+      return false;
+    }
+    return true;
+  }
+
+  // Fallback to settings / secret store
+  let domainProviderId: ProviderId;
+  if (providerId === "kis") domainProviderId = "kis";
+  else if (providerId === "opendart") domainProviderId = "opendart";
+  else if (providerId === "fmp_free") domainProviderId = "fmp";
+  else if (providerId === "finnhub_free") domainProviderId = "finnhub";
+  else if (providerId === "alpha_vantage_free") domainProviderId = "alpha_vantage";
+  else return false;
+
+  try {
+    const config = resolveProviderConfigSync(domainProviderId);
+    const storeVal = config[keyName];
+    if (typeof storeVal === "string" && storeVal.trim().length > 0) {
+      if (isSecret && isMockKey(storeVal)) {
+        return false;
+      }
+      return true;
+    }
+    if (typeof storeVal === "boolean") {
+      return storeVal;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 function resolveStatus(
@@ -71,7 +107,7 @@ function resolveStatus(
 ): { status: ProviderReadinessStatus; message: string | null } {
   // Personal fallback: requires explicit opt-in flags
   if (PERSONAL_FALLBACK_PROVIDERS.has(providerId)) {
-    const allowPersonal = isKeyConfigured("ALLOW_PERSONAL_FALLBACK") &&
+    const allowPersonal = isKeyConfigured(providerId, "ALLOW_PERSONAL_FALLBACK") &&
       process.env.ALLOW_PERSONAL_FALLBACK === "true";
 
     if (!allowPersonal) {
@@ -88,7 +124,7 @@ function resolveStatus(
         : "ENABLE_STOOQ_PERSONAL";
 
     if (
-      !isKeyConfigured(enableFlag) ||
+      !isKeyConfigured(providerId, enableFlag) ||
       process.env[enableFlag] !== "true"
     ) {
       return {
@@ -127,8 +163,8 @@ export function resolveProviderReadiness(): ProviderReadinessCheck[] {
   for (const providerId of providerIds) {
     const { required } = PROVIDER_KEY_MAP[providerId];
 
-    const configuredKeys = required.filter((k) => isKeyConfigured(k));
-    const missingKeys = required.filter((k) => !isKeyConfigured(k));
+    const configuredKeys = required.filter((k) => isKeyConfigured(providerId, k));
+    const missingKeys = required.filter((k) => !isKeyConfigured(providerId, k));
 
     const { status, message } = resolveStatus(providerId, missingKeys);
 

@@ -172,4 +172,77 @@ describe("RegimeEngine", () => {
     expect(snapshot.score).toBeGreaterThanOrEqual(90);
     expect(snapshot.regime).toBe("overheated");
   });
+
+  it("does not trigger credit spread override on KR market", async () => {
+    // US credit spike
+    await regimeEngine.updateIndicators({
+      vix: 11.0,
+      vixZScore: 0.1,
+      highYieldSpread: 6.0, // spread >= 5.0 (would trigger US override)
+      yieldCurve10Y2Y: 1.2,
+      cnnFearGreed: 85,
+    });
+
+    const mockBars: PriceBar[] = Array.from({ length: 130 }, (_, i) => ({
+      assetId: "KR:KOSPI",
+      date: `2026-01-${String(i).padStart(3, "0")}`,
+      open: 100 + i,
+      high: 100 + i,
+      low: 100 + i,
+      close: 100 + i,
+      volume: 100,
+    }));
+
+    vi.mocked(loadOhlcvHistory).mockResolvedValue({
+      value: mockBars,
+      status: "real_time",
+      source: "Mock",
+      sourceTier: "official",
+      warnings: [],
+      updatedAt: new Date().toISOString(),
+    });
+
+    const snapshot = await regimeEngine.evaluateRegime("KR");
+
+    // Credit spread override should NOT be active for KR, so regime stays risk_on or selective_risk_on
+    expect(snapshot.regime).not.toBe("risk_off");
+    expect(snapshot.regime).not.toBe("panic");
+    expect(snapshot.warnings.some((w) => w.includes("Credit Spread"))).toBe(false);
+  });
+
+  it("sets correct gate values for overheated regime", async () => {
+    await regimeEngine.updateIndicators({
+      vix: 11.0,
+      vixZScore: 0.1,
+      highYieldSpread: 2.1,
+      yieldCurve10Y2Y: 1.2,
+      cnnFearGreed: 95,
+    });
+
+    const mockBars: PriceBar[] = Array.from({ length: 130 }, (_, i) => ({
+      assetId: "US:SPX",
+      date: `2026-01-${String(i).padStart(3, "0")}`,
+      open: 100 + i * 2,
+      high: 100 + i * 2,
+      low: 100 + i * 2,
+      close: 100 + i * 2,
+      volume: 100,
+    }));
+
+    vi.mocked(loadOhlcvHistory).mockResolvedValue({
+      value: mockBars,
+      status: "real_time",
+      source: "Mock",
+      sourceTier: "official",
+      warnings: [],
+      updatedAt: new Date().toISOString(),
+    });
+
+    const snapshot = await regimeEngine.evaluateRegime("US");
+
+    expect(snapshot.regime).toBe("overheated");
+    expect(snapshot.gates.allowsNewWatch).toBe(false);
+    expect(snapshot.gates.allowsRiskUpgrading).toBe(false);
+    expect(snapshot.gates.suppressesMomentumAlert).toBe(false);
+  });
 });

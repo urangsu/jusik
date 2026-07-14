@@ -1,4 +1,5 @@
 import { resolveProviderConfigSync } from "../../settings/provider-config-resolver";
+import { isMockKey } from "../provider-registry";
 
 export class KisConfig {
   private get config() {
@@ -53,7 +54,7 @@ export class KisConfig {
   }
 
   public get isConfigured(): boolean {
-    return !!(this.appKey && this.appSecret && this.appKey !== "mock_kis_app_key");
+    return !!(this.appKey && this.appSecret && !isMockKey(this.appKey) && !isMockKey(this.appSecret));
   }
 }
 

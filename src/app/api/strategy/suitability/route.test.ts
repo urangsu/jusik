@@ -13,7 +13,7 @@ import { strategySuitabilityService } from "@/server/strategy/strategy-suitabili
 describe("GET /api/strategy/suitability", () => {
   it("returns 400 when parameters are missing", async () => {
     const response = await GET(
-      new NextRequest("http://localhost/api/strategy/suitability?assetId=US_AAPL")
+      new NextRequest("http://localhost/api/strategy/suitability?assetId=US_AAPL&universeId=SP500_SAMPLE")
     );
 
     expect(response.status).toBe(400);
@@ -46,7 +46,7 @@ describe("GET /api/strategy/suitability", () => {
 
     const response = await GET(
       new NextRequest(
-        "http://localhost/api/strategy/suitability?assetId=US_AAPL&symbol=AAPL&signalId=momentum&originalLabel=strong_watch&originalScore=85&asOf=2026-07-05"
+        "http://localhost/api/strategy/suitability?assetId=US_AAPL&symbol=AAPL&signalId=momentum&asOf=2026-07-05&universeId=SP500_SAMPLE"
       )
     );
 
@@ -62,7 +62,7 @@ describe("GET /api/strategy/suitability", () => {
 
     const response = await GET(
       new NextRequest(
-        "http://localhost/api/strategy/suitability?assetId=US_AAPL&symbol=AAPL&signalId=momentum&originalLabel=strong_watch&asOf=2026-07-05"
+        "http://localhost/api/strategy/suitability?assetId=US_AAPL&symbol=AAPL&signalId=momentum&asOf=2026-07-05&universeId=SP500_SAMPLE"
       )
     );
 

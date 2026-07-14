@@ -73,4 +73,12 @@ describe("Sensitive Data Redaction and Masking Checks", () => {
     expect(redacted.val2).toBe("[REDACTED_OPENDART_KEY]");
     expect(redacted.val3).toBe("[REDACTED_FMP_KEY]");
   });
+
+  it("should redact embedded secrets in URLs, query parameters, and error messages", () => {
+    const url = "http://localhost:3000/api/market/quote?symbol=AAPL&apiKey=fmp_key_def";
+    const errorMessage = "Failed to connect using key my_app_secret_456, unauthorized.";
+    
+    expect(redactSensitive(url)).toBe("http://localhost:3000/api/market/quote?symbol=AAPL&apiKey=[REDACTED_FMP_KEY]");
+    expect(redactSensitive(errorMessage)).toBe("Failed to connect using key [REDACTED_APP_SECRET], unauthorized.");
+  });
 });

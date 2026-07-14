@@ -6,8 +6,15 @@ import { yfinancePersonalProvider } from "../providers/yfinance-personal-provide
 import { finnhubFreeProvider } from "../providers/finnhub-free-provider";
 import { fmpFreeProvider } from "../providers/fmp-free-provider";
 import { alphaVantageProvider } from "../providers/alpha-vantage-provider";
+import { withMarketDataRuntimeGate } from "./market-data-runtime-wrapper";
+import { RuntimeProviderId } from "@/domain/providers/provider-runtime-policy";
 
 export type MarketDataProviderId = "kis" | "yfinance_personal" | "finnhub_free" | "fmp_free" | "alpha_vantage_free";
+
+function getAssetId(symbol: string, region: MarketRegion, customAssetId?: string | null): string {
+  if (customAssetId) return customAssetId;
+  return region === "KR" ? `KR:${symbol}` : `US:${symbol}`;
+}
 
 export class MarketDataService {
   /**
@@ -18,6 +25,8 @@ export class MarketDataService {
   public async getQuoteForProvider(
     symbol: string,
     providerId: MarketDataProviderId,
+    region: MarketRegion = "US",
+    assetId?: string | null
   ): Promise<DataEnvelope<Quote>> {
     const provider = this.getMarketDataProvider(providerId);
     if (!provider) {
@@ -31,8 +40,16 @@ export class MarketDataService {
         message: `Provider '${providerId}' is not available.`,
       };
     }
+    const resolvedAssetId = getAssetId(symbol, region, assetId);
     try {
-      return await provider.getQuote(symbol);
+      return await withMarketDataRuntimeGate({
+        providerId: providerId as RuntimeProviderId,
+        market: region,
+        assetId: resolvedAssetId,
+        symbol,
+        capability: "quote",
+        fetcher: () => provider.getQuote(symbol),
+      });
     } catch (err) {
       return {
         value: null,
@@ -55,6 +72,7 @@ export class MarketDataService {
       region: MarketRegion;
       range: "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y" | "10Y";
       interval: "1D" | "1W" | "1M";
+      assetId?: string | null;
     },
     providerId: MarketDataProviderId,
   ): Promise<DataEnvelope<unknown>> {
@@ -70,8 +88,18 @@ export class MarketDataService {
         message: `Provider '${providerId}' is not available.`,
       };
     }
+    const resolvedAssetId = getAssetId(params.symbol, params.region, params.assetId);
     try {
-      return await provider.getOhlcv(params);
+      return await withMarketDataRuntimeGate({
+        providerId: providerId as RuntimeProviderId,
+        market: params.region,
+        assetId: resolvedAssetId,
+        symbol: params.symbol,
+        capability: "ohlcv",
+        range: params.range,
+        interval: params.interval,
+        fetcher: () => provider.getOhlcv(params),
+      });
     } catch (err) {
       return {
         value: null,
@@ -89,8 +117,9 @@ export class MarketDataService {
    * Resolves price quote from prioritized providers.
    * Falls through the priority chain and returns the first successful response.
    */
-  public async getQuote(symbol: string, region: MarketRegion): Promise<DataEnvelope<Quote>> {
+  public async getQuote(symbol: string, region: MarketRegion, assetId?: string | null): Promise<DataEnvelope<Quote>> {
     const priority = getPriorityList(region, "quote");
+    const resolvedAssetId = getAssetId(symbol, region, assetId);
 
     if (priority.length === 0) {
       return {
@@ -104,10 +133,18 @@ export class MarketDataService {
     }
 
     for (const profile of priority) {
-      const provider = this.getMarketDataProvider(profile.id as MarketDataProviderId);
+      const providerId = profile.id as MarketDataProviderId;
+      const provider = this.getMarketDataProvider(providerId);
       if (provider) {
         try {
-          const result = await provider.getQuote(symbol);
+          const result = await withMarketDataRuntimeGate({
+            providerId: providerId as RuntimeProviderId,
+            market: region,
+            assetId: resolvedAssetId,
+            symbol,
+            capability: "quote",
+            fetcher: () => provider.getQuote(symbol),
+          });
           if (result.status !== "api_required" && result.status !== "error") {
             return result;
           }
@@ -135,8 +172,10 @@ export class MarketDataService {
     region: MarketRegion;
     range: "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y" | "10Y";
     interval: "1D" | "1W" | "1M";
+    assetId?: string | null;
   }): Promise<DataEnvelope<unknown>> {
     const priority = getPriorityList(params.region, "ohlcv");
+    const resolvedAssetId = getAssetId(params.symbol, params.region, params.assetId);
 
     if (priority.length === 0) {
       return {
@@ -150,10 +189,20 @@ export class MarketDataService {
     }
 
     for (const profile of priority) {
-      const provider = this.getMarketDataProvider(profile.id as MarketDataProviderId);
+      const providerId = profile.id as MarketDataProviderId;
+      const provider = this.getMarketDataProvider(providerId);
       if (provider) {
         try {
-          const result = await provider.getOhlcv(params);
+          const result = await withMarketDataRuntimeGate({
+            providerId: providerId as RuntimeProviderId,
+            market: params.region,
+            assetId: resolvedAssetId,
+            symbol: params.symbol,
+            capability: "ohlcv",
+            range: params.range,
+            interval: params.interval,
+            fetcher: () => provider.getOhlcv(params),
+          });
           if (result.status !== "api_required" && result.status !== "error") {
             return result;
           }

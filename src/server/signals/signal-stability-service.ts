@@ -102,6 +102,10 @@ export function calculateCrossSectionalRankCorrelation(
   universeId: string
 ): RankCorrelationResult {
   const universeAssets = getAssetsOfUniverse(universeId);
+  if (!universeAssets) {
+    // unknown universe -> fail-closed
+    return { correlation: null, isLowSample: false, sampleSize: 0 };
+  }
 
   // Group and find all unique dates in the signal history up to targetDate belonging to the universe constituents
   const allDates = Array.from(
@@ -109,7 +113,7 @@ export function calculateCrossSectionalRankCorrelation(
       records
         .filter((r) => {
           const matchesSignal = getSignalId(r.signal) === signalId;
-          const matchesUniverse = universeAssets ? universeAssets.includes(r.assetId) : true;
+          const matchesUniverse = universeAssets.includes(r.assetId);
           return matchesSignal && matchesUniverse;
         })
         .map((r) => r.date)
@@ -132,13 +136,13 @@ export function calculateCrossSectionalRankCorrelation(
     (r) =>
       r.date === dateT &&
       getSignalId(r.signal) === signalId &&
-      (universeAssets ? universeAssets.includes(r.assetId) : true)
+      universeAssets.includes(r.assetId)
   );
   const recordsTMinus1 = records.filter(
     (r) =>
       r.date === dateTMinus1 &&
       getSignalId(r.signal) === signalId &&
-      (universeAssets ? universeAssets.includes(r.assetId) : true)
+      universeAssets.includes(r.assetId)
   );
 
   const ranksT = computeAverageRanks(recordsT);
@@ -198,15 +202,44 @@ export class SignalStabilityService {
       minRankAutocorrelation?: number;
     }
   ): SignalStability {
-    const isKr = params.assetId.startsWith("KR:") || params.assetId.startsWith("KR_");
-    const resolvedUniverseId = params.universeId || (isKr ? "KOSPI_SAMPLE" : "SP500_SAMPLE");
+    // Item 3: universeId is mandatory, no auto fallback
+    if (!params.universeId) {
+      return {
+        assetId: params.assetId,
+        signalId: params.signalId,
+        date: params.date,
+        consecutiveObservations: 0,
+        flipCount30d: 0,
+        rankAutocorrelation: null,
+        status: "insufficient_data",
+        actionableThresholdMet: false,
+        warnings: ["universe_id_required"],
+      };
+    }
+
+    const universeId = params.universeId;
+    const universeAssets = getAssetsOfUniverse(universeId);
+    if (!universeAssets) {
+      return {
+        assetId: params.assetId,
+        signalId: params.signalId,
+        universeId,
+        date: params.date,
+        consecutiveObservations: 0,
+        flipCount30d: 0,
+        rankAutocorrelation: null,
+        status: "insufficient_data",
+        actionableThresholdMet: false,
+        warnings: ["unknown_universe_id"],
+      };
+    }
 
     // 1. Calculate the cross-sectional rank correlation for adjacent sessions t and t-1
     const { correlation: rankAutocorrelation, isLowSample } = calculateCrossSectionalRankCorrelation(
       records,
       params.signalId,
       params.date,
-      resolvedUniverseId
+      universeId
     );
 
     // 2. Define getSignalLabel callback
@@ -228,7 +261,7 @@ export class SignalStabilityService {
     const stability = calculateSignalStability({
       assetId: params.assetId,
       signalId: params.signalId,
-      universeId: resolvedUniverseId,
+      universeId,
       date: params.date,
       records,
       getSignalLabel,

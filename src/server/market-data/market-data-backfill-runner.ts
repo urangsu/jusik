@@ -14,6 +14,7 @@ import {
 import { saveMarketBackfillManifest } from "./market-backfill-manifest-store";
 import { getRuntimeStoreRoot } from "@/server/storage/runtime-store-root";
 import { withMarketDataRuntimeGate } from "@/server/services/market-data-runtime-wrapper";
+import { getPriorityList } from "../providers/source-priority";
 
 const ENGINE_VERSION = "market-backfill-v1";
 
@@ -48,10 +49,14 @@ async function runAssetBackfill(
   asset: MarketBackfillAsset,
 ): Promise<MarketBackfillAssetResult> {
   try {
+    const priority = getPriorityList(asset.market, request.capability as any);
+    const activeProvider = priority[0];
+    const resolvedProviderId = activeProvider ? (activeProvider.id as any) : (asset.market === "KR" ? "kis" : "fmp_free");
+
     const envelope =
       request.capability === "quote"
         ? await withMarketDataRuntimeGate({
-            providerId: asset.market === "KR" ? "kis" : "fmp_free",
+            providerId: resolvedProviderId,
             market: asset.market,
             assetId: asset.assetId,
             symbol: asset.symbol,
@@ -59,7 +64,7 @@ async function runAssetBackfill(
             fetcher: () => marketDataService.getQuote(asset.symbol, asset.market),
           })
         : await withMarketDataRuntimeGate({
-            providerId: asset.market === "KR" ? "kis" : "fmp_free",
+            providerId: resolvedProviderId,
             market: asset.market,
             assetId: asset.assetId,
             symbol: asset.symbol,

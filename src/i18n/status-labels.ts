@@ -14,6 +14,7 @@ export const KO_DATA_STATUS_LABELS: Record<DataStatus, string> = {
   not_found: "없음",
   error: "오류",
   insufficient_data: "데이터 부족",
+  plan_restricted: "구독 플랜 제한",
 };
 
 export const EN_DATA_STATUS_LABELS: Record<DataStatus, string> = {
@@ -28,6 +29,7 @@ export const EN_DATA_STATUS_LABELS: Record<DataStatus, string> = {
   not_found: "Not Found",
   error: "Error",
   insufficient_data: "Insufficient Data",
+  plan_restricted: "Plan Restricted",
 };
 
 export const KO_SOURCE_WARNING_LABELS: Record<SourceWarning, string> = {
@@ -37,6 +39,7 @@ export const KO_SOURCE_WARNING_LABELS: Record<SourceWarning, string> = {
   license_review_required: "라이선스 검토 필요",
   commercial_use_not_allowed: "상업적 이용 불가",
   manual_import_required: "수동 임포트 필요",
+  plan_restricted: "구독 플랜 제한",
 };
 
 export const EN_SOURCE_WARNING_LABELS: Record<SourceWarning, string> = {
@@ -46,6 +49,7 @@ export const EN_SOURCE_WARNING_LABELS: Record<SourceWarning, string> = {
   license_review_required: "License Review Required",
   commercial_use_not_allowed: "Commercial Use Prohibited",
   manual_import_required: "Manual Import Required",
+  plan_restricted: "Plan Restricted",
 };
 
 export function getDataStatusLabel(status: DataStatus, locale: Locale): string {

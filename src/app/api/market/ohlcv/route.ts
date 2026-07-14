@@ -53,34 +53,20 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const ohlcvParams: any = { symbol, region, range, interval };
+    if (assetId) {
+      ohlcvParams.assetId = assetId;
+    }
+
     // If a specific providerId is requested, bypass the priority chain.
     // This ensures provider-specific smoke tests measure the actual target provider.
     if (isValidProviderId(providerIdParam)) {
-      const providerId = providerIdParam;
-      const ohlcv = await withMarketDataRuntimeGate({
-        providerId: providerId as RuntimeProviderId,
-        market: region,
-        assetId: getAssetId(symbol, region, assetId),
-        symbol,
-        capability: "ohlcv",
-        range,
-        interval,
-        fetcher: () => marketDataService.getOhlcvForProvider({ symbol, region, range, interval }, providerId),
-      });
+      const ohlcv = await marketDataService.getOhlcvForProvider(ohlcvParams, providerIdParam);
       return createSafeResponse(ohlcv);
     }
 
     // Default: priority-chain fallback
-    const ohlcv = await withMarketDataRuntimeGate({
-      providerId: region === "KR" ? "kis" : "fmp_free",
-      market: region,
-      assetId: getAssetId(symbol, region, assetId),
-      symbol,
-      capability: "ohlcv",
-      range,
-      interval,
-      fetcher: () => marketDataService.getOhlcv({ symbol, region, range, interval }),
-    });
+    const ohlcv = await marketDataService.getOhlcv(ohlcvParams);
     return createSafeResponse(ohlcv);
   } catch (err) {
     const envelope: DataEnvelope<null> = {

@@ -51,6 +51,28 @@ function calculateAgreementRate(views: StrategyViewScore[]): number {
 export function calculateStrategyAgreementSignal(
   params: CalculateStrategyAgreementSignalParams,
 ): StrategyAgreementSignal {
+  if (!params.universeId) {
+    return {
+      assetId: params.assetId,
+      symbol: params.symbol,
+      date: params.date,
+      agreementScore: null,
+      agreementLabel: "insufficient_data",
+      agreementRate: null,
+      participatingViews: [],
+      excludedViews: params.views.map((view) => ({
+        strategyId: view.strategyId,
+        reason: "universeId 누락",
+      })),
+      topBullishFactors: [],
+      topBearishFactors: [],
+      vetoReasons: ["universe_id_required"],
+      status: "insufficient_data",
+      dataQualityScore: 0,
+      explanation: "universe_id_required",
+    };
+  }
+
   const excludedViews = params.views
     .filter((view) => view.status === "insufficient_data" || !isFiniteNumber(view.score))
     .map((view) => ({
@@ -69,6 +91,7 @@ export function calculateStrategyAgreementSignal(
       assetId: params.assetId,
       symbol: params.symbol,
       date: params.date,
+      universeId: params.universeId,
       agreementScore: null,
       agreementLabel: "insufficient_data",
       agreementRate: null,
@@ -114,7 +137,7 @@ export function calculateStrategyAgreementSignal(
     symbol: params.symbol,
     date: params.date,
     signalId: params.signalId,
-    universeId: params.universeId ?? (params.assetId.startsWith("KR") ? "KOSPI_SAMPLE" : "SP500_SAMPLE"),
+    universeId: params.universeId,
     agreementScore,
     agreementLabel,
     agreementRate,

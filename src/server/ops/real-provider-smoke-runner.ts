@@ -11,6 +11,7 @@ import { buildEvidencePackFromDataEnvelope } from "@/server/evidence/evidence-pa
 import { validateDataEnvelopeContract } from "./data-envelope-contract-validator";
 import { resolveProviderReadiness } from "./provider-readiness-resolver";
 import { REAL_PROVIDER_SMOKE_TARGETS } from "./real-provider-smoke-targets";
+import { marketDataService, MarketDataProviderId } from "@/server/services/market-data-service";
 
 const ENGINE_VERSION = "real-provider-smoke-v1";
 
@@ -149,6 +150,7 @@ async function runTarget(
   baseUrl: string,
   fetcher: FetchLike,
   expectationMode: Exclude<RealProviderSmokeExpectationMode, "auto">,
+  readiness: ProviderReadinessCheck[],
 ): Promise<RealProviderSmokeResult> {
   const checkedAt = new Date().toISOString();
   const url = `${baseUrl}${target.endpoint}`;
@@ -156,20 +158,55 @@ async function runTarget(
   let httpStatus: number | null = null;
   let raw: unknown = null;
 
-  try {
-    const internalKey = process.env.INTERNAL_SMOKE_KEY || "";
-    const response = await fetcher(url, {
-      method: target.method,
-      headers: {
-        "content-type": "application/json",
-        "x-internal-smoke-key": internalKey,
-      },
-      body: target.method === "POST" && target.body ? JSON.stringify(target.body) : undefined,
-    });
-    httpStatus = response.status;
-    raw = await response.json().catch(() => null);
-  } catch (error) {
-    raw = makeFallbackEnvelope(target, "error", error instanceof Error ? error.message : "Network error.");
+  const internalKey = process.env.INTERNAL_SMOKE_KEY;
+  const isKeyConfigured = typeof internalKey === "string" && internalKey.trim().length > 0;
+
+  if (!isKeyConfigured && target.providerId !== "system") {
+    // INTERNAL_SMOKE_KEY is missing. Bypass HTTP route and call service directly (service-direct)
+    // to prevent falling back to generic priority chain over HTTP.
+    try {
+      if (target.capability === "quote") {
+        raw = await marketDataService.getQuoteForProvider(target.symbol!, target.providerId as MarketDataProviderId, target.region || "KR");
+        httpStatus = 200;
+      } else if (target.capability === "ohlcv") {
+        raw = await marketDataService.getOhlcvForProvider({
+          symbol: target.symbol!,
+          region: target.region || "KR",
+          range: "1M",
+          interval: "1D",
+        }, target.providerId as MarketDataProviderId);
+        httpStatus = 200;
+      } else {
+        const response = await fetcher(url, {
+          method: target.method,
+          headers: {
+            "content-type": "application/json",
+            "x-internal-smoke-key": "",
+          },
+          body: target.method === "POST" && target.body ? JSON.stringify(target.body) : undefined,
+        });
+        httpStatus = response.status;
+        raw = await response.json().catch(() => null);
+      }
+    } catch (error) {
+      raw = makeFallbackEnvelope(target, "error", error instanceof Error ? error.message : "Service call error.");
+      httpStatus = 500;
+    }
+  } else {
+    try {
+      const response = await fetcher(url, {
+        method: target.method,
+        headers: {
+          "content-type": "application/json",
+          "x-internal-smoke-key": internalKey || "",
+        },
+        body: target.method === "POST" && target.body ? JSON.stringify(target.body) : undefined,
+      });
+      httpStatus = response.status;
+      raw = await response.json().catch(() => null);
+    } catch (error) {
+      raw = makeFallbackEnvelope(target, "error", error instanceof Error ? error.message : "Network error.");
+    }
   }
 
   const validation = validateDataEnvelopeContract(raw);
@@ -195,23 +232,65 @@ async function runTarget(
     ...(expectationPassed ? [] : [`Expectation failed for target=${target.id}.`]),
   ];
 
+  const providerCheck = readiness.find((c) => c.providerId === target.providerId);
+  const configured = providerCheck ? providerCheck.status === "ready" : false;
+
+  let recordCount = 0;
+  let firstDate: string | undefined;
+  let lastDate: string | undefined;
+
+  if (validation.dataAvailable && raw && typeof raw === "object" && "value" in raw) {
+    const val = (raw as any).value;
+    if (target.capability === "quote" && val) {
+      recordCount = 1;
+    } else if (Array.isArray(val)) {
+      recordCount = val.length;
+      if (val[0]) {
+        firstDate = val[0].date || (val[0].publishedAt ? val[0].publishedAt.split("T")[0] : undefined);
+      }
+      if (val[val.length - 1]) {
+        lastDate = val[val.length - 1].date || (val[val.length - 1].publishedAt ? val[val.length - 1].publishedAt.split("T")[0] : undefined);
+      }
+    } else if (val && typeof val === "object") {
+      if (Array.isArray(val.list)) {
+        recordCount = val.list.length;
+        if (val.list[0]) {
+          firstDate = val.list[0].rcept_dt ? `${val.list[0].rcept_dt.substring(0, 4)}-${val.list[0].rcept_dt.substring(4, 6)}-${val.list[0].rcept_dt.substring(6, 8)}` : undefined;
+        }
+        if (val.list[val.list.length - 1]) {
+          lastDate = val.list[val.list.length - 1].rcept_dt ? `${val.list[val.list.length - 1].rcept_dt.substring(0, 4)}-${val.list[val.list.length - 1].rcept_dt.substring(4, 6)}-${val.list[val.list.length - 1].rcept_dt.substring(6, 8)}` : undefined;
+        }
+      }
+    }
+  }
+
+  const sampleMetadata = {
+    symbol: target.symbol ?? undefined,
+    recordCount,
+    firstDate,
+    lastDate,
+  };
+
   return {
     targetId: target.id,
     providerId: target.providerId,
     capability: target.capability,
     symbol: target.symbol,
     region: target.region,
+    configured,
     attempted: true,
     expectationMode,
     expected,
     httpStatus,
     envelopeStatus: validation.status,
+    status: validation.status,
     dataAvailable: validation.dataAvailable,
     source: validation.source,
     sourceTier: validation.sourceTier,
     warnings: validation.warnings,
     updatedAt: validation.updatedAt,
     contractPassed: validation.passed,
+    providerMatched: mismatch.matched,
     expectationPassed,
     passed,
     failures,
@@ -226,6 +305,7 @@ async function runTarget(
       createdAt: checkedAt,
       engineVersion: ENGINE_VERSION,
     }),
+    sampleMetadata,
     checkedAt,
   };
 }
@@ -245,7 +325,7 @@ export async function runRealProviderSmoke(input?: {
   const results: RealProviderSmokeResult[] = [];
 
   for (const target of targets) {
-    results.push(await runTarget(target, baseUrl, fetcher, resolveExpectationMode(target, readiness, mode)));
+    results.push(await runTarget(target, baseUrl, fetcher, resolveExpectationMode(target, readiness, mode), readiness));
   }
 
   const createdAt = new Date().toISOString();

@@ -2,6 +2,20 @@ import { PROVIDERS, ProviderProfile } from "@/domain/source/provider-profile";
 import { resolveProviderConfigSync } from "../settings/provider-config-resolver";
 import { ProviderId } from "@/domain/settings/provider-id";
 
+export function isMockKey(value: string | null | undefined): boolean {
+  if (!value) return true;
+  const val = value.trim().toLowerCase();
+  return (
+    val.includes("mock") ||
+    val.includes("replace_with") ||
+    val.includes("placeholder") ||
+    val === "your_api_key" ||
+    val === "my_key" ||
+    val === "my_secret" ||
+    val.length < 5
+  );
+}
+
 export class ProviderRegistry {
   private profiles: Map<string, ProviderProfile> = new Map();
 
@@ -42,20 +56,33 @@ export class ProviderRegistry {
     // Check API Key requirements
     if (profile.requiresApiKey) {
       const apiKeyVar = this.getApiKeyVarName(id);
-      const key = process.env[apiKeyVar];
-      if (!key) {
-        let providerId: ProviderId;
-        if (id === "kis") providerId = "kis";
-        else if (id === "opendart") providerId = "opendart";
-        else if (id === "fmp_free") providerId = "fmp";
-        else if (id === "finnhub_free") providerId = "finnhub";
-        else if (id === "alpha_vantage_free") providerId = "alpha_vantage";
-        else return false;
+      let providerId: ProviderId;
+      if (id === "kis") providerId = "kis";
+      else if (id === "opendart") providerId = "opendart";
+      else if (id === "fmp_free") providerId = "fmp";
+      else if (id === "finnhub_free") providerId = "finnhub";
+      else if (id === "alpha_vantage_free") providerId = "alpha_vantage";
+      else return false;
 
-        const resolvedConfig = resolveProviderConfigSync(providerId);
-        if (!resolvedConfig[apiKeyVar]) {
-          return false;
-        }
+      const resolvedConfig = resolveProviderConfigSync(providerId);
+      const enabledKey = `${providerId.toUpperCase()}_ENABLED`;
+
+      // 1. Resolve key value
+      const keyVal = (process.env[apiKeyVar] || resolvedConfig[apiKeyVar]) as string | null | undefined;
+
+      // 2. Reject if key is missing or is a mock key
+      if (!keyVal || isMockKey(keyVal)) {
+        return false;
+      }
+
+      // 3. Reject if explicitly disabled
+      if (resolvedConfig[enabledKey] === false || resolvedConfig[enabledKey] === "false") {
+        return false;
+      }
+
+      // 4. Return true if explicitly enabled
+      if (resolvedConfig[enabledKey] === true || resolvedConfig[enabledKey] === "true") {
+        return true;
       }
     }
 

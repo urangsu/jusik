@@ -11,4 +11,5 @@ export type SourceWarning =
   | "personal_use_only"
   | "license_review_required"
   | "commercial_use_not_allowed"
-  | "manual_import_required";
+  | "manual_import_required"
+  | "plan_restricted";

@@ -58,7 +58,13 @@ export async function runWithProviderRuntimeGate<T>(options: GateOptions<T>): Pr
   }
 
   if (last) {
-    await cacheStore.put(options.cacheKey, last, now);
+    const isRateLimited = last.status === "rate_limited";
+    const isError = last.status === "error";
+    const isValueNull = last.value === null || last.value === undefined;
+
+    if (!isRateLimited && !isError && !isValueNull) {
+      await cacheStore.put(options.cacheKey, last, now);
+    }
     return last;
   }
 

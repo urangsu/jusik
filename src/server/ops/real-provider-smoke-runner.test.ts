@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { runRealProviderSmoke } from "./real-provider-smoke-runner";
 import type { RealProviderSmokeTarget } from "@/domain/ops/real-provider-smoke";
 import type { ProviderReadinessCheck } from "@/domain/ops/provider-readiness";
@@ -106,6 +106,19 @@ function response(status: number, body: unknown) {
 }
 
 describe("runRealProviderSmoke", () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = {
+      ...originalEnv,
+      INTERNAL_SMOKE_KEY: "test_smoke_key",
+    };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
   it("passes api_required no-key state and records EvidencePack", async () => {
     const report = await runRealProviderSmoke({
       targets: [target],
