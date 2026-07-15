@@ -42,9 +42,9 @@ async function main() {
     for (const record of pending) {
       try {
         const observed = await observeOutcome(record.id);
-        const alphaStr =
-          observed.alphaReturn !== null
-            ? `${(observed.alphaReturn * 100).toFixed(2)}%`
+        const excessStr =
+          observed.marketExcessReturn !== null
+            ? `${(observed.marketExcessReturn * 100).toFixed(2)}%`
             : "—";
 
         console.log(
@@ -52,7 +52,7 @@ async function main() {
           pad(observed.subjectId, 22) +
           pad(observed.horizon, 14) +
           pad(observed.outcomeStatus, 16) +
-          alphaStr
+          excessStr
         );
       } catch (err: any) {
         console.error(`Failed to observe ${record.id}:`, err.message || err);

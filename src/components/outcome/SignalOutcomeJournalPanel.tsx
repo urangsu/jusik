@@ -55,17 +55,9 @@ export const SignalOutcomeJournalPanel: React.FC<Props> = ({ initialRecord }) =>
     }
   };
 
-  const getAdjustmentBadgeClass = (adj: SignalOutcomeJournalRecord["confidenceAdjustment"]) => {
-    switch (adj) {
-      case "increase":
-        // KR Up = Red
-        return "bg-kt-positive/10 text-kt-positive-text border-kt-positive/20 font-bold";
-      case "decrease":
-        // KR Down = Blue
-        return "bg-kt-negative-weak/10 text-kt-negative-text border-kt-negative-text/20 font-bold";
-      default:
-        return "bg-kt-bg-overlay-100 text-kt-text-muted border-kt-border-panel/30";
-    }
+  // confidenceAdjustment is always "not_applicable" — single observation never changes confidence
+  const getAdjustmentBadgeClass = (_adj: SignalOutcomeJournalRecord["confidenceAdjustment"]) => {
+    return "bg-kt-bg-overlay-100 text-kt-text-muted border-kt-border-panel/30";
   };
 
   return (
@@ -134,21 +126,21 @@ export const SignalOutcomeJournalPanel: React.FC<Props> = ({ initialRecord }) =>
               </div>
             </div>
             <div className="bg-kt-bg-overlay-100 p-2 rounded border border-kt-border-panel/30">
-              <div className="text-kt-text-muted text-[8px] uppercase">Benchmark</div>
+              <div className="text-kt-text-muted text-[8px] uppercase">Market Benchmark</div>
               <div className="text-[10px] font-bold text-kt-text-secondary mt-0.5">
-                {record.benchmarkReturn !== null ? `${(record.benchmarkReturn * 100).toFixed(2)}%` : "—"}
+                {record.marketBenchmarkReturn !== null ? `${(record.marketBenchmarkReturn * 100).toFixed(2)}%` : "—"}
               </div>
             </div>
             <div className="bg-kt-bg-overlay-100 p-2 rounded border border-kt-border-panel/30">
-              <div className="text-kt-text-muted text-[8px] uppercase">Alpha (Index Relative)</div>
+              <div className="text-kt-text-muted text-[8px] uppercase">Market Excess Return</div>
               <div className={`text-[10px] font-bold mt-0.5 ${
-                record.alphaReturn !== null && record.alphaReturn > 0
+                record.marketExcessReturn !== null && record.marketExcessReturn > 0
                   ? "text-kt-positive-text"
-                  : record.alphaReturn !== null && record.alphaReturn < 0
+                  : record.marketExcessReturn !== null && record.marketExcessReturn < 0
                   ? "text-kt-negative-text"
                   : "text-kt-text-primary"
               }`}>
-                {record.alphaReturn !== null ? `${(record.alphaReturn * 100).toFixed(2)}%` : "—"}
+                {record.marketExcessReturn !== null ? `${(record.marketExcessReturn * 100).toFixed(2)}%` : "—"}
               </div>
             </div>
           </div>

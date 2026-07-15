@@ -24,6 +24,9 @@ const SEED_SYMBOLS: SymbolMasterRecord[] = [
     status: "active",
     source: "seed",
     updatedAt: SEED_UPDATED_AT,
+    // Seed metadata only — not live truth
+    marketBenchmarkId: "KR_INDEX_KOSPI",
+    sectorBenchmarkId: "KR_INDEX_KRX_SEMICONDUCTOR",
   },
   {
     assetId: "US_AAPL",
@@ -40,6 +43,9 @@ const SEED_SYMBOLS: SymbolMasterRecord[] = [
     status: "active",
     source: "seed",
     updatedAt: SEED_UPDATED_AT,
+    // Seed metadata only — not live truth
+    marketBenchmarkId: "US_SPY",
+    sectorBenchmarkId: "US_XLK",
   },
 ];
 
