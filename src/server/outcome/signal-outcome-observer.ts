@@ -140,20 +140,21 @@ export async function observeOutcome(recordId: string): Promise<SignalOutcomeJou
 
   const nowStr = new Date().toISOString();
 
+  const pendingRecord: SignalOutcomeJournalRecord = pending;
   // Helper: create a terminal revision (insufficient_data or error)
   async function terminalRevision(
     status: "insufficient_data" | "error",
     fields: Partial<SignalOutcomeJournalRecord>,
   ): Promise<SignalOutcomeJournalRecord> {
     const revision: SignalOutcomeJournalRecord = {
-      ...pending,
-      id: nextRevisionId(pending),
-      supersedesOutcomeId: pending.id,
-      revision: pending.revision + 1,
+      ...pendingRecord,
+      id: nextRevisionId(pendingRecord),
+      supersedesOutcomeId: pendingRecord.id,
+      revision: pendingRecord.revision + 1,
       outcomeStatus: status,
       observedAt: nowStr,
       ...fields,
-    };
+    } as SignalOutcomeJournalRecord;
     await saveOutcomeRecord(revision);
     return revision;
   }

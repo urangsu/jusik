@@ -11,6 +11,7 @@ const MOCK_SIGNAL_VERSION: SignalVersion = {
     engineVersion: "0.1.0",
     configHash: "abc",
     gitCommitSha: "def",
+    createdAt: "2026-01-01T00:00:00Z",
   },
   dataVersionId: "dv_test",
   calculatedAt: "2026-01-01T00:00:00Z",
