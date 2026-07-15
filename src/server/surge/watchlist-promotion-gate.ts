@@ -36,6 +36,12 @@ export async function promoteSurgeCandidateToWatchlist(input: {
     status: "cached",
     updatedAt: candidate.detectedAt,
     warnings: [],
+    sourceUrl: null,
+    publishedAt: null,
+    contentHash: "",
+    claimIds: [],
+    sourceAuthor: null,
+    extractionMethod: "provider_direct",
   }));
 
   const evidencePackId = `evp_promo_${candidate.id}`;
