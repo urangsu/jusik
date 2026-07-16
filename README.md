@@ -49,6 +49,7 @@ npm run build
 * **Strategy Signal Shell**: 표준편차 매매와 전략 합의 탭의 타입 계약, 데이터 부족 처리, veto 사유 표시를 고정했습니다. 실제 가격/재무 데이터가 없으면 신호나 점수를 생성하지 않습니다.
 * **Quant Core Contract**: PIT 데이터 버전, atomic signal, factor definition, IC/ICIR, 단면 정규화, 팩터 공분산, 리스크 분해의 순수 계산 계약을 분리했습니다.
 * **PIT / Universe Foundation**: in-memory/test-only PIT store, DataVersion store, AssetIdentity, UniverseSnapshot, seed demo universe 계약을 추가했습니다.
+* **Evidence-First Research Workspace**: 방법론 검증 규칙, 공급망 경로 분석, 리서치 보이스 타임라인, 다면 신뢰성 다수결 배제 비토 진단 기능을 탑재했습니다.
 
 ## 4. 현재 상태 (Current Status)
 * Quant Core contracts exist.

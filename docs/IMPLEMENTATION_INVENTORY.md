@@ -56,6 +56,10 @@
 | Symbol Import Guard | **implemented** | `src/server/symbols/symbol-master-import-validator.ts` | ✓ | Rejects non-canonical KR/US imports |
 | Surge Context | **implemented** | `src/server/surge/surge-context-store.ts` | ✓ | Optional sector/filing context without fake signals |
 | Runtime Store Isolation | **implemented (WO017-N)** | `src/server/storage/runtime-store-root.ts` | ✓ | JUSIK_TEST_DATA_ROOT / JUSIK_DATA_ROOT 분리 |
+| Evidence-First Method Rules | **implemented (WO017-U)** | `src/domain/research/evaluate-method-rule.ts` | ✓ | 11가지 검증 방법론 규칙 및 자료 정합성 산출 |
+| Supply Chain Graph | **implemented (WO017-U)** | `src/domain/research/validate-supply-chain-graph.ts` | ✓ | 공급망 의존도 가속/추정/검증 노드 및 엣지 결론 |
+| Append-Only Research Voice | **implemented (WO017-U)** | `src/server/research/file-research-voice-store.ts` | ✓ | 리서치 의견 및 코멘트 타임라인 리비전 관리 |
+| Multi-Seat Validation | **implemented (WO017-U)** | `src/domain/research/synthesize-validation-reports.ts` | ✓ | 5대 검증 책임(seat) 및 비다수결 비토 체인 설계 |
 | Earnings Event Minimal | **missing_p1** | - | - | 영업이익/순이익 이벤트 탐지 없음 |
 | Signal History Visualization | **missing_p1** | - | - | UI 컴포넌트 없음 |
 | Cross-horizon Tension UI | **missing_p1** | - | - | 타입 정의만 존재 |
@@ -98,6 +102,9 @@
 | `GET /api/settings/providers` | **implemented** | ✓ | SettingsWriteGuard | |
 | `GET/PUT /api/settings/providers/[id]` | **implemented** | ✓ | SettingsWriteGuard | |
 | `POST /api/settings/providers/[id]/health-check` | **implemented** | ✓ | - | |
+| `GET /api/research/voices` | **implemented** | ✓ | - | |
+| `POST /api/research/voices/import` | **implemented** | ✓ | - | |
+| `GET /api/research/assets/[assetId]` | **implemented** | ✓ | - | |
 | `PUT /api/settings/providers/[id]/secret/[key]` | **implemented** | ✓ | SettingsWriteGuard | |
 | `GET /api/macro/playbook` | **implemented** | ✓ | - | |
 | `POST /api/macro/playbook/notes` | **implemented** | ✓ | SettingsWriteGuard | |
