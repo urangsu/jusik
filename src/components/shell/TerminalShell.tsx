@@ -11,6 +11,7 @@ import { AlertSettingsPage } from "../alerts/AlertSettingsPage";
 import { BacktestWorkspace } from "../backtest/BacktestWorkspace";
 import { ReliabilityWorkspace } from "../reliability/ReliabilityWorkspace";
 import { ProviderApiSettingsPanel } from "../settings/ProviderApiSettingsPanel";
+import { ResearchWorkspace } from "../research/ResearchWorkspace";
 import { WatchlistPage } from "../watchlist/WatchlistPage";
 import { Panel } from "../ui/Panel";
 import { MetricCell } from "../ui/MetricCell";
@@ -122,6 +123,8 @@ export const TerminalShell: React.FC = () => {
         <main className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto">
           {activeTab === "strategy" ? (
             <StrategyWorkspace selectedAsset={selectedAsset} />
+          ) : activeTab === "research" ? (
+            <ResearchWorkspace assetId={selectedAsset ? selectedAsset.id.replace(/:/g, "_") : null} />
           ) : activeTab === "alerts" ? (
             <AlertSettingsPage />
           ) : activeTab === "backtest" ? (
