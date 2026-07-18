@@ -1,0 +1,20 @@
+{
+  "claimId": "claim_post_voice_analyst_01_post_01_c1",
+  "postId": "post_voice_analyst_01_post_01",
+  "voiceId": "voice_analyst_01",
+  "assetId": "KR_005930",
+  "unresolvedReason": null,
+  "text": "삼성전자 수요가 확인되었습니다 (Demand Evidence)",
+  "direction": "bullish",
+  "claimKind": "demand_evidence",
+  "evidenceIds": [
+    "ev_demand_01"
+  ],
+  "evidenceSpan": {
+    "from": "2026-01-01",
+    "to": "2026-03-01"
+  },
+  "isVerified": true,
+  "extractionMethod": "user_import",
+  "createdAt": "2026-07-16T14:20:49.809Z"
+}

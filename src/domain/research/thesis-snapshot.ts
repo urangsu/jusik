@@ -13,5 +13,5 @@ export type ThesisArcSnapshot = {
   changeReasons: string[];
   requiredNextEvidence: string[];
   dataVersionIds: string[];
-  signalVersion: SignalVersion;
+  signalVersion: SignalVersion | null;
 };

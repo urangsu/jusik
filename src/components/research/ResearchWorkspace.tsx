@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Loader2, AlertCircle, AlertTriangle } from "lucide-react";
 import { MethodRulePanel } from "./MethodRulePanel";
 import { SupplyChainEvidencePanel } from "./SupplyChainEvidencePanel";
 import { ThesisPillarPanel } from "./ThesisPillarPanel";
@@ -7,51 +7,76 @@ import { ResearchValidationPanel } from "./ResearchValidationPanel";
 import { ResearchVoiceTimeline } from "./ResearchVoiceTimeline";
 import { EvidenceDrawer } from "./EvidenceDrawer";
 import type { ResearchClaim } from "@/domain/research/research-claim";
+import type { ResearchDiagnosticData } from "@/server/research/research-workspace-service";
+import type { DataEnvelope } from "@/domain/common/data-status";
+
+type ResearchDiagnosticEnvelope = DataEnvelope<ResearchDiagnosticData | null>;
 
 interface ResearchWorkspaceProps {
   assetId: string | null;
   asOfDate?: string;
+  /** Must be provided explicitly — never inferred from assetId. */
+  universeId: string | null;
 }
 
-export const ResearchWorkspace: React.FC<ResearchWorkspaceProps> = ({ assetId, asOfDate }) => {
+export const ResearchWorkspace: React.FC<ResearchWorkspaceProps> = ({ assetId, asOfDate, universeId }) => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ResearchDiagnosticData | null>(null);
   const [status, setStatus] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [selectedClaim, setSelectedClaim] = useState<ResearchClaim | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (!assetId) {
-      setData(null);
+    // Reset immediately on asset switch — prevents stale data flash
+    setData(null);
+    setStatus("");
+    setMessage("");
+    setSelectedClaim(null);
+
+    if (!assetId || !universeId) {
       setStatus("insufficient_data");
-      setMessage("공식 자료 또는 사용자 제공 리서치 기록이 연결되지 않았습니다.");
+      setMessage("종목 또는 유니버스 정보가 없어 리서치 데이터를 불러올 수 없습니다.");
       return;
     }
 
-    setLoading(true);
-    const dateParam = asOfDate ? `?asOfDate=${asOfDate}` : "";
+    // Cancel any in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    fetch(`/api/research/assets/${assetId}${dateParam}`)
+    setLoading(true);
+    const dateParam = asOfDate ?? new Date().toISOString().slice(0, 10);
+    const url = `/api/research/assets/${encodeURIComponent(assetId)}?asOfDate=${dateParam}&universeId=${encodeURIComponent(universeId)}`;
+
+    fetch(url, { signal: controller.signal })
       .then((res) => res.json())
-      .then((envelope) => {
+      .then((envelope: ResearchDiagnosticEnvelope) => {
+        if (controller.signal.aborted) return;
         setStatus(envelope.status);
-        setMessage(envelope.message || "");
-        if (envelope.status === "cached" || envelope.status === "real_time") {
+        setMessage((envelope as any).message ?? "");
+        const validStatuses = new Set(["cached", "real_time", "delayed", "eod", "stale"]);
+        if (validStatuses.has(envelope.status) && envelope.value) {
           setData(envelope.value);
         } else {
           setData(null);
         }
       })
-      .catch((err) => {
+      .catch((err: Error) => {
+        if (err.name === "AbortError") return;
         console.error("Failed to fetch research diagnostics:", err);
         setStatus("error");
         setMessage("리서치 워크스페이스 데이터를 불러오는 도중 오류가 발생했습니다.");
         setData(null);
       })
       .finally(() => {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       });
-  }, [assetId, asOfDate]);
+
+    return () => {
+      controller.abort();
+    };
+  }, [assetId, asOfDate, universeId]);
 
   if (loading) {
     return (
@@ -62,8 +87,7 @@ export const ResearchWorkspace: React.FC<ResearchWorkspaceProps> = ({ assetId, a
     );
   }
 
-  // Handle missing/insufficient data screen honestly
-  if (!assetId || status === "insufficient_data" || !data) {
+  if (!assetId || !universeId || status === "insufficient_data" || status === "error" || !data) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center bg-kt-bg-surface-200 border border-kt-border-panel/40 rounded-kt-card max-w-xl mx-auto select-none my-8 text-xs">
         <AlertCircle className="w-8 h-8 text-kt-text-muted mb-3" />
@@ -78,45 +102,16 @@ export const ResearchWorkspace: React.FC<ResearchWorkspaceProps> = ({ assetId, a
     );
   }
 
-  // Create a beautiful mock supply chain graph for the asset
-  const mockGraph = {
-    graphId: `g_mock_${assetId}`,
-    theme: "semiconductor_materials",
-    nodes: [
-      { nodeId: "node_upstream", nodeType: "supplier" as const, label: "반도체 장비/소재 협력사 (Upstream Supplier)", assetId: null },
-      { nodeId: "node_target", nodeType: "listed_asset" as const, label: `분석 대상 상장사 (Target Asset)`, assetId: assetId },
-      { nodeId: "node_downstream", nodeType: "customer" as const, label: "글로벌 디바이스 제조사 (Downstream Customer)", assetId: null },
-    ],
-    edges: [
-      {
-        edgeId: "e_up_target",
-        fromNodeId: "node_upstream",
-        toNodeId: "node_target",
-        relationship: "supplies" as const,
-        evidenceState: "verified" as const,
-        evidenceIds: ["ev_supply_01"],
-        claimIds: [],
-        validFrom: "2026-01-01",
-        expiryAt: null,
-      },
-      {
-        edgeId: "e_target_down",
-        fromNodeId: "node_target",
-        toNodeId: "node_downstream",
-        relationship: "supplies" as const,
-        evidenceState: "inferred" as const,
-        evidenceIds: ["ev_demand_02"],
-        claimIds: [],
-        validFrom: "2026-01-01",
-        expiryAt: null,
-      },
-    ],
-    asOfDate: asOfDate || new Date().toISOString().slice(0, 10),
-    dataVersionIds: ["ver_mock"],
-  };
-
   return (
     <div className="flex flex-col gap-6 relative select-none">
+      {/* Stale data warning banner */}
+      {status === "stale" && (
+        <div className="flex items-center gap-2 bg-kt-bg-surface-200 border border-kt-border-panel/40 rounded px-4 py-2.5 text-kt-text-secondary text-xs">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>표시된 데이터가 최신이 아닐 수 있습니다 (stale). 데이터 원천을 직접 확인하세요.</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Left Side: Multiseat validation and Thesis Pillars */}
         <div className="flex flex-col gap-6">
@@ -124,20 +119,29 @@ export const ResearchWorkspace: React.FC<ResearchWorkspaceProps> = ({ assetId, a
           <ThesisPillarPanel
             pillars={data.thesisSnapshot.pillars}
             claims={data.claims}
-            onClaimSelect={(claim) => setSelectedClaim(claim)}
+            onClaimSelect={(claim: ResearchClaim) => setSelectedClaim(claim)}
           />
         </div>
 
-        {/* Right Side: Evaluations and Supply chain graph */}
+        {/* Right Side: Method Rules, Supply Chain, Voice Timeline */}
         <div className="flex flex-col gap-6">
           <MethodRulePanel evaluations={data.evaluations} />
-          <SupplyChainEvidencePanel graph={mockGraph} />
+          {/*
+            graph prop receives the real supply chain graph (or null).
+            When null, the panel shows an "unavailable" empty state.
+            No mock graph is ever generated here.
+          */}
+          <SupplyChainEvidencePanel graph={data.supplyChainGraph} />
           <ResearchVoiceTimeline timeline={data.voiceTimeline} />
         </div>
       </div>
 
       {/* Slide-out Evidence details drawer */}
-      <EvidenceDrawer claim={selectedClaim} onClose={() => setSelectedClaim(null)} />
+      <EvidenceDrawer
+        claim={selectedClaim}
+        evidenceRecords={data.evidenceRecords}
+        onClose={() => setSelectedClaim(null)}
+      />
     </div>
   );
 };

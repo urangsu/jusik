@@ -35,5 +35,5 @@ export type MethodRuleEvaluation = {
    * Must NOT be interpreted as probability of upside or return.
    */
   dataQualityScore: number;
-  signalVersion: SignalVersion;
+  signalVersion: SignalVersion | null;
 };

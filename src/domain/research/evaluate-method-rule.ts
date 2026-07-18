@@ -24,7 +24,7 @@ export type EvaluateMethodRuleInput = {
   evidenceMeta: Record<string, { kind: string; expiryAt: string | null }>;
   /** ISO-8601 date for staleness evaluation */
   asOfDate: string;
-  signalVersion: SignalVersion;
+  signalVersion: SignalVersion | null;
 };
 
 export function evaluateMethodRule(input: EvaluateMethodRuleInput): MethodRuleEvaluation {

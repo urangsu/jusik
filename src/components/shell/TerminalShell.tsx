@@ -124,7 +124,16 @@ export const TerminalShell: React.FC = () => {
           {activeTab === "strategy" ? (
             <StrategyWorkspace selectedAsset={selectedAsset} />
           ) : activeTab === "research" ? (
-            <ResearchWorkspace assetId={selectedAsset ? selectedAsset.id.replace(/:/g, "_") : null} />
+            <ResearchWorkspace
+              assetId={selectedAsset ? selectedAsset.id.replace(/:/g, "_") : null}
+              universeId={
+                selectedAsset
+                  ? selectedAsset.exchange === "KOSPI" || selectedAsset.exchange === "KOSDAQ"
+                    ? "KOSPI_SAMPLE"
+                    : "SP500_SAMPLE"
+                  : null
+              }
+            />
           ) : activeTab === "alerts" ? (
             <AlertSettingsPage />
           ) : activeTab === "backtest" ? (

@@ -11,6 +11,15 @@
 
 import type { SignalVersion } from "@/domain/signals/signal-version";
 
+/**
+ * Veto severity for a research method rule violation.
+ * - none: violation has no effect on veto status
+ * - warning: produces deteriorating but NOT isVetoed=true
+ * - blocking: produces isVetoed=true
+ * - fatal: produces isVetoed=true and globalStatus=deteriorating
+ */
+export type ResearchVetoSeverity = "none" | "warning" | "blocking" | "fatal";
+
 export type ResearchMethodRuleId =
   | "demand_evidence"
   | "supply_chain_bottleneck"
@@ -39,6 +48,12 @@ export type ResearchMethodRule = {
   /** Human-readable conditions that produce "contradicted" */
   breakConditions: string[];
   supportedMarkets: Array<"KR" | "US">;
+  /**
+   * Severity of violation if this rule's break conditions are triggered.
+   * warning → deteriorating only, never isVetoed=true
+   * blocking/fatal → isVetoed=true
+   */
+  vetoSeverity: ResearchVetoSeverity;
   /**
    * Always false. Production eligibility requires K-Terminal's own
    * out-of-sample validation, which is not yet complete.

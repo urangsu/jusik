@@ -28,6 +28,7 @@ const DEMAND_RULE: ResearchMethodRule = {
   warningConditions: ["Demand signals are mixed"],
   breakConditions: ["Major customer cancellation confirmed"],
   supportedMarkets: ["KR", "US"],
+  vetoSeverity: "fatal",
   productionEligible: false,
   engineVersion: "0.1.0",
 };
@@ -37,6 +38,7 @@ const KR_ONLY_RULE: ResearchMethodRule = {
   ruleId: "market_window",
   displayName: "Market Window",
   supportedMarkets: ["KR"],
+  vetoSeverity: "warning",
 };
 
 function makeClaim(overrides: Partial<ResearchClaim>): ResearchClaim {
@@ -70,7 +72,7 @@ function makeInput(
       ev1: { kind: "revenue_data", expiryAt: null },
     },
     asOfDate: "2026-06-01",
-    signalVersion: MOCK_SIGNAL_VERSION,
+    signalVersion: null,
     ...overrides,
   };
 }

@@ -10,7 +10,7 @@ export type BuildThesisSnapshotInput = {
   valuationEvidenceAvailable: boolean;
   filingsAvailable: boolean;
   dataVersionIds: string[];
-  signalVersion: SignalVersion;
+  signalVersion: SignalVersion | null;
   firstClaimAt: string | null;
   latestClaimAt: string | null;
   changeReasons: string[];

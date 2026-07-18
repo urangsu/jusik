@@ -1,51 +1,77 @@
 import type { MethodRuleEvaluation } from "./method-evaluation";
-import type { ResearchValidationReport, ResearchValidationSeatId } from "./research-validation";
+import type { ResearchValidationReport, ResearchValidationSeatId, ResearchVetoReason } from "./research-validation";
+import type { ResearchAvailability } from "./research-availability";
+import { resolveEvidenceFreshness, resolveEvidenceConfidence } from "./resolve-evidence-quality";
+import { getMethodRule } from "@/server/research/method-rule-registry";
 import type { SignalVersion } from "@/domain/signals/signal-version";
 
 export type SynthesizeValidationReportsInput = {
   assetId: string;
   evaluations: MethodRuleEvaluation[];
-  priceAvailable: boolean;
-  valuationAvailable: boolean;
-  filingsAvailable: boolean;
-  signalVersion: SignalVersion;
+  availability: ResearchAvailability;
+  signalVersion: SignalVersion | null;
 };
 
 export type SynthesisResult = {
   reports: ResearchValidationReport[];
   globalStatus: "confirming" | "mixed" | "deteriorating" | "insufficient_data";
+  /**
+   * True only when at least one ResearchVetoReason with severity "blocking" or "fatal" exists.
+   * deteriorating status alone does NOT set isVetoed=true.
+   */
   isVetoed: boolean;
-  vetoReasons: string[];
+  /** Always non-empty when isVetoed=true. Empty when isVetoed=false. */
+  vetoReasons: ResearchVetoReason[];
 };
 
-export function synthesizeValidationReports(input: SynthesizeValidationReportsInput): SynthesisResult {
-  const { assetId, evaluations, priceAvailable, valuationAvailable, filingsAvailable, signalVersion } = input;
-
-  const reports: ResearchValidationReport[] = [];
-  const allVetoReasons: string[] = [];
-
-  // Helper to extract claims and evidence from matching evaluations
-  const extractRefs = (ruleIds: string[]) => {
-    const matched = evaluations.filter((e) => ruleIds.includes(e.ruleId));
-    return {
-      claimIds: Array.from(new Set(matched.flatMap((m) => m.claimIds))),
-      supportingEvidenceIds: Array.from(new Set(matched.flatMap((m) => m.supportingEvidenceIds))),
-      contradictingEvidenceIds: Array.from(new Set(matched.flatMap((m) => m.contradictingEvidenceIds))),
-      missingInputs: Array.from(new Set(matched.flatMap((m) => m.missingInputs))),
-      staleEvidenceIds: Array.from(new Set(matched.flatMap((m) => m.staleEvidenceIds))),
-      dataQualityScore: matched.length > 0
+// Helper to extract combined refs from evaluations matching given rule IDs
+function extractRefs(evaluations: MethodRuleEvaluation[], ruleIds: string[]) {
+  const matched = evaluations.filter((e) => ruleIds.includes(e.ruleId));
+  return {
+    claimIds: Array.from(new Set(matched.flatMap((m) => m.claimIds))),
+    supportingEvidenceIds: Array.from(new Set(matched.flatMap((m) => m.supportingEvidenceIds))),
+    contradictingEvidenceIds: Array.from(new Set(matched.flatMap((m) => m.contradictingEvidenceIds))),
+    missingInputs: Array.from(new Set(matched.flatMap((m) => m.missingInputs))),
+    staleEvidenceIds: Array.from(new Set(matched.flatMap((m) => m.staleEvidenceIds))),
+    dataQualityScore:
+      matched.length > 0
         ? matched.reduce((acc, curr) => acc + curr.dataQualityScore, 0) / matched.length
         : 0,
-    };
   };
+}
 
-  // 1. Seat: evidence_counter_thesis (Counter Thesis Veto Gate)
-  const contradictedEval = evaluations.find((e) => e.status === "contradicted");
-  const counterRefs = extractRefs(evaluations.map(e => e.ruleId));
-  const hasContradiction = !!contradictedEval;
-  const counterStatus = hasContradiction ? "deteriorating" : "confirming";
-  const counterVetos = hasContradiction ? [`Fatal evidence contradiction detected in rule "${contradictedEval.ruleId}".`] : [];
-  if (hasContradiction) allVetoReasons.push(...counterVetos);
+export function synthesizeValidationReports(input: SynthesizeValidationReportsInput): SynthesisResult {
+  const { assetId, evaluations, availability, signalVersion } = input;
+
+  const reports: ResearchValidationReport[] = [];
+  const allVetoReasons: ResearchVetoReason[] = [];
+
+  // ── Seat 1: evidence_counter_thesis ──────────────────────────────────────
+  const counterRefs = extractRefs(evaluations, evaluations.map((e) => e.ruleId));
+  const counterVetos: ResearchVetoReason[] = [];
+
+  // Find contradicted rules and check their severity
+  const contradictedEvals = evaluations.filter((e) => e.status === "contradicted");
+  for (const eval_ of contradictedEvals) {
+    const rule = (() => { try { return getMethodRule(eval_.ruleId as any); } catch { return null; } })();
+    if (!rule) continue;
+    const severity = rule.vetoSeverity;
+    if (severity === "blocking" || severity === "fatal") {
+      counterVetos.push({
+        code: `CONTRADICTION_${eval_.ruleId.toUpperCase()}`,
+        severity: severity as "blocking" | "fatal",
+        seatId: "evidence_counter_thesis",
+        ruleId: eval_.ruleId,
+        message: `Evidence contradiction detected in rule "${rule.displayName}". This is a ${severity} violation.`,
+        evidenceIds: eval_.contradictingEvidenceIds,
+      });
+    }
+  }
+
+  if (counterVetos.length > 0) allVetoReasons.push(...counterVetos);
+
+  const counterStatus: ResearchValidationReport["status"] =
+    contradictedEvals.length > 0 ? "deteriorating" : "confirming";
 
   reports.push({
     seatId: "evidence_counter_thesis",
@@ -55,28 +81,37 @@ export function synthesizeValidationReports(input: SynthesizeValidationReportsIn
     supportingEvidenceIds: counterRefs.supportingEvidenceIds,
     contradictingEvidenceIds: counterRefs.contradictingEvidenceIds,
     missingInputs: counterRefs.missingInputs,
-    freshness: counterRefs.staleEvidenceIds.length > 0 ? "stale" : "fresh",
-    confidence: counterRefs.supportingEvidenceIds.length > 3 ? "high" : counterRefs.supportingEvidenceIds.length > 0 ? "medium" : "low",
+    freshness: resolveEvidenceFreshness(counterRefs.supportingEvidenceIds, counterRefs.staleEvidenceIds),
+    confidence: resolveEvidenceConfidence(counterRefs.supportingEvidenceIds, counterRefs.contradictingEvidenceIds),
     abstained: false,
     vetoReasons: counterVetos,
     dataQualityScore: counterRefs.dataQualityScore,
     signalVersion,
   });
 
-  // 2. Seat: demand_supply_chain
-  const dscRefs = extractRefs(["demand_evidence", "supply_chain_bottleneck"]);
-  const dscEvals = evaluations.filter((e) => ["demand_evidence", "supply_chain_bottleneck"].includes(e.ruleId));
+  // ── Seat 2: demand_supply_chain ───────────────────────────────────────────
+  const dscRuleIds = ["demand_evidence", "supply_chain_bottleneck"];
+  const dscRefs = extractRefs(evaluations, dscRuleIds);
+  const dscEvals = evaluations.filter((e) => dscRuleIds.includes(e.ruleId));
   const dscHasContradiction = dscEvals.some((e) => e.status === "contradicted");
-  const dscHasInsufficient = dscEvals.some((e) => e.status === "insufficient_data") || dscEvals.length === 0;
+  const dscHasInsufficient = dscEvals.length === 0 || dscEvals.some((e) => e.status === "insufficient_data");
   const dscHasAllSupported = dscEvals.length > 0 && dscEvals.every((e) => e.status === "supported");
+
+  // Also check availability — missing supply chain graph is insufficient_data
+  const supplyChainUnavailable = !availability.supplyChain.available;
 
   let dscStatus: ResearchValidationReport["status"] = "mixed";
   if (dscHasContradiction) {
     dscStatus = "deteriorating";
-  } else if (dscHasInsufficient) {
+  } else if (dscHasInsufficient || supplyChainUnavailable) {
     dscStatus = "insufficient_data";
   } else if (dscHasAllSupported) {
     dscStatus = "confirming";
+  }
+
+  const dscMissingInputs = [...dscRefs.missingInputs];
+  if (supplyChainUnavailable) {
+    dscMissingInputs.push("supply_chain_graph_unavailable");
   }
 
   reports.push({
@@ -86,20 +121,20 @@ export function synthesizeValidationReports(input: SynthesizeValidationReportsIn
     claimIds: dscRefs.claimIds,
     supportingEvidenceIds: dscRefs.supportingEvidenceIds,
     contradictingEvidenceIds: dscRefs.contradictingEvidenceIds,
-    missingInputs: dscRefs.missingInputs,
-    freshness: dscRefs.staleEvidenceIds.length > 0 ? "stale" : "fresh",
-    confidence: dscRefs.supportingEvidenceIds.length > 0 ? "medium" : "none",
+    missingInputs: dscMissingInputs,
+    freshness: resolveEvidenceFreshness(dscRefs.supportingEvidenceIds, dscRefs.staleEvidenceIds),
+    confidence: resolveEvidenceConfidence(dscRefs.supportingEvidenceIds, dscRefs.contradictingEvidenceIds),
     abstained: false,
     vetoReasons: [],
     dataQualityScore: dscRefs.dataQualityScore,
     signalVersion,
   });
 
-  // 3. Seat: company_attribution
-  // Veto rule: missing supply-chain evidence makes company attribution abstain
+  // ── Seat 3: company_attribution ───────────────────────────────────────────
   const caAbstain = dscStatus === "insufficient_data";
-  const caRefs = extractRefs(["customer_validation", "contract_counterparty_quality"]);
-  const caEvals = evaluations.filter((e) => ["customer_validation", "contract_counterparty_quality"].includes(e.ruleId));
+  const caRuleIds = ["customer_validation", "contract_counterparty_quality"];
+  const caRefs = extractRefs(evaluations, caRuleIds);
+  const caEvals = evaluations.filter((e) => caRuleIds.includes(e.ruleId));
   const caHasContradiction = caEvals.some((e) => e.status === "contradicted");
   const caHasAllSupported = caEvals.length > 0 && caEvals.every((e) => e.status === "supported");
 
@@ -114,6 +149,8 @@ export function synthesizeValidationReports(input: SynthesizeValidationReportsIn
     }
   }
 
+  const caMissingInputs = caAbstain ? ["supply_chain_graph_unavailable"] : caRefs.missingInputs;
+
   reports.push({
     seatId: "company_attribution",
     assetId,
@@ -121,38 +158,56 @@ export function synthesizeValidationReports(input: SynthesizeValidationReportsIn
     claimIds: caRefs.claimIds,
     supportingEvidenceIds: caRefs.supportingEvidenceIds,
     contradictingEvidenceIds: caRefs.contradictingEvidenceIds,
-    missingInputs: caRefs.missingInputs,
-    freshness: caRefs.staleEvidenceIds.length > 0 ? "stale" : "fresh",
-    confidence: caAbstain ? "none" : caRefs.supportingEvidenceIds.length > 0 ? "medium" : "low",
+    missingInputs: caMissingInputs,
+    freshness: caAbstain ? "unknown" : resolveEvidenceFreshness(caRefs.supportingEvidenceIds, caRefs.staleEvidenceIds),
+    confidence: caAbstain ? "none" : resolveEvidenceConfidence(caRefs.supportingEvidenceIds, caRefs.contradictingEvidenceIds),
     abstained: caAbstain,
-    vetoReasons: caAbstain ? ["Abstained: Missing demand or supply chain path evidence."] : [],
+    vetoReasons: [],
     dataQualityScore: caRefs.dataQualityScore,
     signalVersion,
   });
 
-  // 4. Seat: financial_quality
-  const fqRefs = extractRefs(["gaap_financial_quality", "dilution_financing_risk"]);
-  const fqEvals = evaluations.filter((e) => ["gaap_financial_quality", "dilution_financing_risk"].includes(e.ruleId));
+  // ── Seat 4: financial_quality ─────────────────────────────────────────────
+  const fqRuleIds = ["gaap_financial_quality", "dilution_financing_risk"];
+  const fqRefs = extractRefs(evaluations, fqRuleIds);
+  const fqEvals = evaluations.filter((e) => fqRuleIds.includes(e.ruleId));
   const fqHasContradiction = fqEvals.some((e) => e.status === "contradicted");
   const fqHasAllSupported = fqEvals.length > 0 && fqEvals.every((e) => e.status === "supported");
 
-  let fqStatus: ResearchValidationReport["status"] = "mixed";
-  const fqVetos: string[] = [];
+  const filingsUnavailable = !availability.filings.available;
 
-  // Veto rule: missing fundamentals/filings prevents company confirming
-  if (!filingsAvailable) {
+  let fqStatus: ResearchValidationReport["status"] = "mixed";
+  const fqVetos: ResearchVetoReason[] = [];
+
+  if (filingsUnavailable) {
     fqStatus = "insufficient_data";
-    fqVetos.push("Missing core fundamentals or filings data.");
-    allVetoReasons.push("Missing core fundamentals or filings data.");
-  } else {
-    if (fqHasContradiction) {
-      fqStatus = "deteriorating";
-    } else if (fqHasAllSupported) {
-      fqStatus = "confirming";
-    } else {
-      fqStatus = "mixed";
+    // Not a veto — data just unavailable
+  } else if (fqHasContradiction) {
+    fqStatus = "deteriorating";
+    // Check for blocking/fatal within financial quality rules
+    const contradictedFqEvals = fqEvals.filter((e) => e.status === "contradicted");
+    for (const eval_ of contradictedFqEvals) {
+      const rule = (() => { try { return getMethodRule(eval_.ruleId as any); } catch { return null; } })();
+      if (!rule) continue;
+      if (rule.vetoSeverity === "blocking" || rule.vetoSeverity === "fatal") {
+        const vetoReason: ResearchVetoReason = {
+          code: `FINANCIAL_QUALITY_VIOLATION_${eval_.ruleId.toUpperCase()}`,
+          severity: rule.vetoSeverity as "blocking" | "fatal",
+          seatId: "financial_quality",
+          ruleId: eval_.ruleId,
+          message: `Financial quality violation detected in rule "${rule.displayName}".`,
+          evidenceIds: eval_.contradictingEvidenceIds,
+        };
+        fqVetos.push(vetoReason);
+        allVetoReasons.push(vetoReason);
+      }
     }
+  } else if (fqHasAllSupported) {
+    fqStatus = "confirming";
   }
+
+  const fqMissingInputs = [...fqRefs.missingInputs];
+  if (filingsUnavailable) fqMissingInputs.push("filings_unavailable");
 
   reports.push({
     seatId: "financial_quality",
@@ -161,39 +216,40 @@ export function synthesizeValidationReports(input: SynthesizeValidationReportsIn
     claimIds: fqRefs.claimIds,
     supportingEvidenceIds: fqRefs.supportingEvidenceIds,
     contradictingEvidenceIds: fqRefs.contradictingEvidenceIds,
-    missingInputs: fqRefs.missingInputs,
-    freshness: fqRefs.staleEvidenceIds.length > 0 ? "stale" : "fresh",
-    confidence: fqRefs.supportingEvidenceIds.length > 0 ? "medium" : "none",
+    missingInputs: fqMissingInputs,
+    freshness: resolveEvidenceFreshness(fqRefs.supportingEvidenceIds, fqRefs.staleEvidenceIds),
+    confidence: resolveEvidenceConfidence(fqRefs.supportingEvidenceIds, fqRefs.contradictingEvidenceIds),
     abstained: false,
     vetoReasons: fqVetos,
     dataQualityScore: fqRefs.dataQualityScore,
     signalVersion,
   });
 
-  // 5. Seat: security_market_window
-  const smwRefs = extractRefs(["valuation_absorption", "market_window"]);
-  const smwEvals = evaluations.filter((e) => ["valuation_absorption", "market_window"].includes(e.ruleId));
+  // ── Seat 5: security_market_window ────────────────────────────────────────
+  const smwRuleIds = ["valuation_absorption", "market_window"];
+  const smwRefs = extractRefs(evaluations, smwRuleIds);
+  const smwEvals = evaluations.filter((e) => smwRuleIds.includes(e.ruleId));
   const smwHasContradiction = smwEvals.some((e) => e.status === "contradicted");
   const smwHasAllSupported = smwEvals.length > 0 && smwEvals.every((e) => e.status === "supported");
 
-  let smwStatus: ResearchValidationReport["status"] = "mixed";
-  const smwVetos: string[] = [];
+  const priceUnavailable = !availability.price.available;
+  const valuationUnavailable = !availability.valuation.available;
 
-  // Veto rule: missing price or valuation makes it not decision-grade / insufficient
-  if (!priceAvailable || !valuationAvailable) {
+  let smwStatus: ResearchValidationReport["status"] = "mixed";
+  const smwVetos: ResearchVetoReason[] = [];
+
+  if (priceUnavailable || valuationUnavailable) {
     smwStatus = "insufficient_data";
-    const reason = "Missing current price or valuation metrics.";
-    smwVetos.push(reason);
-    allVetoReasons.push(reason);
-  } else {
-    if (smwHasContradiction) {
-      smwStatus = "deteriorating";
-    } else if (smwHasAllSupported) {
-      smwStatus = "confirming";
-    } else {
-      smwStatus = "mixed";
-    }
+    // Not a veto — data unavailable, not a contradicting evidence situation
+  } else if (smwHasContradiction) {
+    smwStatus = "deteriorating";
+  } else if (smwHasAllSupported) {
+    smwStatus = "confirming";
   }
+
+  const smwMissingInputs = [...smwRefs.missingInputs];
+  if (priceUnavailable) smwMissingInputs.push("price_data_unavailable");
+  if (valuationUnavailable) smwMissingInputs.push("valuation_metrics_unavailable");
 
   reports.push({
     seatId: "security_market_window",
@@ -202,18 +258,20 @@ export function synthesizeValidationReports(input: SynthesizeValidationReportsIn
     claimIds: smwRefs.claimIds,
     supportingEvidenceIds: smwRefs.supportingEvidenceIds,
     contradictingEvidenceIds: smwRefs.contradictingEvidenceIds,
-    missingInputs: smwRefs.missingInputs,
-    freshness: smwRefs.staleEvidenceIds.length > 0 ? "stale" : "fresh",
-    confidence: smwRefs.supportingEvidenceIds.length > 0 ? "medium" : "none",
+    missingInputs: smwMissingInputs,
+    freshness: resolveEvidenceFreshness(smwRefs.supportingEvidenceIds, smwRefs.staleEvidenceIds),
+    confidence: resolveEvidenceConfidence(smwRefs.supportingEvidenceIds, smwRefs.contradictingEvidenceIds),
     abstained: false,
     vetoReasons: smwVetos,
     dataQualityScore: smwRefs.dataQualityScore,
     signalVersion,
   });
 
-  // 6. Aggregate Global Status via Veto Chain
-  // No majority voting exists. A single deteriorating seat cascades the global status.
-  const isVetoed = allVetoReasons.length > 0 || reports.some((r) => r.status === "deteriorating");
+  // ── Aggregate global status (veto-first, no majority voting) ─────────────
+  // isVetoed is ONLY true when blocking or fatal veto reasons exist
+  const isVetoed = allVetoReasons.some(
+    (r) => r.severity === "blocking" || r.severity === "fatal"
+  );
 
   let globalStatus: SynthesisResult["globalStatus"] = "confirming";
   if (reports.some((r) => r.status === "deteriorating")) {

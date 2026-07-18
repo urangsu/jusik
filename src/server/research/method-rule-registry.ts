@@ -10,6 +10,12 @@
  *
  * All rules have productionEligible: false. Production eligibility requires
  * K-Terminal's own out-of-sample validation.
+ *
+ * Veto severity mapping:
+ * - fatal: core demand or financial integrity violation → isVetoed=true
+ * - blocking: secondary structural or pricing violation → isVetoed=true
+ * - warning: auxiliary indicator contradiction → deteriorating, NOT isVetoed
+ * - none: informational only
  */
 
 import type { ResearchMethodRule, ResearchMethodRuleId } from "@/domain/research/method-rule";
@@ -38,6 +44,7 @@ const REGISTRY: Record<ResearchMethodRuleId, ResearchMethodRule> = {
       "Revenue decline confirmed in most recent quarter",
     ],
     supportedMarkets: ["KR", "US"],
+    vetoSeverity: "fatal",
     productionEligible: false,
     engineVersion: ENGINE_VERSION,
   },
@@ -63,6 +70,7 @@ const REGISTRY: Record<ResearchMethodRuleId, ResearchMethodRule> = {
       "Customer has confirmed dual-sourcing strategy",
     ],
     supportedMarkets: ["KR", "US"],
+    vetoSeverity: "blocking",
     productionEligible: false,
     engineVersion: ENGINE_VERSION,
   },
@@ -87,6 +95,7 @@ const REGISTRY: Record<ResearchMethodRuleId, ResearchMethodRule> = {
       "Drop-in substitute is in volume production with a key customer",
     ],
     supportedMarkets: ["KR", "US"],
+    vetoSeverity: "warning",
     productionEligible: false,
     engineVersion: ENGINE_VERSION,
   },
@@ -110,6 +119,7 @@ const REGISTRY: Record<ResearchMethodRuleId, ResearchMethodRule> = {
       "Qualification failure confirmed by customer or official source",
     ],
     supportedMarkets: ["KR", "US"],
+    vetoSeverity: "blocking",
     productionEligible: false,
     engineVersion: ENGINE_VERSION,
   },
@@ -132,6 +142,7 @@ const REGISTRY: Record<ResearchMethodRuleId, ResearchMethodRule> = {
       "CapEx cancelled or deferred by official announcement",
     ],
     supportedMarkets: ["KR", "US"],
+    vetoSeverity: "warning",
     productionEligible: false,
     engineVersion: ENGINE_VERSION,
   },
@@ -155,6 +166,7 @@ const REGISTRY: Record<ResearchMethodRuleId, ResearchMethodRule> = {
       "Relationship termination confirmed by customer or filing",
     ],
     supportedMarkets: ["KR", "US"],
+    vetoSeverity: "warning",
     productionEligible: false,
     engineVersion: ENGINE_VERSION,
   },
@@ -176,6 +188,7 @@ const REGISTRY: Record<ResearchMethodRuleId, ResearchMethodRule> = {
       "Major counterparty has filed for bankruptcy or credit downgrade confirmed",
     ],
     supportedMarkets: ["KR", "US"],
+    vetoSeverity: "blocking",
     productionEligible: false,
     engineVersion: ENGINE_VERSION,
   },
@@ -201,6 +214,7 @@ const REGISTRY: Record<ResearchMethodRuleId, ResearchMethodRule> = {
       "Going-concern warning issued in most recent filing",
     ],
     supportedMarkets: ["KR", "US"],
+    vetoSeverity: "fatal",
     productionEligible: false,
     engineVersion: ENGINE_VERSION,
   },
@@ -224,6 +238,7 @@ const REGISTRY: Record<ResearchMethodRuleId, ResearchMethodRule> = {
       "Convertible debt approaching maturity with insufficient cash reserves",
     ],
     supportedMarkets: ["KR", "US"],
+    vetoSeverity: "blocking",
     productionEligible: false,
     engineVersion: ENGINE_VERSION,
   },
@@ -248,6 +263,7 @@ const REGISTRY: Record<ResearchMethodRuleId, ResearchMethodRule> = {
       "Market price or valuation data is unavailable — security conclusion is not decision-grade",
     ],
     supportedMarkets: ["KR", "US"],
+    vetoSeverity: "warning",
     productionEligible: false,
     engineVersion: ENGINE_VERSION,
   },
@@ -272,6 +288,7 @@ const REGISTRY: Record<ResearchMethodRuleId, ResearchMethodRule> = {
       "Market window officially closed by regulatory announcement",
     ],
     supportedMarkets: ["KR", "US"],
+    vetoSeverity: "warning",
     productionEligible: false,
     engineVersion: ENGINE_VERSION,
   },

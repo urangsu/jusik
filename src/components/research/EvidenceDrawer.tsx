@@ -1,16 +1,33 @@
 import React from "react";
-import { X, ExternalLink, ShieldCheck, AlertCircle } from "lucide-react";
+import { X, ExternalLink, ShieldCheck, AlertCircle, FileText, Calendar, Tag } from "lucide-react";
 import type { ResearchClaim } from "@/domain/research/research-claim";
+import type { ResearchEvidenceRecord } from "@/domain/research/research-evidence-record";
 
 interface EvidenceDrawerProps {
   claim: ResearchClaim | null;
+  evidenceRecords: ResearchEvidenceRecord[];
   onClose: () => void;
 }
 
-export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ claim, onClose }) => {
+const VERIFICATION_LABEL: Record<ResearchEvidenceRecord["verificationStatus"], string> = {
+  verified: "검증 완료",
+  unverified: "미검증",
+  stale: "기간 만료",
+  rejected: "거부됨",
+};
+
+export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ claim, evidenceRecords, onClose }) => {
   if (!claim) return null;
 
   const isAiExtracted = claim.extractionMethod === "ai_extraction";
+
+  // Find evidence records that correspond to this claim's evidenceIds
+  const linkedRecords = evidenceRecords.filter((r) =>
+    claim.evidenceIds.includes(r.evidenceId)
+  );
+  const unresolvedIds = claim.evidenceIds.filter(
+    (id) => !linkedRecords.some((r) => r.evidenceId === id)
+  );
 
   return (
     <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-kt-border-panel/40 bg-kt-bg-surface-100/95 backdrop-blur-md p-6 flex flex-col gap-6 text-xs text-kt-text-secondary select-none">
@@ -97,16 +114,73 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ claim, onClose }
           </div>
         )}
 
-        {claim.evidenceIds.length > 0 && (
+        {/* ── Linked Evidence Records (actual provenance) ── */}
+        {linkedRecords.length > 0 && (
           <div>
-            <span className="text-[10px] text-kt-text-muted uppercase tracking-wider">관련 증거 일련번호 (Evidence IDs)</span>
-            <ul className="mt-1.5 flex flex-col gap-1.5 font-mono">
-              {claim.evidenceIds.map((evId) => (
-                <li key={evId} className="flex items-center justify-between bg-kt-bg-overlay-100 px-3 py-1.5 rounded border border-kt-border-panel/20">
-                  <span className="text-kt-text-primary">{evId}</span>
+            <span className="text-[10px] text-kt-text-muted uppercase tracking-wider">연결된 증거 출처 (Evidence Sources)</span>
+            <ul className="mt-1.5 flex flex-col gap-2">
+              {linkedRecords.map((rec) => (
+                <li key={rec.evidenceId} className="bg-kt-bg-overlay-100 border border-kt-border-panel/20 rounded p-3 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-kt-text-primary text-[11px] leading-snug">{rec.title}</span>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                      rec.verificationStatus === "verified"
+                        ? "text-kt-positive-text bg-kt-positive-weak"
+                        : rec.verificationStatus === "stale"
+                        ? "text-kt-warning-text bg-kt-bg-surface-200"
+                        : "text-kt-text-muted bg-kt-bg-surface-200"
+                    }`}>
+                      {VERIFICATION_LABEL[rec.verificationStatus]}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-kt-text-muted text-[9.5px]">
+                    <span className="flex items-center gap-1"><Tag className="w-3 h-3" />{rec.source}</span>
+                    {rec.publishedAt && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{rec.publishedAt}</span>}
+                    <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{rec.sourceTier}</span>
+                  </div>
+
+                  {rec.quoteSpan && (
+                    <div className="bg-kt-bg-surface-100 border-l-2 border-kt-border-panel/60 pl-2 mt-1 text-[10px] text-kt-text-secondary italic leading-relaxed">
+                      &quot;{rec.quoteSpan.text}&quot;
+                      {rec.quoteSpan.page && <span className="not-italic ml-1 text-kt-text-muted">p.{rec.quoteSpan.page}</span>}
+                    </div>
+                  )}
+
+                  {rec.sourceUrl && (
+                    <a
+                      href={rec.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="flex items-center gap-1 text-[9.5px] text-kt-text-muted hover:text-kt-text-primary transition-colors mt-1"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      원본 열기
+                    </a>
+                  )}
+
+                  <span className="font-mono text-[8.5px] text-kt-text-muted">{rec.evidenceId}</span>
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* ── Unresolved evidence IDs (no record found) ── */}
+        {unresolvedIds.length > 0 && (
+          <div>
+            <span className="text-[10px] text-kt-text-muted uppercase tracking-wider">미등록 증거 일련번호 (Unresolved)</span>
+            <ul className="mt-1.5 flex flex-col gap-1 font-mono">
+              {unresolvedIds.map((evId) => (
+                <li key={evId} className="flex items-center justify-between bg-kt-bg-overlay-100 px-3 py-1.5 rounded border border-kt-border-panel/20 opacity-50">
+                  <span className="text-kt-text-muted">{evId}</span>
+                  <span className="text-[8.5px] text-kt-text-muted uppercase">미수집</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-1.5 text-[9.5px] text-kt-text-muted">
+              이 ID는 현재 시스템에 근거 원문이 등록되지 않았습니다. 원문 수집 후 재확인하세요.
+            </p>
           </div>
         )}
       </div>

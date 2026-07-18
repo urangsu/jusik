@@ -94,7 +94,12 @@ export const ResearchValidationPanel: React.FC<ResearchValidationPanelProps> = (
               </div>
               <ul className="list-disc pl-5 text-[9.5px] leading-relaxed flex flex-col gap-1 text-kt-text-secondary">
                 {validationResult.vetoReasons.map((reason, idx) => (
-                  <li key={idx} className="font-sans">{reason}</li>
+                  <li key={idx} className="font-sans">
+                    <span className={`font-bold uppercase mr-1 text-[8px] ${reason.severity === "fatal" ? "text-kt-negative-text" : "text-kt-warning-text"}`}>
+                      [{reason.severity}]
+                    </span>
+                    {reason.message}
+                  </li>
                 ))}
               </ul>
             </div>
