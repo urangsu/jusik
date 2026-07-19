@@ -12,6 +12,7 @@ function makeRecord(overrides: Partial<SignalOutcomeJournalRecord>): SignalOutco
     subjectType: "signal",
     subjectId: "sig_abc",
     assetId: "KR_005930",
+    universeId: "KOSPI_SAMPLE",
     signalId: "sig_abc",
     strategyId: null,
     observationStartedAt: "2026-01-05T00:00:00Z",

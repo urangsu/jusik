@@ -16,6 +16,10 @@ export async function saveResearchClaim(claim: ResearchClaim): Promise<void> {
   const dir = getClaimsDir();
   await fs.mkdir(dir, { recursive: true });
   const filePath = getClaimPath(claim.claimId);
+  const resolved = path.resolve(filePath);
+  if (!resolved.startsWith(dir + path.sep)) {
+    throw new Error("Path traversal attempt blocked.");
+  }
   await writeAtomic(filePath, JSON.stringify(claim, null, 2));
 }
 
@@ -66,6 +70,9 @@ export async function listResearchClaims(query?: {
 }
 
 export async function clearAllResearchClaims(): Promise<void> {
+  if (process.env.NODE_ENV !== "test") {
+    throw new Error("Clear operations are only allowed in test environment.");
+  }
   try {
     await fs.rm(getClaimsDir(), { recursive: true, force: true });
   } catch {

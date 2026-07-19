@@ -7,6 +7,8 @@
  * - expiryAt < asOfDate means the record is stale and must be labeled as such.
  */
 
+import type { ResearchClaimKind } from "./research-claim";
+
 export type EvidenceVerificationStatus =
   | "verified"
   | "unverified"
@@ -16,6 +18,16 @@ export type EvidenceVerificationStatus =
 export type ResearchEvidenceRecord = {
   evidenceId: string;
   assetId: string;
+  evidenceKind: ResearchClaimKind;
+  claimIds: string[];
+  contentHash: string;
+  dataVersionId: string;
+  sourceAuthor: string | null;
+  extractionMethod:
+    | "provider_direct"
+    | "deterministic_parser"
+    | "ai_extraction"
+    | "user_import";
 
   /** Human-readable source name (e.g. "OpenDART", "Bloomberg", "User Import") */
   source: string;

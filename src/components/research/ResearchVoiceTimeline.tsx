@@ -22,12 +22,17 @@ export const ResearchVoiceTimeline: React.FC<ResearchVoiceTimelineProps> = ({ ti
     <Panel title="리서치 타임라인 (Research Voices Timeline)" headerAction={<Radio className="w-4 h-4 text-kt-text-muted" />}>
       <div className="flex flex-col gap-4 text-xs">
         <div className="text-[11px] text-kt-text-muted">
-          추적 등록된 주요 독립 분석가 및 채널의 실시간 코멘트 히스토리입니다.
+          추적 등록된 주요 독립 분석가 및 채널의 수집된 공개 리서치 기록 히스토리입니다.
         </div>
 
         <div className="flex flex-col gap-3">
           {timeline.map((post) => {
-            const isAiExtracted = post.sourceMethod === "official_api" || post.sourceMethod === "user_json";
+            const sourceLabels: Record<string, string> = {
+              official_api: "공식 API",
+              user_json: "사용자 JSON",
+              user_csv: "사용자 CSV",
+            };
+            const badgeLabel = sourceLabels[post.sourceMethod] || post.sourceMethod;
             const dateStr = new Date(post.publishedAt).toLocaleDateString();
 
             return (
@@ -42,9 +47,9 @@ export const ResearchVoiceTimeline: React.FC<ResearchVoiceTimelineProps> = ({ ti
                     <span className="text-[10px] text-kt-text-muted tabular-nums">{dateStr}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {isAiExtracted && (
-                      <span className="text-[9px] font-bold text-kt-positive-text bg-kt-positive-weak px-1.5 py-0.5 rounded">
-                        AI 추출 자료
+                    {badgeLabel && (
+                      <span className="text-[9px] font-bold text-kt-text-secondary bg-kt-bg-overlay-200 px-1.5 py-0.5 rounded border border-kt-border-panel/30">
+                        {badgeLabel}
                       </span>
                     )}
                     <a

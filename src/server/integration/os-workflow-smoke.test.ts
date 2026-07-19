@@ -138,6 +138,7 @@ describe("O~S Integration E2E Smoke Workflow", () => {
       subjectType: "signal",
       subjectId: "sig_smoke_001",
       assetId: "US_AAPL",
+      universeId: "SP500_SAMPLE",
       horizon: "forward_20d",
       evidencePackIds: [retrievedPack!.id],
       observationStartedAt: "2026-06-05T00:00:00Z",

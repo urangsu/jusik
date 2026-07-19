@@ -36,12 +36,21 @@ export async function GET(request: NextRequest) {
   }
 }
 
+import { checkResearchWriteGuard, makeResearchWriteErrorEnvelope } from "@/server/security/research-write-guard";
+
+const ID_REGEX = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
+
 /**
  * POST /api/research/voices
  * Registers or updates a voice profile.
  */
 export async function POST(request: NextRequest) {
   try {
+    const guard = checkResearchWriteGuard();
+    if (!guard.allowed) {
+      return createSafeResponse(makeResearchWriteErrorEnvelope(guard.status, guard.message), guard.status);
+    }
+
     const body = await request.json().catch(() => ({}));
     const { voiceId, displayName, publicHandle, sourcePlatforms, affiliationStatus } = body;
 
@@ -54,6 +63,19 @@ export async function POST(request: NextRequest) {
         warnings: [],
         updatedAt: null,
         message: "voiceId, displayName, and publicHandle are required.",
+      };
+      return createSafeResponse(envelope, 400);
+    }
+
+    if (!ID_REGEX.test(voiceId)) {
+      const envelope: DataEnvelope<null> = {
+        value: null,
+        status: "error",
+        source: "research_voice_store",
+        sourceTier: "manual_import",
+        warnings: [],
+        updatedAt: null,
+        message: `voiceId "${voiceId}" is not in valid format.`,
       };
       return createSafeResponse(envelope, 400);
     }

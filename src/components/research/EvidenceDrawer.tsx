@@ -82,7 +82,11 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ claim, evidenceR
           <div>
             <span className="text-[10px] text-kt-text-muted uppercase tracking-wider">검증 여부 (Verified)</span>
             <p className="mt-1 flex items-center gap-1">
-              {claim.isVerified ? (
+              {claim.evidenceIds.length > 0 &&
+              claim.evidenceIds.every((id) => {
+                const rec = evidenceRecords.find((r) => r.evidenceId === id);
+                return rec?.verificationStatus === "verified";
+              }) ? (
                 <span className="flex items-center gap-1 text-kt-positive-text bg-kt-positive-weak px-1.5 py-0.5 rounded text-[10px] font-bold">
                   <ShieldCheck className="w-3.5 h-3.5" /> VERIFIED
                 </span>

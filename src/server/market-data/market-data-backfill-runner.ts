@@ -85,7 +85,14 @@ async function runAssetBackfill(
       capability: request.capability,
       assetId: asset.assetId,
     });
-    await saveMarketEnvelope({ path: storedPath, envelope: envelope as DataEnvelope<unknown> });
+
+    await saveMarketEnvelope({
+      path: storedPath,
+      envelope: envelope as DataEnvelope<unknown>,
+      universe: request.universe,
+      assetId: asset.assetId,
+      capability: request.capability,
+    });
 
     return {
       assetId: asset.assetId,

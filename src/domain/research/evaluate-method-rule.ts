@@ -7,28 +7,31 @@
  * - Expired evidence is stale and cannot support the rule
  * - Unsupported market → "not_applicable"
  * - No evidence → insufficient_data (no synthetic claim created)
- * - dataQualityScore = (provided inputs / total required inputs), capped to [0, 1]
+ * - dataQualityScore = (provided inputs with verified evidence / total required inputs), capped to [0, 1]
  */
 
 import type { ResearchMethodRule } from "./method-rule";
 import type { ResearchClaim } from "./research-claim";
 import type { MethodRuleEvaluation } from "./method-evaluation";
 import type { SignalVersion } from "@/domain/signals/signal-version";
+import type { ResearchEvidenceRecord } from "./research-evidence-record";
+import { resolveKnownAt } from "./resolve-evidence-quality";
 
 export type EvaluateMethodRuleInput = {
   rule: ResearchMethodRule;
   assetId: string;
   market: "KR" | "US";
   claims: ResearchClaim[];
-  /** Map from evidenceId → { kind: string; expiryAt: string | null } */
-  evidenceMeta: Record<string, { kind: string; expiryAt: string | null }>;
+  evidenceRecords: ResearchEvidenceRecord[];
   /** ISO-8601 date for staleness evaluation */
   asOfDate: string;
+  knownAt?: string;
   signalVersion: SignalVersion | null;
 };
 
 export function evaluateMethodRule(input: EvaluateMethodRuleInput): MethodRuleEvaluation {
-  const { rule, assetId, market, claims, evidenceMeta, asOfDate, signalVersion } = input;
+  const { rule, assetId, market, claims, evidenceRecords, asOfDate, signalVersion } = input;
+  const knownAt = input.knownAt || resolveKnownAt(asOfDate);
 
   const base: Omit<MethodRuleEvaluation, "status" | "dataQualityScore"> = {
     ruleId: rule.ruleId,
@@ -48,7 +51,6 @@ export function evaluateMethodRule(input: EvaluateMethodRuleInput): MethodRuleEv
   }
 
   // Gate 2: Required input keys check
-  // Input keys are derived from claim kinds that match the rule's requirements
   const presentInputKeys = new Set<string>();
   for (const claim of claims) {
     if (claim.assetId === assetId && claim.claimKind !== "other") {
@@ -90,32 +92,35 @@ export function evaluateMethodRule(input: EvaluateMethodRuleInput): MethodRuleEv
     claimIds.push(claim.claimId);
 
     for (const evidenceId of claim.evidenceIds) {
-      const meta = evidenceMeta[evidenceId];
-      if (!meta) continue;
+      const rec = evidenceRecords.find((r) => r.evidenceId === evidenceId);
+      if (!rec) {
+        // Missing record metadata -> unverified -> skip
+        continue;
+      }
 
-      // Staleness check
-      const isStale = meta.expiryAt !== null && meta.expiryAt < asOfDate;
+      if (rec.assetId !== assetId) continue;
+      if (rec.verificationStatus !== "verified") continue;
+      if (!rec.dataAvailableAt || rec.dataAvailableAt > knownAt) continue;
+
+      const isStale = rec.expiryAt !== null && rec.expiryAt < asOfDate;
       if (isStale) {
         staleEvidenceIds.push(evidenceId);
-        // Stale evidence cannot support the rule
         continue;
       }
 
-      // Evidence kind relevance
-      if (rule.requiredEvidenceKinds.length > 0 && !rule.requiredEvidenceKinds.includes(meta.kind)) {
+      if (rule.requiredEvidenceKinds.length > 0 && !rule.requiredEvidenceKinds.includes(rec.evidenceKind)) {
         continue;
       }
 
-      if (claim.direction === "bullish" || claim.direction === "neutral") {
+      if (claim.direction === "bullish") {
         supportingEvidenceIds.push(evidenceId);
       } else if (claim.direction === "bearish") {
         contradictingEvidenceIds.push(evidenceId);
       }
-      // "unclear" direction: evidence is logged but contributes to neither side
     }
   }
 
-  // Gate 3: Fatal contradiction check
+  // Gate 3: Fatal contradiction check (Veto)
   if (contradictingEvidenceIds.length > 0) {
     vetoReasons.push(
       `${contradictingEvidenceIds.length} contradicting evidence item(s) found.`,
@@ -129,7 +134,7 @@ export function evaluateMethodRule(input: EvaluateMethodRuleInput): MethodRuleEv
       staleEvidenceIds,
       vetoReasons,
       missingInputs,
-      dataQualityScore: computeDataQuality(rule, missingInputs, staleEvidenceIds, evidenceMeta),
+      dataQualityScore: computeDataQuality(rule, missingInputs, staleEvidenceIds, evidenceRecords, claims),
     };
   }
 
@@ -144,7 +149,7 @@ export function evaluateMethodRule(input: EvaluateMethodRuleInput): MethodRuleEv
       vetoReasons: staleEvidenceIds.length > 0
         ? [`${staleEvidenceIds.length} evidence item(s) excluded as stale.`]
         : ["No supporting evidence found."],
-      dataQualityScore: computeDataQuality(rule, missingInputs, staleEvidenceIds, evidenceMeta),
+      dataQualityScore: computeDataQuality(rule, missingInputs, staleEvidenceIds, evidenceRecords, claims),
     };
   }
 
@@ -157,7 +162,7 @@ export function evaluateMethodRule(input: EvaluateMethodRuleInput): MethodRuleEv
     staleEvidenceIds,
     missingInputs,
     vetoReasons,
-    dataQualityScore: computeDataQuality(rule, missingInputs, staleEvidenceIds, evidenceMeta),
+    dataQualityScore: computeDataQuality(rule, missingInputs, staleEvidenceIds, evidenceRecords, claims),
   };
 }
 
@@ -165,15 +170,27 @@ function computeDataQuality(
   rule: ResearchMethodRule,
   missingInputs: string[],
   staleEvidenceIds: string[],
-  evidenceMeta: Record<string, { kind: string; expiryAt: string | null }>,
+  evidenceRecords: ResearchEvidenceRecord[],
+  claims: ResearchClaim[]
 ): number {
   const totalRequired = rule.requiredInputKeys.length;
-  if (totalRequired === 0) return staleEvidenceIds.length === 0 ? 1 : 0.5;
+  if (totalRequired === 0) return 1.0;
 
-  const providedCount = totalRequired - missingInputs.length;
-  const baseScore = providedCount / totalRequired;
-  // Penalise stale evidence
-  const totalEvidence = Object.keys(evidenceMeta).length;
-  const stalenessRatio = totalEvidence > 0 ? staleEvidenceIds.length / totalEvidence : 0;
-  return Math.max(0, Math.min(1, baseScore * (1 - stalenessRatio * 0.5)));
+  let metCount = 0;
+  for (const key of rule.requiredInputKeys) {
+    const hasEvidence = evidenceRecords.some(
+      (rec) =>
+        rec.verificationStatus === "verified" &&
+        !staleEvidenceIds.includes(rec.evidenceId) &&
+        rec.claimIds.some((cid) => {
+          const claim = claims.find((c) => c.claimId === cid);
+          return claim && claim.claimKind === key;
+        })
+    );
+    if (hasEvidence) {
+      metCount++;
+    }
+  }
+
+  return metCount / totalRequired;
 }

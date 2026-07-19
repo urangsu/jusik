@@ -11,6 +11,7 @@
     "test": "vitest run",
     "check:wording": "node scripts/check-forbidden-ui-text.mjs",
     "check:alpha-ui": "node scripts/check-alpha-ui-exposure.mjs",
+    "check:runtime-data": "node scripts/check-runtime-data.mjs",
     "alerts:evaluate": "tsx scripts/alerts/evaluate-alerts.ts",
     "reports:daily": "tsx scripts/reports/generate-daily-report.ts",
     "docs:check": "tsx scripts/docs/check-required-docs.ts",

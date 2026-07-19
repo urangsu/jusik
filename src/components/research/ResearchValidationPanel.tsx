@@ -4,8 +4,11 @@ import { Panel } from "../ui/Panel";
 import type { SynthesisResult } from "@/domain/research/synthesize-validation-reports";
 import type { ResearchValidationReport } from "@/domain/research/research-validation";
 
+import type { ResearchAvailability } from "@/domain/research/research-availability";
+
 interface ResearchValidationPanelProps {
   validationResult: SynthesisResult;
+  availability?: ResearchAvailability;
 }
 
 const SEAT_DISPLAY_NAMES: Record<ResearchValidationReport["seatId"], string> = {
@@ -16,7 +19,7 @@ const SEAT_DISPLAY_NAMES: Record<ResearchValidationReport["seatId"], string> = {
   security_market_window: "5. 가격 매력도 및 기회 윈도우 (Security Pricing & Market Window)",
 };
 
-export const ResearchValidationPanel: React.FC<ResearchValidationPanelProps> = ({ validationResult }) => {
+export const ResearchValidationPanel: React.FC<ResearchValidationPanelProps> = ({ validationResult, availability }) => {
   const getStatusBadge = (status: ResearchValidationReport["status"], abstained: boolean) => {
     if (abstained) {
       return (
@@ -128,6 +131,11 @@ export const ResearchValidationPanel: React.FC<ResearchValidationPanelProps> = (
                 <div className="flex items-start justify-between gap-3">
                   <span className="font-bold text-kt-text-primary text-[11px] leading-snug">
                     {displayName}
+                    {report.seatId === "security_market_window" && availability?.price?.status === "stale" && (
+                      <span className="ml-2 inline-block text-[8px] font-bold text-kt-warning-text bg-kt-warning-weak/10 border border-kt-warning-text/20 px-1 rounded animate-pulse">
+                        STALE PRICE
+                      </span>
+                    )}
                   </span>
                   {getStatusBadge(report.status, report.abstained)}
                 </div>

@@ -28,6 +28,7 @@ function makeMockRecord(id: string, overrides: Partial<SignalOutcomeJournalRecor
     subjectType: "signal",
     subjectId: "sig_123",
     assetId: "KR_005930",
+    universeId: "KOSPI_SAMPLE",
     signalId: "sig_123",
     strategyId: null,
     observationStartedAt: "2026-01-05T00:00:00Z",
@@ -99,6 +100,9 @@ describe("Signal Outcome Journal APIs", () => {
       body: JSON.stringify({
         subjectType: "signal",
         subjectId: "sig_456",
+        assetId: "US_AAPL",
+        universeId: "SP500_SAMPLE",
+        observationStartedAt: "2026-01-05T00:00:00Z",
         horizon: "forward_20d",
       }),
       headers: { "content-type": "application/json" },

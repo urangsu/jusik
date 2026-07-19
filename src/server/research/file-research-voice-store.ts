@@ -28,6 +28,10 @@ export async function saveVoiceProfile(profile: ResearchVoiceProfile): Promise<v
   const dir = getProfilesDir();
   await fs.mkdir(dir, { recursive: true });
   const filePath = getProfilePath(profile.voiceId);
+  const resolved = path.resolve(filePath);
+  if (!resolved.startsWith(dir + path.sep)) {
+    throw new Error("Path traversal attempt blocked.");
+  }
   await writeAtomic(filePath, JSON.stringify(profile, null, 2));
 }
 
@@ -67,6 +71,10 @@ export async function saveResearchPost(post: PublicResearchPost): Promise<void> 
   await fs.mkdir(dir, { recursive: true });
 
   const filePath = getPostPath(post.postId);
+  const resolved = path.resolve(filePath);
+  if (!resolved.startsWith(dir + path.sep)) {
+    throw new Error("Path traversal attempt blocked.");
+  }
 
   // Append-only rule: do not overwrite prior post files if content is different
   try {
@@ -169,6 +177,9 @@ async function updatePostsIndex(newPost: PublicResearchPost): Promise<void> {
 }
 
 export async function clearAllResearchVoicesAndPosts(): Promise<void> {
+  if (process.env.NODE_ENV !== "test") {
+    throw new Error("Clear operations are only allowed in test environment.");
+  }
   try {
     await fs.rm(getProfilesDir(), { recursive: true, force: true });
     await fs.rm(getPostsDir(), { recursive: true, force: true });

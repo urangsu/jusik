@@ -42,7 +42,6 @@ const mockEval = (id: string, status: MethodRuleEvaluation["status"]): MethodRul
 
 describe("synthesize-validation-reports", () => {
   it("produces deteriorating global status when a fatal rule is contradicted", () => {
-    // gaap_financial_quality has vetoSeverity=fatal
     const evaluations = [
       mockEval("demand_evidence", "supported"),
       mockEval("supply_chain_bottleneck", "supported"),
@@ -56,10 +55,10 @@ describe("synthesize-validation-reports", () => {
       evaluations,
       availability: makeAvailability(true, true, true, true),
       signalVersion: null,
+      evidenceRecords: [],
     });
 
     expect(result.globalStatus).toBe("deteriorating");
-    // isVetoed=true because gaap_financial_quality has fatal vetoSeverity
     expect(result.isVetoed).toBe(true);
     expect(result.vetoReasons.length).toBeGreaterThan(0);
     expect(result.vetoReasons[0].severity).toBe("fatal");
@@ -67,7 +66,6 @@ describe("synthesize-validation-reports", () => {
   });
 
   it("does NOT set isVetoed when only a warning-severity rule is contradicted", () => {
-    // substitutability has vetoSeverity=warning — should deteriorate but NOT veto
     const evaluations = [
       mockEval("demand_evidence", "supported"),
       mockEval("substitutability", "contradicted"), // warning only
@@ -78,10 +76,10 @@ describe("synthesize-validation-reports", () => {
       evaluations,
       availability: makeAvailability(true, true, true, true),
       signalVersion: null,
+      evidenceRecords: [],
     });
 
     expect(result.globalStatus).toBe("deteriorating");
-    // substitutability is warning severity → isVetoed must be false
     expect(result.isVetoed).toBe(false);
     expect(result.vetoReasons.length).toBe(0);
   });
@@ -97,6 +95,7 @@ describe("synthesize-validation-reports", () => {
       evaluations,
       availability: makeAvailability(true, true, true, false), // supply chain unavailable
       signalVersion: null,
+      evidenceRecords: [],
     });
 
     const caReport = result.reports.find((r) => r.seatId === "company_attribution");
@@ -118,13 +117,13 @@ describe("synthesize-validation-reports", () => {
       evaluations,
       availability: makeAvailability(true, true, false), // filings unavailable
       signalVersion: null,
+      evidenceRecords: [],
     });
 
     const fqReport = result.reports.find((r) => r.seatId === "financial_quality");
     expect(fqReport).toBeDefined();
     expect(fqReport!.status).toBe("insufficient_data");
     expect(fqReport!.missingInputs).toContain("filings_unavailable");
-    // filings unavailable is not a blocking/fatal veto — it's just insufficient data
     expect(result.isVetoed).toBe(false);
   });
 
@@ -139,6 +138,7 @@ describe("synthesize-validation-reports", () => {
       evaluations,
       availability: makeAvailability(false, true, true), // price unavailable
       signalVersion: null,
+      evidenceRecords: [],
     });
 
     const smwReport = result.reports.find((r) => r.seatId === "security_market_window");
@@ -155,6 +155,7 @@ describe("synthesize-validation-reports", () => {
       evaluations,
       availability: makeAvailability(true, false, true), // valuation unavailable
       signalVersion: null,
+      evidenceRecords: [],
     });
 
     const smwReport = result.reports.find((r) => r.seatId === "security_market_window");
@@ -172,9 +173,9 @@ describe("synthesize-validation-reports", () => {
       evaluations,
       availability: makeAvailability(true, true, true, true),
       signalVersion: null,
+      evidenceRecords: [],
     });
 
-    // demand_supply_chain seat has no supporting evidence → freshness=unknown
     const dscReport = result.reports.find(r => r.seatId === "demand_supply_chain");
     expect(dscReport!.freshness).toBe("unknown");
     expect(dscReport!.confidence).toBe("none");
@@ -194,6 +195,7 @@ describe("synthesize-validation-reports", () => {
       evaluations,
       availability: makeAvailability(true, true, true, true),
       signalVersion: null,
+      evidenceRecords: [],
     });
 
     const dscReport = result.reports.find((r) => r.seatId === "demand_supply_chain");
@@ -201,7 +203,6 @@ describe("synthesize-validation-reports", () => {
     expect(dscReport!.claimIds).toContain("c_demand_1");
     expect(dscReport!.claimIds).toContain("c_demand_2");
     expect(dscReport!.supportingEvidenceIds).toContain("ev_demand_1");
-    // fresh because there IS supporting evidence and no stale
     expect(dscReport!.freshness).toBe("fresh");
   });
 
@@ -213,6 +214,7 @@ describe("synthesize-validation-reports", () => {
       evaluations,
       availability: makeAvailability(true, true, true, true),
       signalVersion: null,
+      evidenceRecords: [],
     });
 
     expect(result.isVetoed).toBe(false);

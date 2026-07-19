@@ -1,51 +1,35 @@
-/**
- * Research Workspace Service
- *
- * Computes the ResearchDiagnosticData for a given asset.
- *
- * Strict rules:
- * 1. universeId must be provided explicitly — never inferred from assetId string.
- * 2. valuationAvailable is INDEPENDENT of priceAvailable.
- * 3. filingsAvailable requires real filing records, NOT just corpCode/CIK.
- * 4. supplyChainGraph=null when no real graph is stored.
- * 5. signalVersion=null when no real version is stored.
- * 6. dataVersionIds=[] when no real versions are found.
- * 7. dv_default, ver_1, sv_research_workspace must never be used.
- */
-
-import { listMethodRules } from "./method-rule-registry";
+import type { DataEnvelope } from "@/domain/common/data-status";
+import type { SourceWarning } from "@/domain/source/provider-tier";
+import type { SignalVersion } from "@/domain/signals/signal-version";
+import { getSymbolMasterRecord } from "@/server/symbols/symbol-master-store";
+import { getRecentFilings } from "@/server/filings/filing-event-store";
+import { listMethodRules } from "@/server/research/method-rule-registry";
 import { evaluateMethodRule } from "@/domain/research/evaluate-method-rule";
 import { synthesizeValidationReports } from "@/domain/research/synthesize-validation-reports";
 import { buildThesisSnapshot } from "@/domain/research/build-thesis-snapshot";
-import { listResearchClaims } from "./research-claim-store";
-import { listResearchPosts } from "./research-voice-store";
-import { listEvidenceRecordsForAsset } from "./research-evidence-store";
-import { loadOhlcvHistory } from "../factors/ohlcv-history-loader";
-import { getSymbolMasterRecord } from "../symbols/symbol-master-store";
-import { getRecentFilings } from "../filings/filing-event-store";
-import type { DataEnvelope } from "@/domain/common/data-status";
 import type { ThesisArcSnapshot } from "@/domain/research/thesis-snapshot";
-import type { SynthesisResult } from "@/domain/research/synthesize-validation-reports";
-import type { MethodRuleEvaluation } from "@/domain/research/method-evaluation";
+import type { SupplyChainGraph } from "@/domain/research/supply-chain-graph";
+import type { AvailabilityEvidence, ResearchAvailability } from "@/domain/research/research-availability";
+import type { ResearchEvidenceRecord } from "@/domain/research/research-evidence-record";
+import { listResearchClaims } from "@/server/research/research-claim-store";
+import { listResearchPosts } from "@/server/research/research-voice-store";
+import { listEvidenceRecordsForAsset } from "@/server/research/research-evidence-store";
+import { loadVersionedOhlcvHistory } from "../factors/ohlcv-history-loader";
+import { resolveAppDate, resolveKnownAt } from "@/domain/research/resolve-evidence-quality";
+import type { MarketUniverseId } from "@/domain/universe/market-universe";
 import type { ResearchClaim } from "@/domain/research/research-claim";
 import type { PublicResearchPost } from "@/domain/research/research-voice";
-import type { SignalVersion } from "@/domain/signals/signal-version";
-import type { SupplyChainGraph } from "@/domain/research/supply-chain-graph";
-import type { ResearchAvailability, AvailabilityEvidence } from "@/domain/research/research-availability";
-import type { ResearchEvidenceRecord } from "@/domain/research/research-evidence-record";
-import type { SourceWarning } from "@/domain/source/provider-tier";
 
 export type GetResearchDiagnosticDataInput = {
   assetId: string;
   asOfDate: string;
-  /** Must be explicitly provided. Never auto-inferred from assetId string pattern. */
   universeId: string;
 };
 
 export type ResearchDiagnosticData = {
   thesisSnapshot: ThesisArcSnapshot;
-  validationResult: SynthesisResult;
-  evaluations: MethodRuleEvaluation[];
+  validationResult: any;
+  evaluations: any[];
   claims: ResearchClaim[];
   voiceTimeline: PublicResearchPost[];
   supplyChainGraph: SupplyChainGraph | null;
@@ -83,12 +67,76 @@ function makeAvailable(sourceRefs: string[], updatedAt: string, asOfDate: string
 export async function getResearchDiagnosticData(
   input: GetResearchDiagnosticDataInput
 ): Promise<DataEnvelope<ResearchDiagnosticData | null>> {
-  const { assetId, asOfDate, universeId } = input;
+  const { assetId, asOfDate: rawAsOfDate, universeId } = input;
 
-  // 1. Fetch claims for this asset
-  const claims = await listResearchClaims({ assetId });
+  // 1. Resolve date alignments
+  const asOfDate = resolveAppDate(rawAsOfDate);
+  const knownAt = resolveKnownAt(asOfDate);
 
-  // If no claims exist, return immediately with insufficient_data
+  // Validate universe mapping matches asset market
+  const isKrAsset = assetId.startsWith("KR_");
+  const isUsAsset = assetId.startsWith("US_");
+  const isKrUniverse = universeId === "KOSPI_SAMPLE" || universeId === "KOSPI";
+  const isUsUniverse = universeId === "SP500_SAMPLE" || universeId === "SP500";
+
+  if ((isKrAsset && !isKrUniverse) || (isUsAsset && !isUsUniverse) || (!isKrAsset && !isUsAsset)) {
+    return {
+      value: null,
+      status: "insufficient_data",
+      source: "research_workspace_service",
+      sourceTier: "manual_import",
+      warnings: ["unofficial"],
+      updatedAt: new Date().toISOString(),
+      message: `Universe ID "${universeId}" does not match the market region of asset ID "${assetId}".`,
+    };
+  }
+
+  // 2. Fetch and filter posts / claims based on Point-In-Time (knownAt)
+  const allPosts = await listResearchPosts();
+  const allClaims = await listResearchClaims({ assetId });
+
+  // Group posts by canonical ID
+  const postsByCanonical: Record<string, PublicResearchPost[]> = {};
+  for (const post of allPosts) {
+    const canonicalId = post.revisionOf || post.postId;
+    if (!postsByCanonical[canonicalId]) {
+      postsByCanonical[canonicalId] = [];
+    }
+    postsByCanonical[canonicalId].push(post);
+  }
+
+  // Determine active version of each post at knownAt KST
+  const activePostIds = new Set<string>();
+  const voiceTimeline: PublicResearchPost[] = [];
+
+  for (const canonicalId in postsByCanonical) {
+    const versions = postsByCanonical[canonicalId];
+    const validVersions = versions.filter(
+      (v) => v.publishedAt <= knownAt && v.ingestedAt <= knownAt
+    );
+    if (validVersions.length === 0) continue;
+
+    // Sort valid versions: newest revision first (publishedAt desc, ingestedAt desc)
+    validVersions.sort((a, b) => {
+      const cmp = new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+      if (cmp !== 0) return cmp;
+      return new Date(b.ingestedAt).getTime() - new Date(a.ingestedAt).getTime();
+    });
+
+    const activeVersion = validVersions[0];
+    if (activeVersion.status !== "deleted") {
+      voiceTimeline.push(activeVersion);
+      activePostIds.add(activeVersion.postId);
+    }
+  }
+
+  // Filter claims: must belong to one of the active post versions (prohibits standalone claims)
+  const claims = allClaims.filter((claim) => {
+    if (!claim.postId) return false;
+    return activePostIds.has(claim.postId);
+  });
+
+  // If no claims exist at this point in time, fail-fast
   if (claims.length === 0) {
     return {
       value: null,
@@ -101,32 +149,36 @@ export async function getResearchDiagnosticData(
     };
   }
 
-  // 2. Fetch related posts (voice timeline)
-  const postIdsForAsset = new Set(claims.map((c) => c.postId).filter(Boolean));
-  const allPosts = await listResearchPosts();
-  const voiceTimeline = allPosts.filter((p) => postIdsForAsset.has(p.postId));
+  // Fetch all evidence records for this asset
+  const allEvidenceRecords = await listEvidenceRecordsForAsset(assetId);
 
-  // 3. Resolve symbol — used for market context only (no universe inference)
+  // 3. Resolve symbol details
   const symbolRecord = await getSymbolMasterRecord(assetId).catch(() => null);
   const market: "KR" | "US" = (symbolRecord?.market as "KR" | "US") ?? "KR";
 
-  // 4. Resolve availability — independently for each category
+  // 4. Resolve Availability categories independently
+  // 4a. Price: load versioned OHLCV
+  const ohlcvEnv = await loadVersionedOhlcvHistory({
+    assetId,
+    universeId: universeId as MarketUniverseId,
+    asOfDate,
+    knownAt,
+  }).catch(() => null);
 
-  // 4a. Price availability: requires real OHLCV data (value != null && length > 0)
-  const ohlcvEnv = await loadOhlcvHistory(universeId, assetId).catch(() => null);
   const ohlcvRecords = ohlcvEnv?.value ?? null;
   const priceAvail: AvailabilityEvidence =
-    ohlcvRecords && ohlcvRecords.length > 0
-      ? makeAvailable([], new Date().toISOString(), asOfDate)
+    ohlcvEnv && ohlcvEnv.value && ohlcvEnv.value.length > 0
+      ? makeAvailable(
+          ohlcvEnv.dataVersionId ? [ohlcvEnv.dataVersionId] : [],
+          ohlcvEnv.updatedAt || new Date().toISOString(),
+          asOfDate
+        )
       : makeUnavailable("price_data_unavailable", asOfDate);
 
-  // 4b. Valuation availability: requires a real valuation metric store
-  //     Currently no valuation metric store — explicitly unavailable
+  // 4b. Valuation: unavailable
   const valuationAvail: AvailabilityEvidence = makeUnavailable("valuation_metrics_unavailable", asOfDate);
 
-  // 4c. Filings availability: requires real filing records with receiptNo
-  //     corpCode/CIK alone is NOT sufficient
-  // Extract stockCode from assetId (e.g. KR_005930 → 005930)
+  // 4c. Filings: get actual filings with receiptNo
   const stockCode = assetId.startsWith("KR_")
     ? assetId.replace("KR_", "")
     : assetId.startsWith("US_")
@@ -137,21 +189,20 @@ export async function getResearchDiagnosticData(
     ? await getRecentFilings({ stockCode, limit: 5 }).catch(() => [])
     : [];
 
-  const hasRealFiling = filingRecords.some(
-    (f) =>
-      f.receiptNo &&
-      f.dataAvailableAt &&
-      f.dataAvailableAt <= asOfDate
+  // Filter filings available as of knownAt
+  const validFilingRecords = filingRecords.filter(
+    (f: any) => f.receiptNo && f.dataAvailableAt && f.dataAvailableAt <= knownAt
   );
-  const filingsAvail: AvailabilityEvidence = hasRealFiling
+
+  const filingsAvail: AvailabilityEvidence = validFilingRecords.length > 0
     ? makeAvailable(
-        filingRecords.slice(0, 3).map((f) => f.receiptNo),
-        new Date().toISOString(),
+        validFilingRecords.slice(0, 3).map((f: any) => f.receiptNo),
+        validFilingRecords[0].dataAvailableAt || new Date().toISOString(),
         asOfDate
       )
     : makeUnavailable("filings_unavailable", asOfDate);
 
-  // 4d. Supply chain availability: requires a real stored graph (none yet)
+  // 4d. Supply Chain: unavailable
   const supplyChainAvail: AvailabilityEvidence = makeUnavailable("supply_chain_graph_unavailable", asOfDate);
   const supplyChainGraph: SupplyChainGraph | null = null;
 
@@ -162,31 +213,34 @@ export async function getResearchDiagnosticData(
     supplyChain: supplyChainAvail,
   };
 
-  // 5. Resolve provenance — signalVersion and dataVersionIds from actual stores
-  //    Currently no signal history store for research workspace: return null / []
+  // 5. Signal Version & Provenance metadata
   const signalVersion: SignalVersion | null = null;
-  const dataVersionIds: string[] = [];
+  const dataVersionIds: string[] = (ohlcvEnv && ohlcvEnv.dataVersionId) ? [ohlcvEnv.dataVersionId] : [];
 
-  // 6. Fetch evidence records referenced by claims
-  const allEvidenceRecords = await listEvidenceRecordsForAsset(assetId);
-  // Filter to only evidence IDs referenced by claims
+  // 6. Filter evidence records to only those verified, non-expired, and matching PIT
   const referencedEvidenceIds = new Set(claims.flatMap((c) => c.evidenceIds));
-  const evidenceRecords = allEvidenceRecords.filter((ev) =>
-    referencedEvidenceIds.has(ev.evidenceId)
+  const evidenceRecords = allEvidenceRecords.filter(
+    (ev) =>
+      referencedEvidenceIds.has(ev.evidenceId) &&
+      ev.verificationStatus === "verified" &&
+      ev.dataAvailableAt &&
+      ev.dataAvailableAt <= knownAt
   );
 
-  // 7. Build evidenceMeta from claims (for method rule evaluation)
-  const evidenceMeta: Record<string, { kind: string; expiryAt: string | null }> = {};
-  for (const claim of claims) {
-    for (const evId of claim.evidenceIds) {
-      evidenceMeta[evId] = {
-        kind: claim.claimKind,
-        expiryAt: claim.evidenceSpan ? claim.evidenceSpan.to : null,
-      };
-    }
+  // 7. Gate check: if no verified evidence records are available, diagnostic fails-fast
+  if (evidenceRecords.length === 0) {
+    return {
+      value: null,
+      status: "insufficient_data",
+      source: "research_workspace_service",
+      sourceTier: "manual_import",
+      warnings: ["unofficial"],
+      updatedAt: new Date().toISOString(),
+      message: "진단 가능한 실제 검증된 근거 기록이 존재하지 않습니다.",
+    };
   }
 
-  // 8. Evaluate all 11 method rules
+  // 8. Evaluate all 11 method rules using verified PIT evidence records
   const rules = listMethodRules();
   const evaluations = rules.map((rule) =>
     evaluateMethodRule({
@@ -194,18 +248,20 @@ export async function getResearchDiagnosticData(
       assetId,
       market,
       claims,
-      evidenceMeta,
+      evidenceRecords,
       asOfDate,
+      knownAt,
       signalVersion,
     })
   );
 
-  // 9. Synthesize validation reports using structured availability
+  // 9. Synthesize validation reports
   const validationResult = synthesizeValidationReports({
     assetId,
     evaluations,
     availability,
     signalVersion,
+    evidenceRecords,
   });
 
   // 10. Build thesis pillars from evaluations
@@ -259,8 +315,17 @@ export async function getResearchDiagnosticData(
 
   const warnings: SourceWarning[] = ["manual_import_required"];
   if (!signalVersion) warnings.push("unofficial");
-  // Note: string warnings like "provenance_unavailable" cannot be used here;
-  // SourceWarning is a union type. Provenance info is available in the envelope status.
+
+  // Preserve source timestamps
+  const timestamps = [
+    ohlcvEnv?.updatedAt,
+    validFilingRecords[0]?.dataAvailableAt,
+    ...evidenceRecords.map((r) => r.retrievedAt),
+  ].filter(Boolean) as string[];
+
+  const maxTimestamp = timestamps.length
+    ? timestamps.reduce((max, t) => (t > max ? t : max), timestamps[0])
+    : new Date().toISOString();
 
   const value: ResearchDiagnosticData = {
     thesisSnapshot,
@@ -281,6 +346,6 @@ export async function getResearchDiagnosticData(
     source: "research_workspace_service",
     sourceTier: "manual_import",
     warnings,
-    updatedAt: new Date().toISOString(),
+    updatedAt: maxTimestamp,
   };
 }

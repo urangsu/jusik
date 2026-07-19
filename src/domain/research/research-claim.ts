@@ -45,8 +45,6 @@ export type ResearchClaim = {
    * Required for all claims except those with direction "unclear".
    */
   evidenceSpan: { from: string; to: string } | null;
-  /** Whether the evidence for this claim has been independently verified */
-  isVerified: boolean;
   /** Extraction method; AI-extracted claims require sourceUrl */
   extractionMethod: "provider_direct" | "deterministic_parser" | "ai_extraction" | "user_import";
   createdAt: string;

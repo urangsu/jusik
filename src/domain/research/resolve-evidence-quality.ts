@@ -1,66 +1,92 @@
+import type { ResearchEvidenceRecord } from "@/domain/research/research-evidence-record";
+
 /**
- * Pure helpers for resolving evidence freshness and confidence.
+ * Pure helpers for resolving evidence freshness, confidence, and point-in-time date alignments.
  *
  * Rules:
  * - No supporting evidence → freshness=unknown, confidence=none.
  * - Stale IDs without supporting → freshness=stale if staleIds exist, else unknown.
  * - Only contradicting evidence without supporting → confidence=low.
+ * - confidence must not be high based solely on count; requires multiple independent sources, fresh status, and official tier.
  */
 
-/**
- * Resolves freshness based on actual evidence IDs.
- *
- * @param supportingEvidenceIds - IDs of supporting evidence records
- * @param staleEvidenceIds - IDs of evidence records that are past their expiryAt
- */
+export function resolveAppDate(dateInput?: string): string {
+  if (dateInput) return dateInput;
+  const d = new Date();
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return formatter.format(d); // YYYY-MM-DD
+}
+
+export function resolveKnownAt(asOfDate: string): string {
+  const todayKst = resolveAppDate();
+  if (asOfDate >= todayKst) {
+    return new Date().toISOString();
+  } else {
+    const dateObj = new Date(`${asOfDate}T23:59:59.999+09:00`);
+    return dateObj.toISOString();
+  }
+}
+
 export function resolveEvidenceFreshness(
   supportingEvidenceIds: string[],
-  staleEvidenceIds: string[],
+  staleEvidenceIds: string[]
 ): "fresh" | "stale" | "unknown" {
-  // No supporting evidence at all → unknown
   if (supportingEvidenceIds.length === 0) {
     return "unknown";
   }
 
-  // If any of the supporting evidence is stale → stale
-  if (staleEvidenceIds.length > 0) {
+  if (staleEvidenceIds.some((id) => supportingEvidenceIds.includes(id))) {
     return "stale";
   }
 
-  // Fresh supporting evidence exists and none is stale
   return "fresh";
 }
 
-/**
- * Resolves confidence level based on evidence counts.
- *
- * @param supportingEvidenceIds - IDs of supporting evidence records
- * @param contradictingEvidenceIds - IDs of contradicting evidence records
- */
-export function resolveEvidenceConfidence(
-  supportingEvidenceIds: string[],
-  contradictingEvidenceIds: string[],
-): "none" | "low" | "medium" | "high" {
-  const supporting = supportingEvidenceIds.length;
-  const contradicting = contradictingEvidenceIds.length;
+export function resolveEvidenceConfidence(params: {
+  supportingRecords: ResearchEvidenceRecord[];
+  contradictingRecords: ResearchEvidenceRecord[];
+  freshness: "fresh" | "stale" | "unknown";
+}): "none" | "low" | "medium" | "high" {
+  const { supportingRecords, contradictingRecords, freshness } = params;
 
-  // No supporting evidence → none
-  if (supporting === 0) {
+  if (supportingRecords.length === 0) {
     return "none";
   }
 
-  // Only contradicting, no supporting
-  if (supporting === 0 && contradicting > 0) {
+  if (contradictingRecords.length > 0) {
     return "low";
   }
 
-  // Contradicting signals present
-  if (contradicting > 0) {
+  if (freshness !== "fresh") {
     return "low";
   }
 
-  // Threshold-based confidence
-  if (supporting >= 4) return "high";
-  if (supporting >= 2) return "medium";
+  // Count independent sources
+  const uniqueSources = new Set(supportingRecords.map((r) => r.source));
+  const independentSourceCount = uniqueSources.size;
+
+  // Check for high-tier official sources (exchange, government, regulator)
+  const hasOfficialSource = supportingRecords.some(
+    (r) =>
+      r.sourceTier === "official_exchange" ||
+      r.sourceTier === "official_government" ||
+      r.sourceTier === "official_regulator"
+  );
+
+  // High confidence needs: >= 3 supporting, >= 2 independent sources, at least one official source, and fresh
+  if (supportingRecords.length >= 3 && independentSourceCount >= 2 && hasOfficialSource) {
+    return "high";
+  }
+
+  // Medium confidence needs: >= 2 supporting, >= 1 independent sources, and fresh
+  if (supportingRecords.length >= 2) {
+    return "medium";
+  }
+
   return "low";
 }

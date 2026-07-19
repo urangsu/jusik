@@ -32,8 +32,11 @@ export type SignalOutcomeJournalRecord = {
   subjectType: OutcomeSubjectType;
   subjectId: string;
 
-  /** Canonical asset being tracked; null → insufficient_data, never fall back to a default ticker */
-  assetId: string | null;
+  /** Canonical asset being tracked; required */
+  assetId: string;
+
+  /** Universe ID (e.g. KOSPI_SAMPLE, SP500_SAMPLE); required */
+  universeId: string;
 
   signalId: string | null;
   strategyId: string | null;
@@ -41,8 +44,9 @@ export type SignalOutcomeJournalRecord = {
   /**
    * The ISO-8601 timestamp at which observation was declared to start.
    * The base bar is the FIRST trading bar with date >= observationStartedAt.slice(0, 10).
+   * Required.
    */
-  observationStartedAt: string | null;
+  observationStartedAt: string;
 
   /**
    * dataVersionId returned by the OHLCV loader at the time of observation.
@@ -93,4 +97,11 @@ export type SignalOutcomeJournalRecord = {
 
   createdAt: string;
   observedAt: string | null;
+};
+
+export type BenchmarkMapping = {
+  universeId: string;
+  marketBenchmarkAssetId: string;
+  sectorBenchmarkAssetId: string | null;
+  provenance: string;
 };

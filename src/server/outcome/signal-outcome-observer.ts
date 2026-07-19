@@ -1,11 +1,12 @@
 import { saveOutcomeRecord, getOutcomeRecord } from "./signal-outcome-journal-store";
-import { getSymbolMasterRecord } from "@/server/symbols/symbol-master-store";
 import type {
   SignalOutcomeJournalRecord,
   OutcomeSubjectType,
   OutcomeHorizon,
+  BenchmarkMapping,
 } from "@/domain/outcome/signal-outcome-journal";
-import { loadOhlcvHistory } from "../factors/ohlcv-history-loader";
+import { loadVersionedOhlcvHistory } from "../factors/ohlcv-history-loader";
+import { getBenchmarkMapping } from "./benchmark-mapping-store";
 
 const HORIZON_BARS: Record<OutcomeHorizon, number> = {
   forward_5d: 5,
@@ -13,33 +14,23 @@ const HORIZON_BARS: Record<OutcomeHorizon, number> = {
   forward_60d: 60,
 };
 
-type PriceBar = { date: string; close: number };
+type PriceBar = { date: string; close: number; assetId?: string };
 
-/**
- * Returns the index of the first bar whose date >= observationStartedAt (YYYY-MM-DD prefix).
- * Returns -1 if no such bar exists.
- */
+const CANONICAL_ASSET_ID_RE = /^(KR_\d+|US_[A-Z][A-Z0-9.]*)$/;
+
 export function findBaseIndex(bars: PriceBar[], observationStartedAt: string): number {
   const startDate = observationStartedAt.slice(0, 10);
   return bars.findIndex((b) => b.date >= startDate);
 }
 
-/**
- * Returns the bar exactly `horizonBars` positions after `baseIndex`, or null if out of range.
- */
 export function findTargetBar(
   bars: PriceBar[],
   baseIndex: number,
-  horizonBars: number,
+  horizonBars: number
 ): PriceBar | null {
   return bars[baseIndex + horizonBars] ?? null;
 }
 
-/**
- * Sort bars by date ascending and validate:
- * - No duplicate dates
- * - Finite, positive close prices
- */
 function sortAndValidateBars(bars: PriceBar[]): PriceBar[] | null {
   const sorted = [...bars].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
   for (let i = 0; i < sorted.length; i++) {
@@ -50,9 +41,6 @@ function sortAndValidateBars(bars: PriceBar[]): PriceBar[] | null {
   return sorted;
 }
 
-/**
- * Build the next revision ID from a pending record.
- */
 function nextRevisionId(pending: SignalOutcomeJournalRecord): string {
   return `${pending.rootOutcomeId}_r${pending.revision + 1}`;
 }
@@ -60,23 +48,26 @@ function nextRevisionId(pending: SignalOutcomeJournalRecord): string {
 export async function createPendingOutcomeRecord(input: {
   subjectType: OutcomeSubjectType;
   subjectId: string;
-  assetId?: string | null;
+  assetId: string;
+  universeId: string;
+  observationStartedAt: string;
   signalId?: string | null;
   strategyId?: string | null;
   horizon: OutcomeHorizon;
   evidencePackIds?: string[];
-  observationStartedAt?: string | null;
 }): Promise<SignalOutcomeJournalRecord> {
   const {
     subjectType,
     subjectId,
-    assetId = null,
+    assetId,
+    universeId,
+    observationStartedAt,
     signalId = null,
     strategyId = null,
     horizon,
     evidencePackIds = [],
-    observationStartedAt = null,
   } = input;
+
   const nowStr = new Date().toISOString();
   const id = `out_${subjectId}_${horizon}_${Date.now()}`;
 
@@ -88,6 +79,7 @@ export async function createPendingOutcomeRecord(input: {
     subjectType,
     subjectId,
     assetId,
+    universeId,
     signalId,
     strategyId,
     observationStartedAt,
@@ -118,39 +110,30 @@ export async function createPendingOutcomeRecord(input: {
   return record;
 }
 
-/**
- * Observe an outcome record.
- *
- * All terminal state transitions (observed / insufficient_data / error) create a NEW revision
- * record and preserve the original pending record unchanged (append-only / immutable design).
- *
- * When the target trading bar has not yet arrived the existing pending record is returned
- * without any write so the immutability guard is never triggered.
- */
 export async function observeOutcome(recordId: string): Promise<SignalOutcomeJournalRecord> {
   const pending = await getOutcomeRecord(recordId);
   if (!pending) {
     throw new Error(`Outcome record not found: ${recordId}`);
   }
 
-  // Already in a terminal state — return as-is
   if (pending.outcomeStatus !== "pending") {
     return pending;
   }
 
   const nowStr = new Date().toISOString();
 
-  const pendingRecord: SignalOutcomeJournalRecord = pending;
-  // Helper: create a terminal revision (insufficient_data or error)
+  const pRecord = pending;
+
+  // Helper to create a terminal revision
   async function terminalRevision(
     status: "insufficient_data" | "error",
-    fields: Partial<SignalOutcomeJournalRecord>,
+    fields: Partial<SignalOutcomeJournalRecord>
   ): Promise<SignalOutcomeJournalRecord> {
     const revision: SignalOutcomeJournalRecord = {
-      ...pendingRecord,
-      id: nextRevisionId(pendingRecord),
-      supersedesOutcomeId: pendingRecord.id,
-      revision: pendingRecord.revision + 1,
+      ...pRecord,
+      id: nextRevisionId(pRecord),
+      supersedesOutcomeId: pRecord.id,
+      revision: pRecord.revision + 1,
       outcomeStatus: status,
       observedAt: nowStr,
       ...fields,
@@ -159,53 +142,83 @@ export async function observeOutcome(recordId: string): Promise<SignalOutcomeJou
     return revision;
   }
 
-  // Guard 1: assetId must be present — never fall back to a default ticker
-  if (!pending.assetId) {
+  // Validate pending record fields
+  if (!pending.assetId || !CANONICAL_ASSET_ID_RE.test(pending.assetId)) {
     return terminalRevision("insufficient_data", {
-      lesson: "assetId is required for outcome observation. No default ticker is allowed.",
-      finalWarnings: [...pending.finalWarnings, "missing_asset_id"],
+      lesson: `Invalid or missing assetId format: "${pending.assetId}".`,
+      finalWarnings: [...pending.finalWarnings, "invalid_asset_id"],
     });
   }
 
-  // Guard 2: observationStartedAt must be present
-  if (!pending.observationStartedAt) {
+  if (!pending.universeId) {
     return terminalRevision("insufficient_data", {
-      lesson: "observationStartedAt is required for date-aligned outcome observation.",
-      finalWarnings: [...pending.finalWarnings, "missing_observation_started_at"],
+      lesson: "universeId is required.",
+      finalWarnings: [...pending.finalWarnings, "missing_universe_id"],
     });
   }
 
-  // Resolve benchmark IDs from Symbol Master (seed metadata)
-  const symbolRecord = await getSymbolMasterRecord(pending.assetId).catch(() => null);
-  const marketBenchmarkAssetId = symbolRecord?.marketBenchmarkId ?? null;
-  const sectorBenchmarkAssetId = symbolRecord?.sectorBenchmarkId ?? null;
+  const isKrAsset = pending.assetId.startsWith("KR_");
+  const isUsAsset = pending.assetId.startsWith("US_");
+  const isKrUniverse = pending.universeId === "KOSPI_SAMPLE" || pending.universeId === "KOSPI";
+  const isUsUniverse = pending.universeId === "SP500_SAMPLE" || pending.universeId === "SP500";
+  if ((isKrAsset && !isKrUniverse) || (isUsAsset && !isUsUniverse)) {
+    return terminalRevision("insufficient_data", {
+      lesson: `Universe ID "${pending.universeId}" is not compatible with asset region for "${pending.assetId}".`,
+      finalWarnings: [...pending.finalWarnings, "universe_mismatch"],
+    });
+  }
 
-  // Determine universeId for OHLCV loader
-  const isKr =
-    pending.assetId.startsWith("KR_") ||
-    pending.assetId.includes(".KS") ||
-    /^\d+$/.test(pending.assetId);
-  const universeId = isKr ? "KOSPI_SAMPLE" : "SP500_SAMPLE";
+  if (!pending.observationStartedAt || !/^\d{4}-\d{2}-\d{2}/.test(pending.observationStartedAt)) {
+    return terminalRevision("insufficient_data", {
+      lesson: `Invalid or missing observationStartedAt: "${pending.observationStartedAt}".`,
+      finalWarnings: [...pending.finalWarnings, "invalid_observation_started_at"],
+    });
+  }
 
-  const ohlcvEnv = await loadOhlcvHistory(universeId, pending.assetId);
-  const dataVersionId = (ohlcvEnv as unknown as { dataVersionId?: string }).dataVersionId;
+  if (!HORIZON_BARS[pending.horizon]) {
+    return terminalRevision("error", {
+      lesson: `Invalid outcome horizon: "${pending.horizon}".`,
+      finalWarnings: [...pending.finalWarnings, "invalid_horizon"],
+    });
+  }
 
-  if (!ohlcvEnv.value || ohlcvEnv.value.length === 0) {
+  // Load benchmarks dynamically via dynamic store
+  const mapping = await getBenchmarkMapping(pending.universeId);
+  const marketBenchmarkAssetId = mapping?.marketBenchmarkAssetId ?? null;
+  const sectorBenchmarkAssetId = mapping?.sectorBenchmarkAssetId ?? null;
+
+  // Use loadVersionedOhlcvHistory for point-in-time constraints
+  const ohlcvEnv = await loadVersionedOhlcvHistory({
+    assetId: pending.assetId,
+    universeId: pending.universeId as any,
+    asOfDate: nowStr.slice(0, 10),
+    knownAt: nowStr,
+  }).catch(() => null);
+
+  if (!ohlcvEnv || ohlcvEnv.status === "insufficient_data" || !ohlcvEnv.value || ohlcvEnv.value.length === 0) {
     return terminalRevision("insufficient_data", {
       marketBenchmarkAssetId,
       sectorBenchmarkAssetId,
-      lesson: "No OHLCV history available for observation.",
+      lesson: "No versioned OHLCV history available for observation.",
       finalWarnings: [...pending.finalWarnings, "no_ohlcv_data"],
     });
   }
 
-  // Guard 3: OHLCV must carry a dataVersionId
+  if (ohlcvEnv.status === "error") {
+    return terminalRevision("error", {
+      marketBenchmarkAssetId,
+      sectorBenchmarkAssetId,
+      lesson: ohlcvEnv.message || "Failed to load versioned OHLCV.",
+      finalWarnings: [...pending.finalWarnings, "ohlcv_load_failed"],
+    });
+  }
+
+  const dataVersionId = ohlcvEnv.dataVersionId;
   if (!dataVersionId) {
     return terminalRevision("insufficient_data", {
       marketBenchmarkAssetId,
       sectorBenchmarkAssetId,
-      basePriceDataVersionId: null,
-      lesson: "OHLCV loader did not return a dataVersionId; cannot record a versioned observation.",
+      lesson: "OHLCV file lacks dataVersionId metadata.",
       finalWarnings: [...pending.finalWarnings, "missing_ohlcv_data_version"],
     });
   }
@@ -224,13 +237,11 @@ export async function observeOutcome(recordId: string): Promise<SignalOutcomeJou
   const horizonBars = HORIZON_BARS[pending.horizon];
   const baseIndex = findBaseIndex(bars, pending.observationStartedAt);
 
-  // No qualifying base bar found — still waiting (no write, just return existing)
   if (baseIndex === -1) {
-    return pending;
+    return pending; // Still pending (no base date trading data yet)
   }
 
   const baseBar = bars[baseIndex];
-
   if (baseBar.close <= 0) {
     return terminalRevision("error", {
       marketBenchmarkAssetId,
@@ -241,37 +252,49 @@ export async function observeOutcome(recordId: string): Promise<SignalOutcomeJou
   }
 
   const targetBar = findTargetBar(bars, baseIndex, horizonBars);
-
-  // Target bar does not yet exist → still pending (no write, return existing record)
   if (!targetBar) {
-    return pending;
+    return pending; // Still pending (target trade date has not arrived yet)
   }
 
   const observedForwardReturn = (targetBar.close - baseBar.close) / baseBar.close;
   const finalWarnings = [...pending.finalWarnings];
 
-  // Load market benchmark
+  // Load and check market benchmark
   let marketBenchmarkReturn: number | null = null;
   let marketExcessReturn: number | null = null;
   let marketBenchmarkDataVersionId: string | null = null;
 
   if (marketBenchmarkAssetId) {
     try {
-      const benchEnv = await loadOhlcvHistory(universeId, marketBenchmarkAssetId);
-      const benchVersionId = (benchEnv as unknown as { dataVersionId?: string }).dataVersionId;
-      if (benchEnv.value && benchEnv.value.length > 0) {
+      const benchEnv = await loadVersionedOhlcvHistory({
+        assetId: marketBenchmarkAssetId,
+        universeId: pending.universeId as any,
+        asOfDate: nowStr.slice(0, 10),
+        knownAt: nowStr,
+      });
+
+      if (benchEnv.status !== "error" && benchEnv.value && benchEnv.value.length > 0) {
         const benchBars = sortAndValidateBars(benchEnv.value as PriceBar[]);
         if (benchBars) {
-          const benchBaseIdx = findBaseIndex(benchBars, pending.observationStartedAt!);
+          const benchBaseIdx = findBaseIndex(benchBars, pending.observationStartedAt);
           const benchTargetBar =
             benchBaseIdx !== -1 ? findTargetBar(benchBars, benchBaseIdx, horizonBars) : null;
           const benchBaseBar = benchBaseIdx !== -1 ? benchBars[benchBaseIdx] : null;
 
-          if (benchBaseBar && benchTargetBar && benchBaseBar.close > 0) {
+          // Align trading dates exactly
+          if (
+            benchBaseBar &&
+            benchTargetBar &&
+            benchBaseBar.date === baseBar.date &&
+            benchTargetBar.date === targetBar.date &&
+            benchBaseBar.close > 0
+          ) {
             marketBenchmarkReturn =
               (benchTargetBar.close - benchBaseBar.close) / benchBaseBar.close;
             marketExcessReturn = observedForwardReturn - marketBenchmarkReturn;
-            marketBenchmarkDataVersionId = benchVersionId ?? null;
+            marketBenchmarkDataVersionId = benchEnv.dataVersionId;
+          } else {
+            finalWarnings.push("market_benchmark_date_mismatch");
           }
         }
       }
@@ -284,27 +307,41 @@ export async function observeOutcome(recordId: string): Promise<SignalOutcomeJou
     finalWarnings.push("market_benchmark_missing");
   }
 
-  // Load sector benchmark
+  // Load and check sector benchmark
   let sectorBenchmarkReturn: number | null = null;
   let sectorExcessReturn: number | null = null;
   let sectorBenchmarkDataVersionId: string | null = null;
 
   if (sectorBenchmarkAssetId) {
     try {
-      const secEnv = await loadOhlcvHistory(universeId, sectorBenchmarkAssetId);
-      const secVersionId = (secEnv as unknown as { dataVersionId?: string }).dataVersionId;
-      if (secEnv.value && secEnv.value.length > 0) {
+      const secEnv = await loadVersionedOhlcvHistory({
+        assetId: sectorBenchmarkAssetId,
+        universeId: pending.universeId as any,
+        asOfDate: nowStr.slice(0, 10),
+        knownAt: nowStr,
+      });
+
+      if (secEnv.status !== "error" && secEnv.value && secEnv.value.length > 0) {
         const secBars = sortAndValidateBars(secEnv.value as PriceBar[]);
         if (secBars) {
-          const secBaseIdx = findBaseIndex(secBars, pending.observationStartedAt!);
+          const secBaseIdx = findBaseIndex(secBars, pending.observationStartedAt);
           const secTargetBar =
             secBaseIdx !== -1 ? findTargetBar(secBars, secBaseIdx, horizonBars) : null;
           const secBaseBar = secBaseIdx !== -1 ? secBars[secBaseIdx] : null;
 
-          if (secBaseBar && secTargetBar && secBaseBar.close > 0) {
+          // Align trading dates exactly
+          if (
+            secBaseBar &&
+            secTargetBar &&
+            secBaseBar.date === baseBar.date &&
+            secTargetBar.date === targetBar.date &&
+            secBaseBar.close > 0
+          ) {
             sectorBenchmarkReturn = (secTargetBar.close - secBaseBar.close) / secBaseBar.close;
             sectorExcessReturn = observedForwardReturn - sectorBenchmarkReturn;
-            sectorBenchmarkDataVersionId = secVersionId ?? null;
+            sectorBenchmarkDataVersionId = secEnv.dataVersionId;
+          } else {
+            finalWarnings.push("sector_benchmark_date_mismatch");
           }
         }
       }
@@ -320,13 +357,12 @@ export async function observeOutcome(recordId: string): Promise<SignalOutcomeJou
         `Market excess: ${(marketExcessReturn! * 100).toFixed(2)}%.`
       : "Market benchmark data missing.");
 
-  // Observation creates a new revision (immutable append-only)
-  const observedRevision = pending.revision + 1;
+  // Save the terminal observation revision
   const observed: SignalOutcomeJournalRecord = {
     ...pending,
     id: nextRevisionId(pending),
     supersedesOutcomeId: pending.id,
-    revision: observedRevision,
+    revision: pending.revision + 1,
     basePriceDataVersionId: dataVersionId,
     baseTradeDate: baseBar.date,
     targetTradeDate: targetBar.date,

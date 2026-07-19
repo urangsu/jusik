@@ -95,6 +95,22 @@ export async function GET(request: NextRequest, props: RouteParams) {
       );
     }
 
+    // 3.5. Market and universe compatibility check
+    const isKrAsset = assetId.startsWith("KR_");
+    const isUsAsset = assetId.startsWith("US_");
+    const isKrUniverse = universeId === "KOSPI_SAMPLE" || universeId === "KOSPI";
+    const isUsUniverse = universeId === "SP500_SAMPLE" || universeId === "SP500";
+
+    if ((isKrAsset && !isKrUniverse) || (isUsAsset && !isUsUniverse)) {
+      return createSafeResponse(
+        errorEnvelope(
+          "invalid_research_request",
+          `Universe ID "${universeId}" is not compatible with asset "${assetId}".`
+        ),
+        400
+      );
+    }
+
     // 4. Asset must exist in Symbol Master
     const symbolRecord = await getSymbolMasterRecord(assetId).catch(() => null);
     if (!symbolRecord) {

@@ -115,10 +115,14 @@ export const ResearchWorkspace: React.FC<ResearchWorkspaceProps> = ({ assetId, a
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Left Side: Multiseat validation and Thesis Pillars */}
         <div className="flex flex-col gap-6">
-          <ResearchValidationPanel validationResult={data.validationResult} />
+          <ResearchValidationPanel
+            validationResult={data.validationResult}
+            availability={data.availability}
+          />
           <ThesisPillarPanel
             pillars={data.thesisSnapshot.pillars}
             claims={data.claims}
+            evidenceRecords={data.evidenceRecords}
             onClaimSelect={(claim: ResearchClaim) => setSelectedClaim(claim)}
           />
         </div>

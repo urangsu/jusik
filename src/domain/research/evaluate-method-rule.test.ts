@@ -3,6 +3,7 @@ import { evaluateMethodRule, type EvaluateMethodRuleInput } from "./evaluate-met
 import type { ResearchMethodRule } from "./method-rule";
 import type { ResearchClaim } from "./research-claim";
 import type { SignalVersion } from "@/domain/signals/signal-version";
+import type { ResearchEvidenceRecord } from "./research-evidence-record";
 
 const MOCK_SIGNAL_VERSION: SignalVersion = {
   signalVersionId: "sv_test",
@@ -53,24 +54,48 @@ function makeClaim(overrides: Partial<ResearchClaim>): ResearchClaim {
     claimKind: "demand_evidence",
     evidenceIds: ["ev1"],
     evidenceSpan: { from: "2026-01-01", to: "2026-03-01" },
-    isVerified: true,
     extractionMethod: "user_import",
     createdAt: "2026-01-10T00:00:00Z",
     ...overrides,
   };
 }
 
+function makeEvidenceRecord(id: string, overrides: Partial<ResearchEvidenceRecord> = {}): ResearchEvidenceRecord {
+  return {
+    evidenceId: id,
+    assetId: "KR_005930",
+    evidenceKind: "revenue_data" as any,
+    claimIds: ["c1"],
+    contentHash: "hash_" + id,
+    dataVersionId: "dv_test",
+    sourceAuthor: "Apple Corp",
+    extractionMethod: "user_import",
+    source: "Bloomberg",
+    title: "Test title",
+    quoteSpan: null,
+    sourceUrl: null,
+    publishedAt: null,
+    verificationStatus: "verified",
+    retrievedAt: "2026-01-01T00:00:00Z",
+    dataAvailableAt: "2026-01-01T00:00:00Z",
+    expiryAt: null,
+    internalDocumentRef: null,
+    sourceTier: "licensed_commercial",
+    ...overrides,
+  };
+}
+
 function makeInput(
-  overrides: Partial<EvaluateMethodRuleInput> = {},
+  overrides: Partial<EvaluateMethodRuleInput> = {}
 ): EvaluateMethodRuleInput {
   return {
     rule: DEMAND_RULE,
     assetId: "KR_005930",
     market: "KR",
     claims: [makeClaim({})],
-    evidenceMeta: {
-      ev1: { kind: "revenue_data", expiryAt: null },
-    },
+    evidenceRecords: [
+      makeEvidenceRecord("ev1"),
+    ],
     asOfDate: "2026-06-01",
     signalVersion: null,
     ...overrides,
@@ -95,7 +120,7 @@ describe("evaluateMethodRule", () => {
     const result = evaluateMethodRule(
       makeInput({
         claims: [makeClaim({ direction: "bearish" })],
-        evidenceMeta: { ev1: { kind: "revenue_data", expiryAt: null } },
+        evidenceRecords: [makeEvidenceRecord("ev1")],
       }),
     );
     expect(result.status).toBe("contradicted");
@@ -107,9 +132,9 @@ describe("evaluateMethodRule", () => {
   it("an expired claim cannot support the rule", () => {
     const result = evaluateMethodRule(
       makeInput({
-        evidenceMeta: {
-          ev1: { kind: "revenue_data", expiryAt: "2026-01-01" }, // expired before asOfDate 2026-06-01
-        },
+        evidenceRecords: [
+          makeEvidenceRecord("ev1", { expiryAt: "2026-01-01" }), // expired before asOfDate 2026-06-01
+        ],
       }),
     );
     expect(result.staleEvidenceIds).toContain("ev1");
@@ -134,12 +159,11 @@ describe("evaluateMethodRule", () => {
     const result = evaluateMethodRule(
       makeInput({
         claims: [makeClaim({ evidenceIds: [] })], // claim exists but has no evidence
-        evidenceMeta: {},
+        evidenceRecords: [],
       }),
     );
     // No supporting evidence → insufficient_data
     expect(result.status).toBe("insufficient_data");
-    // No synthetic claim created — claimIds may include the claim but no evidenceIds
     expect(result.supportingEvidenceIds).toHaveLength(0);
   });
 

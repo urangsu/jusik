@@ -4,13 +4,16 @@ import { Panel } from "../ui/Panel";
 import type { ThesisPillar } from "@/domain/research/thesis-pillar";
 import type { ResearchClaim } from "@/domain/research/research-claim";
 
+import type { ResearchEvidenceRecord } from "@/domain/research/research-evidence-record";
+
 interface ThesisPillarPanelProps {
   pillars: ThesisPillar[];
   claims: ResearchClaim[];
+  evidenceRecords: ResearchEvidenceRecord[];
   onClaimSelect: (claim: ResearchClaim) => void;
 }
 
-export const ThesisPillarPanel: React.FC<ThesisPillarPanelProps> = ({ pillars, claims, onClaimSelect }) => {
+export const ThesisPillarPanel: React.FC<ThesisPillarPanelProps> = ({ pillars, claims, evidenceRecords, onClaimSelect }) => {
   const getStatusBadge = (status: ThesisPillar["status"]) => {
     switch (status) {
       case "confirming":
@@ -103,8 +106,26 @@ export const ThesisPillarPanel: React.FC<ThesisPillarPanelProps> = ({ pillars, c
                             onClick={() => onClaimSelect(claimObj)}
                             className="w-full text-left p-2.5 rounded bg-kt-bg-overlay-100/50 hover:bg-kt-bg-overlay-100 border border-kt-border-panel/20 flex items-center justify-between gap-3 cursor-pointer group text-[11px]"
                           >
-                            <span className="text-kt-text-primary group-hover:text-kt-text-primary line-clamp-1">
-                              {claimObj.text}
+                            <span className="text-kt-text-primary group-hover:text-kt-text-primary line-clamp-1 flex items-center gap-1.5 flex-wrap">
+                              {claimObj.extractionMethod === "ai_extraction" && (
+                                <span className="text-[8px] font-bold text-kt-negative-text bg-kt-negative-weak px-1 rounded shrink-0">
+                                  AI
+                                </span>
+                              )}
+                              {claimObj.evidenceIds.length > 0 &&
+                              claimObj.evidenceIds.every((id) => {
+                                const rec = evidenceRecords?.find((r) => r.evidenceId === id);
+                                return rec?.verificationStatus === "verified";
+                              }) ? (
+                                <span className="text-[8px] font-bold text-kt-positive-text bg-kt-positive-weak px-1 rounded shrink-0">
+                                  VERIFIED
+                                </span>
+                              ) : (
+                                <span className="text-[8px] text-kt-text-muted bg-kt-bg-overlay-200 px-1 rounded shrink-0">
+                                  UNVERIFIED
+                                </span>
+                              )}
+                              <span>{claimObj.text}</span>
                             </span>
                             <span className="flex items-center gap-1 text-[9px] text-kt-text-muted shrink-0">
                               <span>세부정보</span>

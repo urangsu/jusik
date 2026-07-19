@@ -12,10 +12,12 @@ describe("Voices and Import API routes", () => {
   beforeEach(async () => {
     const testRoot = await createTestDataRoot("api-research-voices-test");
     process.env.JUSIK_TEST_DATA_ROOT = testRoot.root;
+    process.env.LOCAL_RESEARCH_WRITES_ENABLED = "true";
     cleanup = testRoot.cleanup;
   });
 
   afterEach(async () => {
+    delete process.env.LOCAL_RESEARCH_WRITES_ENABLED;
     await cleanup();
   });
 
@@ -92,7 +94,7 @@ describe("Voices and Import API routes", () => {
     const res2 = await importVoices(req2);
     const json2 = await res2.json();
     expect(json2.value.importedPosts).toHaveLength(1);
-    expect(json2.value.importedPosts[0].postId).toBe("post_voice_api_1_ext_api_post");
+    expect(json2.value.importedPosts[0].postId).toBe("post_99f4550aeff6c293f46d5ee03582af37c464c7e5f72f80a83c96c7da0d54d58d");
     const postsAfterReq2 = await listResearchPosts();
     expect(postsAfterReq2).toHaveLength(1); // Still 1 file stored
 
@@ -129,8 +131,8 @@ describe("Voices and Import API routes", () => {
     const res3 = await importVoices(req3);
     const json3 = await res3.json();
     expect(json3.value.importedPosts).toHaveLength(1);
-    expect(json3.value.importedPosts[0].postId).toBe("post_voice_api_1_ext_api_post_r1"); // Revision postId
-    expect(json3.value.importedPosts[0].revisionOf).toBe("post_voice_api_1_ext_api_post");
+    expect(json3.value.importedPosts[0].postId).toBe("post_99f4550aeff6c293f46d5ee03582af37c464c7e5f72f80a83c96c7da0d54d58d_r1"); // Revision postId
+    expect(json3.value.importedPosts[0].revisionOf).toBe("post_99f4550aeff6c293f46d5ee03582af37c464c7e5f72f80a83c96c7da0d54d58d");
 
     const postsAfterReq3 = await listResearchPosts();
     expect(postsAfterReq3).toHaveLength(2); // Both initial and revision stored

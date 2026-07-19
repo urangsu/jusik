@@ -1,7 +1,7 @@
 # Implementation Inventory
 
-> WO-017-U6 기준 구현 상태 감사 문서  
-> 최종 갱신: 2026-07-17  
+> WO-018-C 기준 구현 상태 감사 문서  
+> 최종 갱신: 2026-07-19  
 > 검증 기준: `npm run typecheck && npm run lint && npm run test && npm run build`
 
 ---
@@ -56,14 +56,14 @@
 | Symbol Import Guard | **implemented** | `src/server/symbols/symbol-master-import-validator.ts` | ✓ | Rejects non-canonical KR/US imports |
 | Surge Context | **implemented** | `src/server/surge/surge-context-store.ts` | ✓ | Optional sector/filing context without fake signals |
 | Runtime Store Isolation | **implemented (WO017-N)** | `src/server/storage/runtime-store-root.ts` | ✓ | JUSIK_TEST_DATA_ROOT / JUSIK_DATA_ROOT 분리 |
-| Evidence-First Method Rules | **implemented (WO017-U6)** | `src/domain/research/evaluate-method-rule.ts` | ✓ | 11가지 검증 방법론 규칙, vetoSeverity(fatal/blocking/warning/none) 명시 |
-| Supply Chain Graph | **implemented (WO017-U6)** | `src/domain/research/validate-supply-chain-graph.ts` | ✓ | 공급망 노드·엣지 검증 — null 반환 시 UI 빈 상태 표시 (mock graph 제거) |
-| Append-Only Research Voice | **implemented (WO017-U)** | `src/server/research/file-research-voice-store.ts` | ✓ | 리서치 의견 및 코멘트 타임라인 리비전 관리 |
-| Multi-Seat Validation | **implemented (WO017-U6)** | `src/domain/research/synthesize-validation-reports.ts` | ✓ | 구조화된 ResearchVetoReason, availability 기반 seat 계산, freshness/confidence 헬퍼 |
-| Research Availability | **implemented (WO017-U6)** | `src/domain/research/research-availability.ts` | ✓ | price/valuation/filings/supplyChain 가용성 독립 판정 (price≠valuation 규칙 적용) |
-| Research Evidence Record | **implemented (WO017-U6)** | `src/domain/research/research-evidence-record.ts` | ✓ | 근거 원천 추적 도메인 타입 (source/title/quoteSpan/verificationStatus) |
-| Research Evidence Store | **implemented (WO017-U6)** | `src/server/research/research-evidence-store.ts` | ✓ | 파일 기반 key-value store — null 반환 (mock 없음) |
-| Evidence Quality Helpers | **implemented (WO017-U6)** | `src/domain/research/resolve-evidence-quality.ts` | ✓ | 증거 없음 → freshness=unknown, confidence=none (false fresh 방지) |
+| Evidence-First Method Rules | **implemented (WO018-C)** | `src/domain/research/evaluate-method-rule.ts` | ✓ | 11가지 검증 방법론 규칙, vetoSeverity(fatal/blocking/warning/none) 명시, 실제 evidence 검증 |
+| Supply Chain Graph | **implemented (WO018-C)** | `src/domain/research/validate-supply-chain-graph.ts` | ✓ | 공급망 노드·엣지 검증 — null 반환 시 UI 빈 상태 표시 (mock graph 제거) |
+| Append-Only Research Voice | **implemented (WO018-C)** | `src/server/research/file-research-voice-store.ts` | ✓ | 리서치 의견 및 코멘트 타임라인 리비전 관리 및 Write Guard 보안 검증 |
+| Multi-Seat Validation | **implemented (WO018-C)** | `src/domain/research/synthesize-validation-reports.ts` | ✓ | 구조화된 ResearchVetoReason, availability 기반 seat 계산, freshness/confidence 헬퍼, 실제 evidence 검증 |
+| Research Availability | **implemented (WO018-C)** | `src/domain/research/research-availability.ts` | ✓ | price/valuation/filings/supplyChain 가용성 독립 판정 (price≠valuation 규칙 적용) |
+| Research Evidence Record | **implemented (WO018-C)** | `src/domain/research/research-evidence-record.ts` | ✓ | 근거 원천 추적 도메인 타입 (source/title/quoteSpan/verificationStatus) |
+| Research Evidence Store | **implemented (WO018-C)** | `src/server/research/research-evidence-store.ts` | ✓ | 파일 기반 key-value store — null 반환 (mock 없음), atomic write & idempotent hash 검증 |
+| Evidence Quality Helpers | **implemented (WO018-C)** | `src/domain/research/resolve-evidence-quality.ts` | ✓ | 증거 없음 → freshness=unknown, confidence=none (false fresh 방지), KST date-alignment |
 | Earnings Event Minimal | **missing_p1** | - | - | 영업이익/순이익 이벤트 탐지 없음 |
 | Signal History Visualization | **missing_p1** | - | - | UI 컴포넌트 없음 |
 | Cross-horizon Tension UI | **missing_p1** | - | - | 타입 정의만 존재 |
@@ -123,7 +123,7 @@
 | `POST /api/broker/kis/account` | **implemented** | ✓ | - | Read-only |
 | `GET /api/broker/kis/balance` | **implemented** | ✓ | - | Read-only |
 | `GET /api/broker/kis/health` | **implemented** | ✓ | - | |
-| `POST /api/broker/kis/order` | **skeleton_only** | ✓ | - | 항상 거부 응답. 실주문 영구 제외 |
+| POST /api/broker/kis/order | **deleted** | - | - | 주문 기능 영구 삭제 |
 | `GET /api/watchlist` | **implemented** | ✓ | - | 관심종목 조회 |
 | `POST /api/watchlist` | **implemented** | ✓ | SettingsWriteGuard | 관심종목 추가 |
 | `PATCH /api/watchlist/[assetId]` | **implemented** | ✓ | SettingsWriteGuard | 관심종목 수정 |
@@ -358,13 +358,14 @@ GPT Vision          : ✗ 코드 없음
 | Command | Result |
 |---|---|
 | `npm run typecheck` | ✓ PASS (0 errors) |
-| `npm run lint` | ✓ PASS (0 errors, 377 warnings — `any` 타입 등) |
-| `npm run test` | ✓ PASS (151 files, 454 tests) |
+| `npm run lint` | ✓ PASS (0 errors, 377 warnings) |
+| `npm run test` | ✓ PASS |
 | `npm run build` | ✓ PASS |
 | `npm run docs:check` | ✓ PASS |
 | `npm run docs:quant` | ✓ PASS |
 | `npm run check:wording` | ✓ PASS (docs 내 정책 설명 warn-only) |
 | `npm run check:alpha-ui` | ✓ PASS |
+| `npm run check:runtime-data` | ✓ PASS (tracked runtime files isolated) |
 
 ## 10. PR #2 Codex Review Feedback
 

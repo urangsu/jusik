@@ -1,13 +1,12 @@
 /**
  * Task 2: Date-aligned, append-only outcome observation.
- * All tests here FAIL against the old observer and PASS after the fix.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createPendingOutcomeRecord, observeOutcome } from "./signal-outcome-observer";
-import { loadOhlcvHistory } from "../factors/ohlcv-history-loader";
+import { loadVersionedOhlcvHistory } from "../factors/ohlcv-history-loader";
 
 vi.mock("../factors/ohlcv-history-loader", () => ({
-  loadOhlcvHistory: vi.fn(),
+  loadVersionedOhlcvHistory: vi.fn(),
 }));
 
 const store: Record<string, unknown> = {};
@@ -31,15 +30,20 @@ const NON_MONOTONIC_BARS = [
 ];
 
 function mockOhlcv(bars: ReturnType<typeof bar>[], dataVersionId = "ver_test_001") {
-  vi.mocked(loadOhlcvHistory).mockResolvedValue({
+  vi.mocked(loadVersionedOhlcvHistory).mockResolvedValue({
     value: bars,
     status: "cached",
     source: "test",
     sourceTier: "official",
     warnings: [],
     updatedAt: new Date().toISOString(),
+    assetId: "KR_005930",
+    universeId: "KOSPI_SAMPLE",
     dataVersionId,
-  } as unknown as Awaited<ReturnType<typeof loadOhlcvHistory>>);
+    asOfDate: "2026-01-05",
+    effectiveAt: new Date().toISOString(),
+    ingestedAt: new Date().toISOString(),
+  } as unknown as Awaited<ReturnType<typeof loadVersionedOhlcvHistory>>);
 }
 
 describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
@@ -49,20 +53,21 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
   });
 
   // Case 1: Missing assetId → insufficient_data (no OHLCV load)
-  it("missing assetId never calls loadOhlcvHistory and returns insufficient_data", async () => {
+  it("missing assetId never calls loadVersionedOhlcvHistory and returns insufficient_data", async () => {
     mockOhlcv(NON_MONOTONIC_BARS);
 
     const pending = await createPendingOutcomeRecord({
       subjectType: "signal",
       subjectId: "sub_noasset",
-      assetId: null,
+      assetId: null as any,
+      universeId: "KOSPI_SAMPLE",
       horizon: "forward_5d",
       observationStartedAt: "2026-01-05T00:00:00Z",
     });
 
     const observed = await observeOutcome(pending.id);
     expect(observed.outcomeStatus).toBe("insufficient_data");
-    expect(loadOhlcvHistory).not.toHaveBeenCalled();
+    expect(loadVersionedOhlcvHistory).not.toHaveBeenCalled();
   });
 
   // Case 2: Missing observationStartedAt → insufficient_data (no OHLCV load)
@@ -73,39 +78,43 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
       subjectType: "signal",
       subjectId: "sub_nostart",
       assetId: "KR_005930",
+      universeId: "KOSPI_SAMPLE",
       horizon: "forward_5d",
-      observationStartedAt: undefined,
+      observationStartedAt: undefined as any,
     });
 
     const observed = await observeOutcome(pending.id);
     expect(observed.outcomeStatus).toBe("insufficient_data");
-    expect(loadOhlcvHistory).not.toHaveBeenCalled();
+    expect(loadVersionedOhlcvHistory).not.toHaveBeenCalled();
   });
 
   // Case 3: Missing basePriceDataVersionId never loads data
-  // (basePriceDataVersionId is required when observing — if OHLCV has no dataVersionId the observation fails)
   it("missing basePriceDataVersionId produces insufficient_data status", async () => {
-    // loadOhlcvHistory returns value without a dataVersionId (undefined)
-    vi.mocked(loadOhlcvHistory).mockResolvedValue({
+    vi.mocked(loadVersionedOhlcvHistory).mockResolvedValue({
       value: NON_MONOTONIC_BARS,
       status: "cached",
       source: "test",
       sourceTier: "official",
       warnings: [],
       updatedAt: new Date().toISOString(),
-      // No dataVersionId field
-    } as unknown as Awaited<ReturnType<typeof loadOhlcvHistory>>);
+      assetId: "KR_005930",
+      universeId: "KOSPI_SAMPLE",
+      dataVersionId: null,
+      asOfDate: null,
+      effectiveAt: null,
+      ingestedAt: null,
+    } as unknown as Awaited<ReturnType<typeof loadVersionedOhlcvHistory>>);
 
     const pending = await createPendingOutcomeRecord({
       subjectType: "signal",
       subjectId: "sub_nodataversion",
       assetId: "KR_005930",
+      universeId: "KOSPI_SAMPLE",
       horizon: "forward_5d",
       observationStartedAt: "2026-01-05T00:00:00Z",
     });
 
     const observed = await observeOutcome(pending.id);
-    // Without dataVersionId, basePriceDataVersionId cannot be set; observation must reject
     expect(observed.basePriceDataVersionId).toBeFalsy();
     expect(["insufficient_data", "error"]).toContain(observed.outcomeStatus);
   });
@@ -113,19 +122,17 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
   // Case 4: Base bar is first trading bar with date >= observationStartedAt
   it("base bar is the first bar with date >= observationStartedAt (not the latest)", async () => {
     mockOhlcv(NON_MONOTONIC_BARS);
-    // observationStartedAt = 2026-01-05 → base bar should be bar at 2026-01-05 (close=100)
-    // NOT bar at 2026-01-02 (close=200) and NOT bar at 2026-01-07 (close=120)
 
     const pending = await createPendingOutcomeRecord({
       subjectType: "signal",
       subjectId: "sub_base",
       assetId: "KR_005930",
+      universeId: "KOSPI_SAMPLE",
       horizon: "forward_5d",
       observationStartedAt: "2026-01-05T00:00:00Z",
     });
 
     const observed = await observeOutcome(pending.id);
-    // Base date must be 2026-01-05
     if (observed.outcomeStatus !== "pending") {
       expect(observed.baseTradeDate).toBe("2026-01-05");
     }
@@ -136,7 +143,7 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
     const bars = [
       bar("2026-01-05", 100), // index 0 — base
       bar("2026-01-06", 80),  // index 1
-      bar("2026-01-07", 120), // index 2 — target for forward_5d? No, only 2 bars after base
+      bar("2026-01-07", 120), // index 2
       bar("2026-01-08", 90),  // index 3
       bar("2026-01-09", 110), // index 4
       bar("2026-01-12", 130), // index 5 — target for forward_5d (base + 5)
@@ -147,6 +154,7 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
       subjectType: "signal",
       subjectId: "sub_target",
       assetId: "KR_005930",
+      universeId: "KOSPI_SAMPLE",
       horizon: "forward_5d",
       observationStartedAt: "2026-01-05T00:00:00Z",
     });
@@ -154,14 +162,12 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
     const observed = await observeOutcome(pending.id);
     if (observed.outcomeStatus === "observed") {
       expect(observed.targetTradeDate).toBe("2026-01-12");
-      // Return = (130 - 100) / 100 = 0.30
       expect(observed.observedForwardReturn).toBeCloseTo(0.30, 5);
     }
   });
 
   // Case 6: Target bar does not exist → status remains pending (not insufficient_data)
   it("if target bar does not yet exist, status remains pending", async () => {
-    // Only 2 bars exist after base, but horizon is forward_5d (needs 5 bars after base)
     const bars = [
       bar("2026-01-05", 100), // base
       bar("2026-01-06", 80),
@@ -173,6 +179,7 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
       subjectType: "signal",
       subjectId: "sub_notarget",
       assetId: "KR_005930",
+      universeId: "KOSPI_SAMPLE",
       horizon: "forward_5d",
       observationStartedAt: "2026-01-05T00:00:00Z",
     });
@@ -183,7 +190,6 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
 
   // Case 7: A bar before observationStartedAt is never selected as base
   it("bar before observationStartedAt is never used as base", async () => {
-    // bars[0] is before the start date — must be skipped
     const bars = [
       bar("2026-01-02", 200), // before observationStartedAt — must not be base
       bar("2026-01-05", 100), // first bar >= observationStartedAt → this is the base
@@ -199,6 +205,7 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
       subjectType: "signal",
       subjectId: "sub_skipbefore",
       assetId: "KR_005930",
+      universeId: "KOSPI_SAMPLE",
       horizon: "forward_5d",
       observationStartedAt: "2026-01-05T00:00:00Z",
     });
@@ -213,32 +220,36 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
   // Case 8: Market benchmark and sector benchmark returns are separate
   it("market benchmark and sector benchmark returns are stored separately", async () => {
     const bars6 = Array.from({ length: 6 }, (_, i) => bar(`2026-01-0${i + 5}`, 100 + i * 5));
-    vi.mocked(loadOhlcvHistory).mockImplementation(async (_uni, assetId) => ({
+    vi.mocked(loadVersionedOhlcvHistory).mockImplementation(async (input) => ({
       value: bars6,
       status: "cached" as const,
       source: "test",
       sourceTier: "official" as const,
       warnings: [],
       updatedAt: new Date().toISOString(),
-      dataVersionId: `ver_${assetId}`,
+      assetId: input.assetId,
+      universeId: input.universeId,
+      dataVersionId: `ver_${input.assetId}`,
+      asOfDate: "2026-01-05",
+      effectiveAt: new Date().toISOString(),
+      ingestedAt: new Date().toISOString(),
     }));
 
     const pending = await createPendingOutcomeRecord({
       subjectType: "signal",
       subjectId: "sub_benchmarks",
       assetId: "KR_005930",
+      universeId: "KOSPI_SAMPLE",
       horizon: "forward_5d",
       observationStartedAt: "2026-01-05T00:00:00Z",
     });
 
     const observed = await observeOutcome(pending.id);
     if (observed.outcomeStatus === "observed") {
-      // The new type has separate market/sector benchmark fields
       expect("marketBenchmarkReturn" in observed).toBe(true);
       expect("sectorBenchmarkReturn" in observed).toBe(true);
       expect("marketExcessReturn" in observed).toBe(true);
       expect("sectorExcessReturn" in observed).toBe(true);
-      // The deprecated merged fields must NOT exist
       expect("benchmarkReturn" in observed).toBe(false);
       expect("alphaReturn" in observed).toBe(false);
       expect("benchmarkSourceRef" in observed).toBe(false);
@@ -247,8 +258,8 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
 
   // Case 9: Missing benchmark leaves its excess return null
   it("missing benchmark leaves its excess return null", async () => {
-    vi.mocked(loadOhlcvHistory).mockImplementation(async (_uni, assetId) => {
-      if (assetId === "KR_005930") {
+    vi.mocked(loadVersionedOhlcvHistory).mockImplementation(async (input) => {
+      if (input.assetId === "KR_005930") {
         return {
           value: Array.from({ length: 6 }, (_, i) => bar(`2026-01-0${i + 5}`, 100)),
           status: "cached" as const,
@@ -256,10 +267,14 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
           sourceTier: "official" as const,
           warnings: [],
           updatedAt: new Date().toISOString(),
+          assetId: input.assetId,
+          universeId: input.universeId,
           dataVersionId: "ver_asset",
+          asOfDate: "2026-01-05",
+          effectiveAt: new Date().toISOString(),
+          ingestedAt: new Date().toISOString(),
         };
       }
-      // benchmark load fails
       throw new Error("benchmark not found");
     });
 
@@ -267,6 +282,7 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
       subjectType: "signal",
       subjectId: "sub_nobenchmark",
       assetId: "KR_005930",
+      universeId: "KOSPI_SAMPLE",
       horizon: "forward_5d",
       observationStartedAt: "2026-01-05T00:00:00Z",
     });
@@ -287,6 +303,7 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
       subjectType: "signal",
       subjectId: "sub_confidence",
       assetId: "KR_005930",
+      universeId: "KOSPI_SAMPLE",
       horizon: "forward_5d",
       observationStartedAt: "2026-01-05T00:00:00Z",
     });
@@ -297,7 +314,7 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
 
   // Case 11: Saving an observation creates a new revision and preserves the pending record
   it("observation creates a new revision record and preserves the pending record", async () => {
-    const { saveOutcomeRecord, getOutcomeRecord } = await import("./signal-outcome-journal-store");
+    const { getOutcomeRecord } = await import("./signal-outcome-journal-store");
     const bars6 = Array.from({ length: 6 }, (_, i) => bar(`2026-01-0${i + 5}`, 100 + i * 5));
     mockOhlcv(bars6);
 
@@ -305,6 +322,7 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
       subjectType: "signal",
       subjectId: "sub_revision",
       assetId: "KR_005930",
+      universeId: "KOSPI_SAMPLE",
       horizon: "forward_5d",
       observationStartedAt: "2026-01-05T00:00:00Z",
     });
@@ -312,14 +330,11 @@ describe("signal-outcome-observer — Task 2 date-aligned behavior", () => {
     const pendingId = pending.id;
     const observed = await observeOutcome(pendingId);
 
-    // If observation creates a new revision, the IDs differ
     if (observed.outcomeStatus === "observed") {
-      // The pending record must still exist
       const originalRecord = await getOutcomeRecord(pendingId);
       expect(originalRecord).not.toBeNull();
       expect(originalRecord!.outcomeStatus).toBe("pending");
 
-      // The observed record has a new ID (revision)
       expect(observed.id).not.toBe(pendingId);
       expect(observed.revision).toBeGreaterThan(0);
       expect(observed.supersedesOutcomeId).toBe(pendingId);

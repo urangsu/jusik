@@ -32,7 +32,6 @@ describe("research-claim-store", () => {
     claimKind: kind as any,
     evidenceIds: ["ev_1"],
     evidenceSpan: { from: "2026-01-01", to: "2026-03-01" },
-    isVerified: true,
     extractionMethod: "user_import",
     createdAt: new Date().toISOString(),
   });

@@ -154,7 +154,6 @@ export async function validateAndResolveClaim(
       from: new Date(payload.evidenceSpan.from).toISOString().slice(0, 10),
       to: new Date(payload.evidenceSpan.to).toISOString().slice(0, 10),
     },
-    isVerified: !!payload.isVerified,
     extractionMethod: payload.extractionMethod,
     createdAt: payload.createdAt || new Date().toISOString(),
   };
