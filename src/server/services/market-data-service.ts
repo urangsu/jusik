@@ -8,6 +8,7 @@ import { fmpFreeProvider } from "../providers/fmp-free-provider";
 import { alphaVantageProvider } from "../providers/alpha-vantage-provider";
 import { withMarketDataRuntimeGate } from "./market-data-runtime-wrapper";
 import { RuntimeProviderId } from "@/domain/providers/provider-runtime-policy";
+import { hasUsableData } from "../security/data-envelope-response";
 
 export type MarketDataProviderId = "kis" | "yfinance_personal" | "finnhub_free" | "fmp_free" | "alpha_vantage_free";
 
@@ -16,11 +17,36 @@ function getAssetId(symbol: string, region: MarketRegion, customAssetId?: string
   return region === "KR" ? `KR:${symbol}` : `US:${symbol}`;
 }
 
+const FAILURE_PRIORITY: Record<string, number> = {
+  plan_restricted: 6,
+  rate_limited: 5,
+  not_found: 4,
+  api_required: 3,
+  not_supported: 2,
+  error: 1,
+};
+
+function selectMostInformativeFailure<T>(
+  failures: DataEnvelope<T>[]
+): DataEnvelope<T> {
+  if (failures.length === 0) {
+    return {
+      value: null,
+      status: "api_required",
+      source: "market-data-service",
+      sourceTier: "manual_import",
+      warnings: [],
+      updatedAt: null,
+    };
+  }
+
+  failures.sort((a, b) => (FAILURE_PRIORITY[b.status] || 0) - (FAILURE_PRIORITY[a.status] || 0));
+  return failures[0];
+}
+
 export class MarketDataService {
   /**
    * Resolves price quote from a single specific provider — no priority fallback.
-   * Used for provider-specific smoke testing and provider-isolated calls.
-   * Returns api_required (not error) if the provider is not configured.
    */
   public async getQuoteForProvider(
     symbol: string,
@@ -115,7 +141,7 @@ export class MarketDataService {
 
   /**
    * Resolves price quote from prioritized providers.
-   * Falls through the priority chain and returns the first successful response.
+   * Falls through the priority chain and returns the first response containing usable data.
    */
   public async getQuote(symbol: string, region: MarketRegion, assetId?: string | null): Promise<DataEnvelope<Quote>> {
     const priority = getPriorityList(region, "quote");
@@ -132,6 +158,8 @@ export class MarketDataService {
       };
     }
 
+    const failedEnvelopes: DataEnvelope<Quote>[] = [];
+
     for (const profile of priority) {
       const providerId = profile.id as MarketDataProviderId;
       const provider = this.getMarketDataProvider(providerId);
@@ -145,23 +173,25 @@ export class MarketDataService {
             capability: "quote",
             fetcher: () => provider.getQuote(symbol),
           });
-          if (result.status !== "api_required" && result.status !== "error") {
+          if (hasUsableData(result)) {
             return result;
           }
-        } catch {
-          // Fall back to next provider in priority list
+          failedEnvelopes.push(result);
+        } catch (err) {
+          failedEnvelopes.push({
+            value: null,
+            status: "error",
+            source: providerId,
+            sourceTier: "manual_import",
+            warnings: [],
+            updatedAt: null,
+            message: err instanceof Error ? err.message : "Provider call failed.",
+          });
         }
       }
     }
 
-    return {
-      value: null,
-      status: "api_required",
-      source: "market-data-service",
-      sourceTier: "manual_import",
-      warnings: [],
-      updatedAt: null,
-    };
+    return selectMostInformativeFailure(failedEnvelopes);
   }
 
   /**
@@ -188,6 +218,8 @@ export class MarketDataService {
       };
     }
 
+    const failedEnvelopes: DataEnvelope<unknown>[] = [];
+
     for (const profile of priority) {
       const providerId = profile.id as MarketDataProviderId;
       const provider = this.getMarketDataProvider(providerId);
@@ -203,23 +235,25 @@ export class MarketDataService {
             interval: params.interval,
             fetcher: () => provider.getOhlcv(params),
           });
-          if (result.status !== "api_required" && result.status !== "error") {
+          if (hasUsableData(result)) {
             return result;
           }
-        } catch {
-          // Fall back
+          failedEnvelopes.push(result);
+        } catch (err) {
+          failedEnvelopes.push({
+            value: null,
+            status: "error",
+            source: providerId,
+            sourceTier: "manual_import",
+            warnings: [],
+            updatedAt: null,
+            message: err instanceof Error ? err.message : "Provider call failed.",
+          });
         }
       }
     }
 
-    return {
-      value: null,
-      status: "api_required",
-      source: "market-data-service",
-      sourceTier: "manual_import",
-      warnings: [],
-      updatedAt: null,
-    };
+    return selectMostInformativeFailure(failedEnvelopes);
   }
 
   private getMarketDataProvider(id: MarketDataProviderId | string) {
