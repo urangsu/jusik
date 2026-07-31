@@ -5,6 +5,8 @@ import { providerBudgetManager } from "./provider-budget-manager";
 import { FilingProvider, FinancialProvider } from "../adapters/types";
 import { getCorpCodeByStockCode } from "../opendart/corp-code-store";
 import { searchOpenDartDisclosures } from "../opendart/disclosure-search-client";
+import { fetchOpenDartFinancialStatements } from "../opendart/financial-statement-client";
+import { normalizeOpenDartFinancialStatements } from "../opendart/financial-statement-normalizer";
 
 export class OpendartProvider implements FilingProvider, FinancialProvider {
   private providerId = "opendart";
@@ -139,7 +141,6 @@ export class OpendartProvider implements FilingProvider, FinancialProvider {
     basis: "CFS" | "OFS";
     period: "annual" | "quarter";
   }): Promise<DataEnvelope<unknown>> {
-    void params;
     if (!providerRegistry.isEnabled(this.providerId)) {
       return {
         value: null,
@@ -152,15 +153,71 @@ export class OpendartProvider implements FilingProvider, FinancialProvider {
       };
     }
 
-    return {
-      value: null,
-      status: "not_supported",
-      source: "OpenDART",
-      sourceTier: "official",
-      warnings: [],
-      updatedAt: null,
-      message: "OpenDART 재무제표 파서는 아직 미구현 상태입니다.",
-    };
+    try {
+      const corpRecord = await getCorpCodeByStockCode(params.symbol);
+      if (!corpRecord) {
+        return {
+          value: null,
+          status: "not_found",
+          source: "OpenDART",
+          sourceTier: "official",
+          warnings: [],
+          updatedAt: new Date().toISOString(),
+          message: `DART corp code not found for stock code ${params.symbol}`,
+        };
+      }
+
+      const currentYear = new Date().getFullYear();
+      const bsnsYear = String(currentYear - 1);
+      const reprtCode = params.period === "quarter" ? "11014" : "11011";
+
+      const res = await fetchOpenDartFinancialStatements({
+        corpCode: corpRecord.corpCode,
+        bsnsYear,
+        reprtCode,
+        fsDiv: params.basis,
+      });
+
+      if (res.status !== "eod" || !res.value) {
+        return {
+          value: null,
+          status: res.status,
+          source: "OpenDART",
+          sourceTier: "official",
+          warnings: res.warnings || [],
+          updatedAt: res.updatedAt,
+          message: res.message,
+        };
+      }
+
+      const normalized = normalizeOpenDartFinancialStatements(
+        params.symbol,
+        corpRecord.corpCode,
+        bsnsYear,
+        reprtCode,
+        params.basis,
+        res.value
+      );
+
+      return {
+        value: normalized,
+        status: "eod",
+        source: "OpenDART",
+        sourceTier: "official",
+        warnings: [],
+        updatedAt: new Date().toISOString(),
+      };
+    } catch (err: any) {
+      return {
+        value: null,
+        status: "error",
+        source: "OpenDART",
+        sourceTier: "official",
+        warnings: [],
+        updatedAt: null,
+        message: err.message || String(err),
+      };
+    }
   }
 }
 
