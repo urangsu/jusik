@@ -172,7 +172,7 @@ export const ProviderSettingCard: React.FC<ProviderSettingCardProps> = ({
             {isHealthy ? (
               <CheckCircle className="w-3.5 h-3.5 text-kt-negative-text flex-shrink-0" />
             ) : isUnverified ? (
-              <AlertCircle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <AlertCircle className="w-3.5 h-3.5 text-kt-text-muted flex-shrink-0" />
             ) : (
               <XCircle className="w-3.5 h-3.5 text-kt-positive-text flex-shrink-0" />
             )}
@@ -181,7 +181,7 @@ export const ProviderSettingCard: React.FC<ProviderSettingCardProps> = ({
                 isHealthy
                   ? "text-kt-negative-text"
                   : isUnverified
-                  ? "text-amber-400"
+                  ? "text-kt-text-muted"
                   : "text-kt-positive-text"
               }`}
             >
