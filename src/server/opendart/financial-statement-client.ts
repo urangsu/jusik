@@ -97,7 +97,7 @@ export async function fetchOpenDartFinancialStatements(params: {
     if (data.status !== "000") {
       return {
         value: null,
-        status: data.status === "010" || data.status === "011" ? "invalid_key" : "error",
+        status: data.status === "010" || data.status === "011" ? "api_required" : "error",
         source: "OpenDART",
         sourceTier: "official",
         warnings: [],

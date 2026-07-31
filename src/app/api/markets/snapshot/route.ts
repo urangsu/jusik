@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       status: !hasData ? "api_required" : isRealTime ? "real_time" : "cached",
       source: "market-board-snapshot-store",
       sourceTier: "official",
-      warnings: snapshot.warnings || [],
+      warnings: [],
       updatedAt: snapshot.generatedAt,
     };
 

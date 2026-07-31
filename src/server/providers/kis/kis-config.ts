@@ -34,6 +34,10 @@ export class KisConfig {
       : "https://openapi.koreainvestment.com:9443";
   }
 
+  public get restUrl(): string {
+    return this.baseUrl;
+  }
+
   public get isTradingEnabled(): boolean {
     return process.env.KIS_TRADING_ENABLED === "true";
   }
