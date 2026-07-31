@@ -33,11 +33,12 @@ export class StooqPersonalProvider implements MarketDataProvider {
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "Stooq",
       sourceTier: "personal_fallback",
       warnings: ["unofficial", "personal_use_only"],
       updatedAt: null,
+      message: "Stooq provider parsing is not implemented.",
     };
   }
 
@@ -72,11 +73,12 @@ export class StooqPersonalProvider implements MarketDataProvider {
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "Stooq",
       sourceTier: "personal_fallback",
       warnings: ["unofficial", "personal_use_only"],
       updatedAt: null,
+      message: "Stooq OHLCV provider parsing is not implemented.",
     };
   }
 }

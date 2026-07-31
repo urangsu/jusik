@@ -90,9 +90,9 @@ export async function DELETE(
 
     await removeWatchlistItem(assetId);
 
-    const envelope: DataEnvelope<null> = {
-      value: null,
-      status: "real_time",
+    const envelope: DataEnvelope<{ deleted: boolean }> = {
+      value: { deleted: true },
+      status: "cached",
       source: "Watchlist Store",
       sourceTier: "manual_import",
       warnings: [],

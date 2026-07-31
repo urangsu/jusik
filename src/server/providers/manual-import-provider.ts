@@ -19,11 +19,12 @@ export class ManualImportProvider {
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "Manual Import",
       sourceTier: "manual_import",
       warnings: ["manual_import_required"],
       updatedAt: null,
+      message: "Manual import data key is not supported or not uploaded.",
     };
   }
 }
