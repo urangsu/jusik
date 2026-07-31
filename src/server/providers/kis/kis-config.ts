@@ -35,6 +35,9 @@ export class KisConfig {
   }
 
   public get isPaper(): boolean {
+    if (process.env.KIS_APP_TYPE === "real") return false;
+    if (process.env.KIS_APP_TYPE === "paper") return true;
+
     const envVal = process.env.KIS_IS_PAPER;
     const confVal = this.config["KIS_IS_PAPER"];
     const targetVal = envVal !== undefined ? envVal : confVal;
@@ -46,6 +49,9 @@ export class KisConfig {
   }
 
   public get appType(): "paper" | "real" {
+    if (process.env.KIS_APP_TYPE === "real" || process.env.KIS_APP_TYPE === "paper") {
+      return process.env.KIS_APP_TYPE;
+    }
     return this.isPaper ? "paper" : "real";
   }
 

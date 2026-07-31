@@ -29,7 +29,7 @@ describe("Provider Health Checker", () => {
     vi.clearAllMocks();
   });
 
-  it("should return not_configured if provider is disabled", async () => {
+  it("should return disabled status if provider is disabled", async () => {
     vi.mocked(resolveProviderConfigSync).mockReturnValue({
       OPENDART_ENABLED: false,
     });
@@ -38,14 +38,14 @@ describe("Provider Health Checker", () => {
       providerId: "opendart",
       enabled: false,
       values: {},
-      status: "not_configured",
+      status: "disabled",
       lastCheckedAt: null,
-      message: null,
+      message: "OPENDART API가 비활성화되어 있습니다.",
     });
 
     const snap = await checkProviderHealth("opendart");
-    expect(updateProviderStatus).toHaveBeenCalledWith("opendart", "not_configured", expect.any(String));
-    expect(snap.status).toBe("not_configured");
+    expect(updateProviderStatus).toHaveBeenCalledWith("opendart", "disabled", expect.any(String));
+    expect(snap.status).toBe("disabled");
   });
 
   it("should set healthy if OpenDART search succeeds", async () => {
@@ -65,11 +65,11 @@ describe("Provider Health Checker", () => {
       values: {},
       status: "healthy",
       lastCheckedAt: "2026-06-18",
-      message: "정상적으로 연결되었습니다.",
+      message: "OpenDART 전자공시 시스템 정상적으로 연결되었습니다.",
     });
 
     const snap = await checkProviderHealth("opendart");
-    expect(updateProviderStatus).toHaveBeenCalledWith("opendart", "healthy", "정상적으로 연결되었습니다.");
+    expect(updateProviderStatus).toHaveBeenCalledWith("opendart", "healthy", "OpenDART 전자공시 시스템 정상적으로 연결되었습니다.");
     expect(snap.status).toBe("healthy");
   });
 
@@ -94,13 +94,13 @@ describe("Provider Health Checker", () => {
       providerId: "kis",
       enabled: true,
       values: {},
-      status: "invalid_key",
+      status: "credentials_invalid",
       lastCheckedAt: "2026-07-28",
-      message: "유효하지 않은 KIS 자격증명입니다.",
+      message: "KIS가 App Key 또는 App Secret을 거부했습니다.",
     });
 
     const snap = await checkProviderHealth("kis");
-    expect(updateProviderStatus).toHaveBeenCalledWith("kis", "invalid_key", expect.any(String));
-    expect(snap.status).toBe("invalid_key");
+    expect(updateProviderStatus).toHaveBeenCalledWith("kis", "credentials_invalid", expect.any(String));
+    expect(snap.status).toBe("credentials_invalid");
   });
 });
