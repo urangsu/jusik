@@ -7,6 +7,12 @@ import { resolveProviderConfigSync } from "../settings/provider-config-resolver"
 import { ProviderId } from "@/domain/settings/provider-id";
 import { isMockKey } from "../providers/provider-registry";
 
+export const RUNTIME_PROVIDER_SETTINGS = {
+  kis: { settingsId: "kis", enabledKey: "KIS_ENABLED", requiredKeys: ["KIS_APP_KEY", "KIS_APP_SECRET"] },
+  opendart: { settingsId: "opendart", enabledKey: "OPENDART_ENABLED", requiredKeys: ["OPENDART_API_KEY"] },
+  finnhub_free: { settingsId: "finnhub", enabledKey: "FINNHUB_ENABLED", requiredKeys: ["FINNHUB_API_KEY"] },
+} as const;
+
 /**
  * Maps each RuntimeProviderId to its required + optional env keys.
  */

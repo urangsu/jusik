@@ -187,15 +187,17 @@ export async function updateProviderSettings(
   }
 
   // Reset status to configured (or not_configured) since settings were modified
-  const hasSecrets = def.fields
-    .filter((f) => f.required && f.secret)
-    .every(async (f) => {
-      if (process.env[f.key]) return true;
-      const secretVal = await getProviderSecret({ providerId, key: f.key });
-      return !!secretVal;
-    });
+  const requiredSecretChecks = await Promise.all(
+    def.fields
+      .filter((f) => f.required && f.secret)
+      .map(async (f) => {
+        if (process.env[f.key]) return true;
+        const secretVal = await getProviderSecret({ providerId, key: f.key });
+        return !!secretVal;
+      })
+  );
 
-  record.status = (await hasSecrets) ? "configured" : "not_configured";
+  record.status = requiredSecretChecks.every(Boolean) ? "configured" : "not_configured";
   record.lastCheckedAt = new Date().toISOString();
   record.message = "설정이 저장되었습니다.";
 

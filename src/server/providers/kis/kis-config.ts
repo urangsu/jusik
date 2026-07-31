@@ -3,7 +3,7 @@ import { isMockKey } from "../provider-registry";
 
 export class KisConfig {
   private get config() {
-    return resolveProviderConfigSync("kis");
+    return resolveProviderConfigSync("kis") || {};
   }
 
   public get appKey(): string {
@@ -19,18 +19,16 @@ export class KisConfig {
   }
 
   public get appType(): "paper" | "real" {
-    if (process.env.KIS_APP_TYPE === "real") {
-      return "real";
-    }
-    if (process.env.KIS_APP_TYPE === "paper") {
-      return "paper";
-    }
-    const isPaper = this.config["KIS_IS_PAPER"] !== false;
-    return isPaper ? "paper" : "real";
+    const isPaperVal = process.env.KIS_IS_PAPER ?? this.config["KIS_IS_PAPER"];
+    return isPaperVal === "true" || isPaperVal === true ? "paper" : "real";
   }
 
-  public get restUrl(): string {
-    return (this.config["KIS_BASE_URL"] as string) || "https://openapivts.koreainvestment.com";
+  public get baseUrl(): string {
+    const customUrl = (this.config["KIS_BASE_URL"] as string) || process.env.KIS_BASE_URL;
+    if (customUrl) return customUrl;
+    return this.appType === "paper"
+      ? "https://openapivts.koreainvestment.com:29443"
+      : "https://openapi.koreainvestment.com:9443";
   }
 
   public get isTradingEnabled(): boolean {
