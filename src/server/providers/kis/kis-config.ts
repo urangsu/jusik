@@ -7,31 +7,64 @@ export class KisConfig {
   }
 
   public get appKey(): string {
-    return (this.config["KIS_APP_KEY"] as string) || "";
+    const envVal = process.env.KIS_APP_KEY;
+    if (envVal) return envVal.trim();
+    const confVal = this.config["KIS_APP_KEY"];
+    return typeof confVal === "string" ? confVal.trim() : "";
   }
 
   public get appSecret(): string {
-    return (this.config["KIS_APP_SECRET"] as string) || "";
+    const envVal = process.env.KIS_APP_SECRET;
+    if (envVal) return envVal.trim();
+    const confVal = this.config["KIS_APP_SECRET"];
+    return typeof confVal === "string" ? confVal.trim() : "";
   }
 
   public get accountNo(): string {
-    return (this.config["KIS_ACCOUNT_NO"] as string) || "";
+    const envVal = process.env.KIS_ACCOUNT_NO;
+    if (envVal) return envVal.trim();
+    const confVal = this.config["KIS_ACCOUNT_NO"];
+    return typeof confVal === "string" ? confVal.trim() : "";
+  }
+
+  public get accountProductCode(): string {
+    const envVal = process.env.KIS_ACCOUNT_PRODUCT_CODE;
+    if (envVal) return envVal.trim();
+    const confVal = this.config["KIS_ACCOUNT_PRODUCT_CODE"];
+    return typeof confVal === "string" ? confVal.trim() : "01";
+  }
+
+  public get isPaper(): boolean {
+    const envVal = process.env.KIS_IS_PAPER;
+    const confVal = this.config["KIS_IS_PAPER"];
+    const targetVal = envVal !== undefined ? envVal : confVal;
+
+    if (targetVal === "false" || targetVal === false) {
+      return false;
+    }
+    return true; // Default to paper mode
   }
 
   public get appType(): "paper" | "real" {
-    if (process.env.KIS_APP_TYPE === "real" || process.env.KIS_APP_TYPE === "paper") {
-      return process.env.KIS_APP_TYPE;
-    }
-    const isPaperVal = process.env.KIS_IS_PAPER ?? this.config["KIS_IS_PAPER"];
-    return isPaperVal === "false" || isPaperVal === false ? "real" : "paper";
+    return this.isPaper ? "paper" : "real";
   }
 
   public get baseUrl(): string {
-    const customUrl = (this.config["KIS_BASE_URL"] as string) || process.env.KIS_BASE_URL;
-    if (customUrl) return customUrl;
-    return this.appType === "paper"
-      ? "https://openapivts.koreainvestment.com:29443"
-      : "https://openapi.koreainvestment.com:9443";
+    const officialPaperUrl = "https://openapivts.koreainvestment.com:29443";
+    const officialRealUrl = "https://openapi.koreainvestment.com:9443";
+
+    const rawUrl = ((this.config["KIS_BASE_URL"] as string) || process.env.KIS_BASE_URL || "").trim();
+
+    if (
+      !rawUrl ||
+      rawUrl.includes("openapivts.koreainvestment.com") ||
+      rawUrl.includes("openapi.koreainvestment.com")
+    ) {
+      return this.isPaper ? officialPaperUrl : officialRealUrl;
+    }
+
+    // Custom third-party / mock proxy URL
+    return rawUrl;
   }
 
   public get restUrl(): string {
@@ -59,7 +92,12 @@ export class KisConfig {
   }
 
   public get isConfigured(): boolean {
-    return !!(this.appKey && this.appSecret && !isMockKey(this.appKey) && !isMockKey(this.appSecret));
+    return !!(
+      this.appKey &&
+      this.appSecret &&
+      !isMockKey(this.appKey) &&
+      !isMockKey(this.appSecret)
+    );
   }
 }
 
