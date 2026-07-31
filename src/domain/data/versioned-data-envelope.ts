@@ -1,4 +1,5 @@
-import { DataStatus, SourceTier, SourceWarning } from "@/domain/common/data-status";
+import { DataStatus } from "@/domain/common/data-status";
+import { SourceUsagePolicy, SourceWarning } from "@/domain/source/provider-tier";
 
 export type VersionedDataEnvelope<T = unknown> = {
   dataVersionId: string;
@@ -11,7 +12,7 @@ export type VersionedDataEnvelope<T = unknown> = {
   schemaVersion: string;
   supersededRevisionId: string | null;
   status: DataStatus;
-  sourceTier: SourceTier;
+  sourceTier: SourceUsagePolicy;
   warnings: SourceWarning[];
   value: T;
 };

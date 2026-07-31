@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { saveVersionedEnvelope } from "./file-pit-store";
 import { selectPitRevision } from "./pit-revision-selector";
 
 describe("PIT Store & Revision Selector", () => {
-  const assetId = "KR:TEST_ASSET";
-
   it("selects correct point-in-time revision and rejects look-ahead revision", async () => {
+    const assetId = `KR:TEST_ASSET_${Date.now()}`;
+
     const rev1 = await saveVersionedEnvelope({
       assetId,
       providerId: "kis",

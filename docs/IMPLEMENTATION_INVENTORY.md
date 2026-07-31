@@ -1,8 +1,8 @@
 # Implementation Inventory
 
-> WO-018-C 기준 구현 상태 감사 문서  
-> 최종 갱신: 2026-07-19  
-> 검증 기준: `npm run typecheck && npm run lint && npm run test && npm run build`
+> WO-019 Real Data Beta Recovery 기준 구현 상태 감사 문서  
+> 최종 갱신: 2026-07-31  
+> 검증 기준: `npm run check:data-truth && node scripts/check-data-envelope-routes.mjs && npm run typecheck && npm run lint && npm run test && npm run build`
 
 ---
 
