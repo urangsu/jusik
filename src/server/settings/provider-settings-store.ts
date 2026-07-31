@@ -198,8 +198,7 @@ export async function updateProviderSettings(
   );
 
   record.status = requiredSecretChecks.every(Boolean) ? "configured" : "not_configured";
-  record.lastCheckedAt = new Date().toISOString();
-  record.message = "설정이 저장되었습니다.";
+  record.message = record.status === "configured" ? "설정이 저장되었습니다. (연결 테스트 미실행)" : "필수 자격 증명이 누락되었습니다.";
 
   storeData[providerId] = record;
   await writeSettingsAsync(storeData);
