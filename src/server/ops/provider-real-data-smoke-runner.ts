@@ -39,6 +39,12 @@ const PROVIDER_SMOKE_PROFILES: Record<RuntimeProviderId, SmokeProfile[]> = {
       region: "KR",
       endpoint: "/api/opendart/disclosures?stockCode=005930",
     },
+    {
+      capability: "financials",
+      symbol: "005930",
+      region: "KR",
+      endpoint: "/api/financials/statements?symbol=005930&region=KR",
+    },
   ],
   fmp_free: [
     {

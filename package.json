@@ -42,7 +42,8 @@
     "market:backfill": "tsx scripts/market/backfill-market-data.ts",
     "outcomes:observe": "tsx scripts/outcome/observe-signal-outcomes.ts",
     "surge:detect": "tsx scripts/surge/detect-surge-candidates.ts",
-    "test:live-providers": "tsx scripts/ops/test-live-providers.ts"
+    "test:live-providers": "tsx scripts/ops/test-live-providers.ts",
+    "acceptance:beta": "tsx scripts/ops/run-beta-acceptance.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
