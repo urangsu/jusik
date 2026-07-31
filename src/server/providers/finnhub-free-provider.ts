@@ -4,6 +4,7 @@ import { providerRegistry } from "./provider-registry";
 import { providerBudgetManager } from "./provider-budget-manager";
 import { MarketDataProvider } from "../adapters/types";
 import { resolveProviderConfigSync } from "../settings/provider-config-resolver";
+import { FinnhubQuoteSchema, FinnhubCandleSchema } from "./schemas/finnhub-market.schema";
 
 export class FinnhubFreeProvider implements MarketDataProvider {
   private providerId = "finnhub_free";
@@ -65,8 +66,10 @@ export class FinnhubFreeProvider implements MarketDataProvider {
         throw new Error(`Finnhub request failed: status ${res.status}`);
       }
 
-      const data = await res.json();
-      if (data.c === 0 && data.pc === 0) {
+      const rawData = await res.json();
+      const parsed = FinnhubQuoteSchema.parse(rawData);
+
+      if (parsed.c === 0 && (parsed.pc === 0 || parsed.pc === undefined)) {
         return {
           value: null,
           status: "not_found",
@@ -78,16 +81,18 @@ export class FinnhubFreeProvider implements MarketDataProvider {
         };
       }
 
+      const tradeTimeStr = parsed.t ? new Date(parsed.t * 1000).toISOString() : new Date().toISOString();
+
       const quote: Quote = {
         assetId: `US:${symbol}`,
         market: "US",
         symbol,
-        price: data.c,
+        price: parsed.c,
         currency: "USD",
-        change: data.d,
-        changePct: data.dp,
-        volume: 0,
-        tradeDate: new Date(data.t * 1000).toISOString().split("T")[0],
+        change: parsed.d ?? null,
+        changePct: parsed.dp ?? null,
+        volume: null, // Finnhub quote endpoint does not provide volume
+        tradeDate: tradeTimeStr.split("T")[0],
         updatedAt: new Date().toISOString(),
         source: "Finnhub Free",
         dataVersionId: null,
@@ -193,8 +198,8 @@ export class FinnhubFreeProvider implements MarketDataProvider {
         throw new Error(`Finnhub candle request failed: status ${res.status}`);
       }
 
-      const data = await res.json();
-      if (data.s !== "ok") {
+      const rawData = await res.json();
+      if (rawData.s === "no_data") {
         return {
           value: null,
           status: "not_found",
@@ -202,6 +207,27 @@ export class FinnhubFreeProvider implements MarketDataProvider {
           sourceTier: "free_limited",
           warnings: [],
           updatedAt: new Date().toISOString(),
+          message: `No OHLCV candles found for symbol '${params.symbol}'.`,
+        };
+      }
+
+      const data = FinnhubCandleSchema.parse(rawData);
+
+      if (
+        data.t.length !== data.o.length ||
+        data.t.length !== data.h.length ||
+        data.t.length !== data.l.length ||
+        data.t.length !== data.c.length ||
+        data.t.length !== data.v.length
+      ) {
+        return {
+          value: null,
+          status: "error",
+          source: "Finnhub Free",
+          sourceTier: "free_limited",
+          warnings: [],
+          updatedAt: null,
+          message: "Finnhub candle array length mismatch.",
         };
       }
 

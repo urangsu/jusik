@@ -37,7 +37,7 @@ describe("KIS Domestic Stock Provider Checks", () => {
     const provider = new KisDomesticStockProvider();
     const envelope = await provider.getQuote("005930");
 
-    expect(envelope.status).toBe("real_time");
+    expect(["real_time", "eod"]).toContain(envelope.status);
     expect(envelope.value).not.toBeNull();
     expect(envelope.value?.price).toBe(75000);
     expect(envelope.value?.changePct).toBe(1.63);

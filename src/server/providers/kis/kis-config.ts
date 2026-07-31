@@ -19,8 +19,11 @@ export class KisConfig {
   }
 
   public get appType(): "paper" | "real" {
+    if (process.env.KIS_APP_TYPE === "real" || process.env.KIS_APP_TYPE === "paper") {
+      return process.env.KIS_APP_TYPE;
+    }
     const isPaperVal = process.env.KIS_IS_PAPER ?? this.config["KIS_IS_PAPER"];
-    return isPaperVal === "true" || isPaperVal === true ? "paper" : "real";
+    return isPaperVal === "false" || isPaperVal === false ? "real" : "paper";
   }
 
   public get baseUrl(): string {
