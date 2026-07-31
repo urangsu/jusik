@@ -55,22 +55,24 @@ export class KisConfig {
     return this.isPaper ? "paper" : "real";
   }
 
+  /**
+   * P0 SECURITY FIX: baseUrl is ALWAYS derived from isPaper.
+   *
+   * KIS_BASE_URL (env or config) is intentionally ignored.
+   *
+   * Allowing arbitrary URLs was an App Key/Secret exfiltration attack surface:
+   *   1. Attacker sets KIS_BASE_URL to a malicious host
+   *   2. Unauthenticated health-check is triggered
+   *   3. kis-auth-client POSTs /oauth2/tokenP with appKey + appSecret to attacker
+   *   4. Credentials are stolen
+   *
+   * The only valid origins are the two official KIS endpoints.
+   * Test mock proxies must use dependency injection (not env vars).
+   */
   public get baseUrl(): string {
     const officialPaperUrl = "https://openapivts.koreainvestment.com:29443";
     const officialRealUrl = "https://openapi.koreainvestment.com:9443";
-
-    const rawUrl = ((this.config["KIS_BASE_URL"] as string) || process.env.KIS_BASE_URL || "").trim();
-
-    if (
-      !rawUrl ||
-      rawUrl.includes("openapivts.koreainvestment.com") ||
-      rawUrl.includes("openapi.koreainvestment.com")
-    ) {
-      return this.isPaper ? officialPaperUrl : officialRealUrl;
-    }
-
-    // Custom third-party / mock proxy URL
-    return rawUrl;
+    return this.isPaper ? officialPaperUrl : officialRealUrl;
   }
 
   public get restUrl(): string {
