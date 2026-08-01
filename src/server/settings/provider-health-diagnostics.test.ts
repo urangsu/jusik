@@ -9,7 +9,6 @@ import {
   evaluateFinnhubDiagnostic,
   type KisDiagnosticInput,
 } from "./provider-health-diagnostics";
-import type { Parameters as _P } from "../../types/utils"; // won't be used; just keeping coherent import style
 
 // ─── filesystem guard (same as before) ─────────────────────────────────────
 const BLOCKED_PATH_PATTERN = /data\/(settings|secrets|pit)/;

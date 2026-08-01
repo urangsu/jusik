@@ -94,7 +94,7 @@ export async function POST(
     } finally {
       inFlightHealthChecks.delete(providerId);
     }
-  } catch (err: any) {
+  } catch (_err: unknown) {
     const envelope: DataEnvelope<null> = {
       value: null,
       status: "error",
@@ -102,7 +102,7 @@ export async function POST(
       sourceTier: "official",
       warnings: [],
       updatedAt: null,
-      message: err?.message || String(err),
+      message: "Provider 연결 테스트 중 오류가 발생했습니다.",
     };
     return createSafeResponse(envelope, 500);
   }

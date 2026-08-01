@@ -1,31 +1,27 @@
 /**
- * P0 FIX: Test store isolation
+ * Task 2 — orchestration test: production checker saves evaluator result.
  *
- * This test previously called the real `updateProviderSettings()`, which writes to
- * `data/settings/provider-settings.json` and the real secret store. That destroyed
- * real KIS credentials during test runs.
- *
- * All store interactions are now fully mocked. No filesystem I/O occurs.
- * Each test verifies only the `checkProviderHealth()` diagnostic logic.
+ * Tests verify:
+ * 1. checkProviderHealth() calls updateProviderStatus with the evaluator's exact result
+ * 2. raw upstream body is NOT stored or returned in any message
+ * 3. null quote value → provider_error (not healthy)
  */
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { checkProviderHealth } from "./provider-health-checker";
 import { KisAuthClient } from "../providers/kis/kis-auth-client";
 import { kisDomesticStockProvider } from "../providers/kis/kis-domestic-stock-provider";
 
-// Mock the entire settings store — no real filesystem access
+// ─── Full mock isolation ───────────────────────────────────────────────────
 vi.mock("./provider-settings-store", () => ({
   getProviderSettings: vi.fn(),
   updateProviderStatus: vi.fn(),
   updateProviderSettings: vi.fn(),
 }));
 
-// Mock the config resolver — no real env lookups that might bleed
 vi.mock("./provider-config-resolver", () => ({
   resolveProviderConfigSync: vi.fn(),
 }));
 
-// Mock auth and quote — no real network calls
 vi.mock("../providers/kis/kis-auth-client", () => ({
   KisAuthClient: {
     getAccessToken: vi.fn(),
@@ -42,133 +38,128 @@ vi.mock("../providers/kis/kis-domestic-stock-provider", () => ({
 import { resolveProviderConfigSync } from "./provider-config-resolver";
 import { getProviderSettings, updateProviderStatus } from "./provider-settings-store";
 
-const DISABLED_SNAP = {
-  providerId: "kis" as const,
-  enabled: false,
-  values: {},
-  status: "disabled" as const,
-  lastCheckedAt: null,
-  message: "OPENDART API가 비활성화되어 있습니다.",
+const VALID_CONFIG = {
+  KIS_ENABLED: true,
+  KIS_APP_KEY: "valid_app_key_1234567",
+  KIS_APP_SECRET: "valid_app_secret_1234567890abcde",
+  KIS_IS_PAPER: true,
 };
 
-const CREDENTIALS_MISSING_SNAP = {
-  providerId: "kis" as const,
-  enabled: true,
-  values: {},
-  status: "credentials_missing" as const,
-  lastCheckedAt: null,
-  message: null,
-};
+function makeHealthySnap(status = "healthy") {
+  return {
+    providerId: "kis" as const,
+    enabled: true,
+    values: {},
+    status: status as any,
+    lastCheckedAt: new Date().toISOString(),
+    message: "KIS Open API 시세 연결 및 인증 테스트 성공",
+  };
+}
 
-const CREDENTIALS_INVALID_SNAP = {
-  providerId: "kis" as const,
-  enabled: true,
-  values: {},
-  status: "credentials_invalid" as const,
-  lastCheckedAt: null,
-  message: null,
-};
-
-describe("Provider Health Checker 6-Stage Diagnostics (fully mocked)", () => {
+describe("provider-health-checker orchestration (Task 2)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(KisAuthClient.clearCache).mockImplementation(() => {});
-    vi.mocked(updateProviderStatus).mockResolvedValue(undefined as any);
   });
 
-  it("stage 1: identifies disabled provider status", async () => {
-    vi.mocked(resolveProviderConfigSync).mockReturnValue({ KIS_ENABLED: false });
-    vi.mocked(getProviderSettings).mockResolvedValue(DISABLED_SNAP);
-
-    const snap = await checkProviderHealth("kis");
-    expect(snap.status).toBe("disabled");
-    expect(snap.message).toContain("비활성화되어 있습니다");
-    // Must NOT write to real store
-    expect(updateProviderStatus).toHaveBeenCalledTimes(1);
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
-  it("stage 2: identifies missing credentials (empty keys)", async () => {
-    vi.mocked(resolveProviderConfigSync).mockReturnValue({
-      KIS_ENABLED: true,
-      KIS_APP_KEY: "",
-      KIS_APP_SECRET: "",
-    });
-    vi.mocked(getProviderSettings).mockResolvedValue(CREDENTIALS_MISSING_SNAP);
+  it("calls updateProviderStatus with exact status and safe message from evaluator (credentials_invalid 401)", async () => {
+    vi.mocked(resolveProviderConfigSync).mockReturnValue(VALID_CONFIG);
+    vi.mocked(KisAuthClient.getAccessToken).mockRejectedValue(new Error("401 Unauthorized: Invalid AppKey"));
+    vi.mocked(getProviderSettings).mockResolvedValue(makeHealthySnap("credentials_invalid"));
 
-    const snap = await checkProviderHealth("kis");
-    expect(snap.status).toBe("credentials_missing");
-  });
+    await checkProviderHealth("kis");
 
-  it("stage 2: rejects placeholder credentials", async () => {
-    vi.mocked(resolveProviderConfigSync).mockReturnValue({
-      KIS_ENABLED: true,
-      KIS_APP_KEY: "mock_kis_app_key",
-      KIS_APP_SECRET: "mock_kis_app_secret",
-    });
-    vi.mocked(getProviderSettings).mockResolvedValue(CREDENTIALS_INVALID_SNAP);
-
-    const snap = await checkProviderHealth("kis");
-    expect(snap.status).toBe("credentials_invalid");
-  });
-
-  it("stage 4: catches OAuth token failure (401)", async () => {
-    vi.mocked(resolveProviderConfigSync).mockReturnValue({
-      KIS_ENABLED: true,
-      KIS_APP_KEY: "test_key_1234567890",
-      KIS_APP_SECRET: "test_secret_1234567890abcdefghij",
-    });
-    vi.mocked(getProviderSettings).mockResolvedValue({
-      ...CREDENTIALS_INVALID_SNAP,
-      message: "KIS가 App Key 또는 App Secret을 거부했습니다.",
-    });
-    vi.mocked(KisAuthClient.getAccessToken).mockRejectedValue(
-      new Error("401 Unauthorized: Invalid AppKey")
+    expect(updateProviderStatus).toHaveBeenCalledWith(
+      "kis",
+      "credentials_invalid",
+      "KIS가 App Key 또는 App Secret을 거부했습니다.",
     );
-
-    const snap = await checkProviderHealth("kis");
-    expect(snap.status).toBe("credentials_invalid");
-    expect(snap.message).toContain("KIS가 App Key 또는 App Secret을 거부했습니다");
   });
 
-  it("stage 5 & 6: marks healthy on successful token and quote fetch", async () => {
-    vi.mocked(resolveProviderConfigSync).mockReturnValue({
-      KIS_ENABLED: true,
-      KIS_APP_KEY: "test_key_1234567890",
-      KIS_APP_SECRET: "test_secret_1234567890abcdefghij",
+  it("calls updateProviderStatus with provider_error when quote has null value", async () => {
+    vi.mocked(resolveProviderConfigSync).mockReturnValue(VALID_CONFIG);
+    vi.mocked(KisAuthClient.getAccessToken).mockResolvedValue("test_access_token");
+    vi.mocked(kisDomesticStockProvider.getQuote).mockResolvedValue({
+      value: null,
+      status: "real_time",
+      source: "KIS Open API",
+      sourceTier: "official",
+      warnings: [],
+      updatedAt: new Date().toISOString(),
     });
-    vi.mocked(getProviderSettings).mockResolvedValue({
-      providerId: "kis",
-      enabled: true,
-      values: {},
-      status: "healthy",
-      lastCheckedAt: new Date().toISOString(),
-      message: "KIS Open API 시세 연결 및 인증 테스트 성공",
-    });
+    vi.mocked(getProviderSettings).mockResolvedValue(makeHealthySnap("provider_error"));
+
+    await checkProviderHealth("kis");
+
+    expect(updateProviderStatus).toHaveBeenCalledWith(
+      "kis",
+      "provider_error",
+      "KIS 응답에 사용 가능한 시세 데이터가 없습니다.",
+    );
+  });
+
+  it("does NOT store raw upstream error body in status message", async () => {
+    vi.mocked(resolveProviderConfigSync).mockReturnValue(VALID_CONFIG);
+    vi.mocked(KisAuthClient.getAccessToken).mockRejectedValue(
+      new Error("upstream-secret-body: appkey=REAL_KEY_DO_NOT_LOG")
+    );
+    vi.mocked(getProviderSettings).mockResolvedValue(makeHealthySnap("token_failed"));
+
+    await checkProviderHealth("kis");
+
+    expect(updateProviderStatus).not.toHaveBeenCalledWith(
+      "kis",
+      expect.anything(),
+      expect.stringContaining("upstream-secret-body"),
+    );
+    expect(updateProviderStatus).not.toHaveBeenCalledWith(
+      "kis",
+      expect.anything(),
+      expect.stringContaining("REAL_KEY_DO_NOT_LOG"),
+    );
+  });
+
+  it("calls updateProviderStatus with disabled for disabled provider", async () => {
+    vi.mocked(resolveProviderConfigSync).mockReturnValue({ KIS_ENABLED: false });
+    vi.mocked(getProviderSettings).mockResolvedValue(makeHealthySnap("disabled"));
+
+    await checkProviderHealth("kis");
+
+    expect(updateProviderStatus).toHaveBeenCalledWith(
+      "kis",
+      "disabled",
+      expect.stringContaining("비활성화"),
+    );
+  });
+
+  it("calls updateProviderStatus with healthy on full success", async () => {
+    vi.mocked(resolveProviderConfigSync).mockReturnValue(VALID_CONFIG);
     vi.mocked(KisAuthClient.getAccessToken).mockResolvedValue("test_access_token");
     vi.mocked(kisDomesticStockProvider.getQuote).mockResolvedValue({
       value: {
-        assetId: "KR:005930",
-        market: "KR",
-        symbol: "005930",
-        price: 75000,
-        currency: "KRW",
-        change: 1000,
-        changePct: 1.35,
-        volume: 100000,
-        tradeDate: "2026-07-31",
-        updatedAt: "2026-07-31T10:00:00Z",
-        source: "KIS Open API",
-        dataVersionId: null,
+        assetId: "KR:005930", market: "KR", symbol: "005930",
+        price: 75000, currency: "KRW", change: 1000, changePct: 1.35,
+        volume: 100000, tradeDate: "2026-08-01", updatedAt: "2026-08-01T01:00:00Z",
+        source: "KIS Open API", dataVersionId: null,
       },
       status: "real_time",
       source: "KIS Open API",
       sourceTier: "official",
       warnings: [],
-      updatedAt: "2026-07-31T10:00:00Z",
+      updatedAt: "2026-08-01T01:00:00Z",
     });
+    vi.mocked(getProviderSettings).mockResolvedValue(makeHealthySnap("healthy"));
 
-    const snap = await checkProviderHealth("kis");
-    expect(snap.status).toBe("healthy");
-    expect(snap.message).toContain("성공");
+    await checkProviderHealth("kis");
+
+    expect(updateProviderStatus).toHaveBeenCalledWith(
+      "kis",
+      "healthy",
+      "KIS Open API 시세 연결 및 인증 테스트 성공",
+    );
   });
 });
