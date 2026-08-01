@@ -6,43 +6,82 @@ export type DiagnosticResult = {
   safeMessage: string;
 };
 
+// ── Canonical KIS origins (exact URL.origin match only) ────────────────────
+const KIS_PAPER_ORIGIN = "https://openapivts.koreainvestment.com:29443";
+const KIS_LIVE_ORIGIN = "https://openapi.koreainvestment.com:9443";
+
+/**
+ * Returns true only when baseUrl's origin equals the expected KIS origin exactly.
+ * A port-only or substring match is insufficient — attacker.example:29443 is rejected.
+ */
+function isExpectedKisOrigin(baseUrl: string, isPaper: boolean): boolean {
+  try {
+    return new URL(baseUrl).origin === (isPaper ? KIS_PAPER_ORIGIN : KIS_LIVE_ORIGIN);
+  } catch {
+    return false;
+  }
+}
+
+// ── Stage result types (all optional — absent = stage not yet run) ──────────
+
+export type KisTokenResult =
+  | { success: true }
+  | { success: false; errorMessage: string };
+
+export type KisQuoteResult =
+  | { status: "real_time" | "delayed" | "eod" | "cached"; hasValue: boolean }
+  | { status: "rate_limited"; message: string | null }
+  | { status: "error" | "api_required" | "not_found" | "not_supported"; message: string | null };
+
+export type OpenDartSearchResult =
+  | { status: "eod" | "real_time"; hasValue: boolean }
+  | { status: "not_found"; hasValue?: boolean }
+  | { status: "rate_limited"; message: string | null }
+  | { status: "api_required" | "error"; message: string | null };
+
+export type FinnhubQuoteResult =
+  | { status: "real_time" | "delayed" | "eod" | "cached"; hasValue: boolean }
+  | { status: "rate_limited"; message: string | null }
+  | { status: "error" | "api_required"; message: string | null };
+
 export type KisDiagnosticInput = {
   enabled: boolean;
   appKey: string;
   appSecret: string;
   isPaper: boolean;
   baseUrl: string;
-  tokenResult: { success: true } | { success: false; errorMessage: string };
-  quoteResult:
-    | { status: "real_time" | "delayed" | "eod" | "cached"; hasValue: boolean }
-    | { status: "rate_limited"; message: string | null }
-    | { status: "error" | "api_required" | "not_found" | "not_supported"; message: string | null };
+  /** absent = token stage not yet executed */
+  tokenResult?: KisTokenResult;
+  /** absent = quote stage not yet executed */
+  quoteResult?: KisQuoteResult;
 };
 
 export type OpenDartDiagnosticInput = {
   enabled: boolean;
   apiKey: string;
-  searchResult:
-    | { status: "eod" | "not_found" | "real_time"; hasValue: boolean }
-    | { status: "rate_limited"; message: string | null }
-    | { status: "api_required" | "error"; message: string | null };
+  /** absent = search stage not yet executed */
+  searchResult?: OpenDartSearchResult;
 };
 
 export type FinnhubDiagnosticInput = {
   enabled: boolean;
   apiKey: string;
-  quoteResult:
-    | { status: "real_time" | "delayed" | "eod" | "cached"; hasValue: boolean }
-    | { status: "rate_limited"; message: string | null }
-    | { status: "error" | "api_required"; message: string | null };
+  /** absent = quote stage not yet executed */
+  quoteResult?: FinnhubQuoteResult;
 };
 
 const LIVE_STATUSES = new Set(["real_time", "delayed", "eod", "cached"]);
 
+// ─────────────────────────────────────────────────────────────────────────────
+// KIS
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
- * Pure function: given structured inputs, compute the KIS diagnostic result.
- * No filesystem, no network, no environment variables.
- * Easily testable with any input combination.
+ * Pure function: compute KIS diagnostic result from structured inputs.
+ * No filesystem, network, or environment variable access.
+ *
+ * Returns `unverified` when a required stage has not yet been executed.
+ * Returns `healthy` ONLY when the quote result is live AND hasValue=true.
  */
 export function evaluateKisDiagnostic(input: KisDiagnosticInput): DiagnosticResult {
   if (!input.enabled) {
@@ -50,10 +89,7 @@ export function evaluateKisDiagnostic(input: KisDiagnosticInput): DiagnosticResu
   }
 
   if (!input.appKey || !input.appSecret) {
-    return {
-      status: "credentials_missing",
-      safeMessage: "App Key 또는 App Secret이 저장되지 않았습니다.",
-    };
+    return { status: "credentials_missing", safeMessage: "App Key 또는 App Secret이 저장되지 않았습니다." };
   }
 
   if (isMockKey(input.appKey) || isMockKey(input.appSecret)) {
@@ -63,21 +99,20 @@ export function evaluateKisDiagnostic(input: KisDiagnosticInput): DiagnosticResu
     };
   }
 
-  // Stage 3: Endpoint verification
-  if (input.isPaper && !input.baseUrl.includes(":29443")) {
+  // Stage 3: Exact origin validation — port-only match is not sufficient
+  if (!isExpectedKisOrigin(input.baseUrl, input.isPaper)) {
+    const expected = input.isPaper ? KIS_PAPER_ORIGIN : KIS_LIVE_ORIGIN;
     return {
       status: "endpoint_mismatch",
-      safeMessage: "모의투자 URL에 :29443 포트가 필요합니다.",
-    };
-  }
-  if (!input.isPaper && !input.baseUrl.includes(":9443")) {
-    return {
-      status: "endpoint_mismatch",
-      safeMessage: "실전투자 URL에 :9443 포트가 필요합니다.",
+      safeMessage: `KIS ${input.isPaper ? "모의투자" : "실전투자"} URL이 올바르지 않습니다. 허용된 origin: ${expected}`,
     };
   }
 
-  // Stage 4: OAuth token
+  // Stage 4: OAuth token — absent = not yet executed
+  if (input.tokenResult === undefined) {
+    return { status: "unverified", safeMessage: "OAuth 토큰 검증이 아직 실행되지 않았습니다." };
+  }
+
   if (!input.tokenResult.success) {
     const errMsg = input.tokenResult.errorMessage;
     const isAuthError =
@@ -94,20 +129,24 @@ export function evaluateKisDiagnostic(input: KisDiagnosticInput): DiagnosticResu
     };
   }
 
-  // Stage 5 & 6: Quote retrieval
+  // Stage 5 & 6: Quote — absent = not yet executed
+  if (input.quoteResult === undefined) {
+    return { status: "unverified", safeMessage: "실제 시세 조회가 아직 실행되지 않았습니다." };
+  }
+
   const q = input.quoteResult;
   if (LIVE_STATUSES.has(q.status)) {
-    return {
-      status: "healthy",
-      safeMessage: "KIS Open API 시세 연결 및 인증 테스트 성공",
-    };
+    // hasValue=false with a live status is a provider data error, not healthy
+    const hasValue = (q as { hasValue: boolean }).hasValue;
+    return hasValue
+      ? { status: "healthy", safeMessage: "KIS Open API 시세 연결 및 인증 테스트 성공" }
+      : { status: "provider_error", safeMessage: "KIS 응답에 사용 가능한 시세 데이터가 없습니다." };
   }
+
   if (q.status === "rate_limited") {
-    return {
-      status: "rate_limited",
-      safeMessage: "KIS API 호출 한도를 초과했습니다.",
-    };
+    return { status: "rate_limited", safeMessage: "KIS API 호출 한도를 초과했습니다." };
   }
+
   const errMsg = (q as { message: string | null }).message || "";
   const isAuthError =
     errMsg.includes("인증") ||
@@ -122,8 +161,15 @@ export function evaluateKisDiagnostic(input: KisDiagnosticInput): DiagnosticResu
   };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// OpenDART
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Pure function: compute OpenDART diagnostic result.
+ *
+ * `not_found` is treated as connectivity evidence (API reachable, no filings in period).
+ * `eod`/`real_time` require hasValue=true to be healthy.
  */
 export function evaluateOpenDartDiagnostic(input: OpenDartDiagnosticInput): DiagnosticResult {
   if (!input.enabled) {
@@ -139,16 +185,32 @@ export function evaluateOpenDartDiagnostic(input: OpenDartDiagnosticInput): Diag
     };
   }
 
+  if (input.searchResult === undefined) {
+    return { status: "unverified", safeMessage: "공시 조회가 아직 실행되지 않았습니다." };
+  }
+
   const s = input.searchResult;
-  if (LIVE_STATUSES.has(s.status) || s.status === "not_found") {
+
+  // not_found: API is reachable (no data required for connectivity proof)
+  if (s.status === "not_found") {
     return { status: "healthy", safeMessage: "OpenDART 전자공시 시스템 정상적으로 연결되었습니다." };
   }
+
+  // eod / real_time: require hasValue=true
+  if (LIVE_STATUSES.has(s.status)) {
+    const hasValue = (s as { hasValue: boolean }).hasValue;
+    return hasValue
+      ? { status: "healthy", safeMessage: "OpenDART 전자공시 시스템 정상적으로 연결되었습니다." }
+      : { status: "provider_error", safeMessage: "OpenDART 응답에 사용 가능한 공시 데이터가 없습니다." };
+  }
+
   if (s.status === "rate_limited") {
     return { status: "rate_limited", safeMessage: "OpenDART 요청 한도를 초과했습니다." };
   }
   if (s.status === "api_required") {
     return { status: "credentials_missing", safeMessage: "OpenDART API Key 설정이 필요합니다." };
   }
+
   const errMsg = (s as { message: string | null }).message || "";
   const isAuthError =
     errMsg.includes("인증") || errMsg.includes("Key") || errMsg.includes("010") || errMsg.includes("011");
@@ -158,8 +220,13 @@ export function evaluateOpenDartDiagnostic(input: OpenDartDiagnosticInput): Diag
   };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Finnhub
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Pure function: compute Finnhub diagnostic result.
+ * Live quote requires hasValue=true to be healthy.
  */
 export function evaluateFinnhubDiagnostic(input: FinnhubDiagnosticInput): DiagnosticResult {
   if (!input.enabled) {
@@ -172,9 +239,16 @@ export function evaluateFinnhubDiagnostic(input: FinnhubDiagnosticInput): Diagno
     return { status: "credentials_invalid", safeMessage: "유효한 Finnhub API Key를 입력해주세요." };
   }
 
+  if (input.quoteResult === undefined) {
+    return { status: "unverified", safeMessage: "실제 시세 조회가 아직 실행되지 않았습니다." };
+  }
+
   const q = input.quoteResult;
   if (LIVE_STATUSES.has(q.status)) {
-    return { status: "healthy", safeMessage: "Finnhub 시세 조회가 성공했습니다." };
+    const hasValue = (q as { hasValue: boolean }).hasValue;
+    return hasValue
+      ? { status: "healthy", safeMessage: "Finnhub 시세 조회가 성공했습니다." }
+      : { status: "provider_error", safeMessage: "Finnhub 응답에 사용 가능한 시세 데이터가 없습니다." };
   }
   if (q.status === "rate_limited") {
     return { status: "rate_limited", safeMessage: "Finnhub rate limit 초과." };
