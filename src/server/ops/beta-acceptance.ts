@@ -4,22 +4,22 @@ import {
   RuntimeProviderId,
   ProviderRealDataSmokeCapability,
 } from "../../domain/ops/provider-readiness";
+import { SourceUsagePolicy } from "../../domain/source/provider-tier";
+import { DataStatus } from "../../domain/common/data-status";
 
 /**
  * A required target for Beta acceptance.
  * ALL entries must be satisfied for exit 0.
+ * Uses exact source/tier matching — not substring.
  */
 export type BetaAcceptanceTarget = {
   readonly providerId: RuntimeProviderId;
   readonly capability: ProviderRealDataSmokeCapability;
   readonly symbol: string;
-  /**
-   * expectedSource: a lowercase substring that must appear in the actual
-   * envelope `source` field. Used to verify provider identity.
-   * e.g. "kis" must appear in "KIS Open API"
-   */
-  readonly expectedSourceSubstring: string;
-  readonly requireLiveFreshness: boolean;
+  readonly expectedSource: string;
+  readonly expectedSourceTier: SourceUsagePolicy;
+  readonly allowedStatuses: readonly DataStatus[];
+  readonly maxAgeMs: number;
 };
 
 export const REQUIRED_BETA_TARGETS: readonly BetaAcceptanceTarget[] = [
@@ -27,41 +27,48 @@ export const REQUIRED_BETA_TARGETS: readonly BetaAcceptanceTarget[] = [
     providerId: "kis",
     capability: "quote",
     symbol: "005930",
-    expectedSourceSubstring: "kis",
-    requireLiveFreshness: true,
+    expectedSource: "KIS Open API",
+    expectedSourceTier: "official",
+    allowedStatuses: ["real_time", "delayed"],
+    maxAgeMs: 20 * 60_000,
   },
   {
     providerId: "kis",
     capability: "ohlcv",
     symbol: "005930",
-    expectedSourceSubstring: "kis",
-    requireLiveFreshness: true,
+    expectedSource: "KIS Open API",
+    expectedSourceTier: "official",
+    allowedStatuses: ["delayed", "eod"],
+    maxAgeMs: 48 * 60 * 60_000,
   },
   {
     providerId: "opendart",
     capability: "filings",
     symbol: "005930",
-    expectedSourceSubstring: "opendart",
-    requireLiveFreshness: false,
+    expectedSource: "OpenDART",
+    expectedSourceTier: "official",
+    allowedStatuses: ["eod"],
+    maxAgeMs: 24 * 60 * 60_000,
   },
   {
     providerId: "opendart",
     capability: "financials",
     symbol: "005930",
-    expectedSourceSubstring: "opendart",
-    requireLiveFreshness: false,
+    expectedSource: "OpenDART",
+    expectedSourceTier: "official",
+    allowedStatuses: ["eod"],
+    maxAgeMs: 24 * 60 * 60_000,
   },
   {
     providerId: "finnhub_free",
     capability: "quote",
     symbol: "AAPL",
-    expectedSourceSubstring: "finnhub",
-    requireLiveFreshness: true,
+    expectedSource: "Finnhub Free",
+    expectedSourceTier: "free_limited",
+    allowedStatuses: ["real_time", "delayed"],
+    maxAgeMs: 20 * 60_000,
   },
 ] as const;
-
-const LIVE_STATUSES = new Set(["real_time", "delayed"]);
-const EOD_STATUSES = new Set(["real_time", "delayed", "eod"]);
 
 export type AcceptanceViolation = {
   target: BetaAcceptanceTarget;
@@ -71,6 +78,10 @@ export type AcceptanceViolation = {
     | "smoke_failed"
     | "data_unavailable"
     | "null_value_on_success"
+    | "schema_invalid"
+    | "provenance_invalid"
+    | "freshness_invalid"
+    | "attempted_smoke_failed"
     | "wrong_provider_source"
     | "stale_data_not_accepted"
     | "cached_not_accepted";
@@ -89,8 +100,11 @@ export type BetaAcceptanceEvaluation = {
  * Pure function: evaluate a ProviderReadinessReport against REQUIRED_BETA_TARGETS.
  *
  * No network, filesystem, or environment variable access.
- * Returns exitCode=0 ONLY when all targets are verified with live data
- * and correct provider identity.
+ * Returns exitCode=0 ONLY when ALL targets are verified with:
+ * - correct schema (schemaValid=true)
+ * - exact canonical provenance (provenanceValid=true)
+ * - fresh data (freshnessValid=true)
+ * - no attempted smoke failures elsewhere in the report
  */
 export function evaluateBetaAcceptance(
   report: ProviderReadinessReport,
@@ -99,10 +113,17 @@ export function evaluateBetaAcceptance(
   const violations: AcceptanceViolation[] = [];
   const verifiedTargets: BetaAcceptanceTarget[] = [];
 
+  function addViolation(
+    target: BetaAcceptanceTarget,
+    reason: AcceptanceViolation["reason"],
+    detail: string,
+  ) {
+    violations.push({ target, reason, detail });
+  }
+
   // Check configured providers
   const configuredReadyProviders = report.readiness.filter((c) => c.status === "ready");
   const noProviderConfigured = configuredReadyProviders.length === 0;
-
   const readyProviderIds = new Set(configuredReadyProviders.map((c) => c.providerId));
   const requiredProviderIds = [...new Set(targets.map((t) => t.providerId))];
   const missingRequiredProviders = requiredProviderIds.filter(
@@ -119,76 +140,76 @@ export function evaluateBetaAcceptance(
     );
 
     if (!match) {
-      violations.push({
-        target,
-        reason: "target_not_run",
-        detail: `${target.providerId}/${target.capability}/${target.symbol} was not included in smokeResults. Update PROVIDER_SMOKE_PROFILES.`,
-      });
+      addViolation(target, "target_not_run",
+        `${target.providerId}/${target.capability}/${target.symbol} was not included in smokeResults. Update PROVIDER_SMOKE_PROFILES.`
+      );
       continue;
     }
 
     if (!match.attempted) {
-      violations.push({
-        target,
-        reason: "target_skipped",
-        detail: `Skipped: ${match.skippedReason ?? "unknown reason"}`,
-      });
+      addViolation(target, "target_skipped", `Skipped: ${match.skippedReason ?? "unknown reason"}`);
       continue;
     }
 
     if (!match.passed) {
-      violations.push({
-        target,
-        reason: "smoke_failed",
-        detail: `Smoke test failed: ${match.message ?? "no message"}`,
-      });
+      addViolation(target, "smoke_failed", `Smoke test failed: ${match.message ?? "no message"}`);
       continue;
     }
 
-    // Verify data availability — null value on success status is not acceptable
+    // data must be available
     if (!match.dataAvailable) {
-      violations.push({
-        target,
-        reason: "null_value_on_success",
-        detail: `envelopeStatus=${match.envelopeStatus} but value=null. A success envelope with null value is not acceptable evidence.`,
-      });
+      addViolation(target, "null_value_on_success",
+        `envelopeStatus=${match.envelopeStatus} but value=null. A success envelope with null value is not acceptable evidence.`
+      );
       continue;
     }
 
-    // Verify provider source identity — route must have served from the expected provider
-    const actualSource = (match.source ?? "").toLowerCase();
-    if (!actualSource.includes(target.expectedSourceSubstring)) {
-      violations.push({
-        target,
-        reason: "wrong_provider_source",
-        detail: `Expected source containing '${target.expectedSourceSubstring}' but got '${match.source ?? "null"}'. Another provider may have answered instead.`,
-      });
+    // Schema must be valid (schemaValid from runner)
+    if (!match.schemaValid) {
+      addViolation(target, "schema_invalid",
+        match.schemaIssues.length > 0 ? match.schemaIssues.join("; ") : "schema validation failed"
+      );
       continue;
     }
 
-    // Verify freshness — stale and cached are not live evidence
-    const envelopeStatus = match.envelopeStatus ?? "";
-    if (target.requireLiveFreshness) {
-      if (!LIVE_STATUSES.has(envelopeStatus)) {
-        violations.push({
-          target,
-          reason: envelopeStatus === "cached" ? "cached_not_accepted" : "stale_data_not_accepted",
-          detail: `envelopeStatus=${envelopeStatus} is not live evidence. Live targets require real_time or delayed.`,
-        });
-        continue;
-      }
-    } else {
-      if (!EOD_STATUSES.has(envelopeStatus)) {
-        violations.push({
-          target,
-          reason: "stale_data_not_accepted",
-          detail: `envelopeStatus=${envelopeStatus} is not acceptable. Expected one of: real_time, delayed, eod.`,
-        });
-        continue;
-      }
+    // Provenance must exactly match — exact source string and tier
+    if (!match.provenanceValid) {
+      addViolation(target, "provenance_invalid",
+        `Expected source="${target.expectedSource}" tier="${target.expectedSourceTier}" but got source="${match.source ?? "null"}" tier="${match.sourceTier ?? "null"}". Exact match required.`
+      );
+      continue;
+    }
+
+    // Freshness must be valid (freshnessValid from runner)
+    if (!match.freshnessValid) {
+      addViolation(target, "freshness_invalid",
+        `updatedAt=${match.updatedAt} ageMs=${match.ageMs} maxAgeMs=${target.maxAgeMs}`
+      );
+      continue;
     }
 
     verifiedTargets.push(target);
+  }
+
+  // After checking required targets, check for any attempted smoke failures
+  const attemptedFailures = report.smokeResults.filter((r) => r.attempted && !r.passed);
+  if (attemptedFailures.length > 0 && violations.length === 0) {
+    const failed = attemptedFailures[0];
+    const matchingTarget = targets.find(
+      (t) =>
+        t.providerId === failed.providerId &&
+        t.capability === failed.capability &&
+        t.symbol === failed.symbol
+    ) ?? {
+      providerId: failed.providerId,
+      capability: failed.capability,
+      symbol: failed.symbol ?? "unknown",
+      expectedSource: failed.source ?? "unknown",
+      expectedSourceTier: (failed.sourceTier ?? "manual_import") as SourceUsagePolicy,
+      allowedStatuses: [] as readonly DataStatus[],
+      maxAgeMs: 0,
+    };
+    addViolation(matchingTarget, "attempted_smoke_failed", failed.message ?? "attempted smoke failed");
   }
 
   const exitCode =

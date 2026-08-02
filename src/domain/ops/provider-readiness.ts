@@ -63,6 +63,11 @@ export type ProviderRealDataSmokeResult = {
   message: string | null;
 
   passed: boolean;
+  schemaValid: boolean;
+  schemaIssues: string[];
+  provenanceValid: boolean;
+  freshnessValid: boolean;
+  ageMs: number | null;
   checkedAt: string;
 };
 

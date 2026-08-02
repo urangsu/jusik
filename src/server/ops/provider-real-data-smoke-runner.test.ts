@@ -9,6 +9,15 @@ import type { ProviderRealDataSmokeResult } from "@/domain/ops/provider-readines
  *
  * Tests here verify the result domain contracts and skip logic.
  */
+
+const BLANK_SCHEMA_FIELDS = {
+  schemaValid: false,
+  schemaIssues: [] as string[],
+  provenanceValid: false,
+  freshnessValid: false,
+  ageMs: null,
+} as const;
+
 describe("provider-real-data-smoke-runner contracts", () => {
   it("not_configured provider skip result is a pass", () => {
     const skipResult: ProviderRealDataSmokeResult = {
@@ -26,6 +35,7 @@ describe("provider-real-data-smoke-runner contracts", () => {
       updatedAt: null,
       message: "FMP_API_KEY 누락",
       passed: true,
+      ...BLANK_SCHEMA_FIELDS,
       checkedAt: new Date().toISOString(),
     };
 
@@ -50,6 +60,7 @@ describe("provider-real-data-smoke-runner contracts", () => {
       updatedAt: null,
       message: null,
       passed: true,
+      ...BLANK_SCHEMA_FIELDS,
       checkedAt: new Date().toISOString(),
     };
 
@@ -74,6 +85,7 @@ describe("provider-real-data-smoke-runner contracts", () => {
       updatedAt: null,
       message: "provider가 ready이나 api_required 응답을 반환했습니다.",
       passed: false,
+      ...BLANK_SCHEMA_FIELDS,
       checkedAt: new Date().toISOString(),
     };
 
@@ -98,6 +110,11 @@ describe("provider-real-data-smoke-runner contracts", () => {
       updatedAt: new Date().toISOString(),
       message: null,
       passed: true,
+      schemaValid: true,
+      schemaIssues: [],
+      provenanceValid: true,
+      freshnessValid: true,
+      ageMs: 5000,
       checkedAt: new Date().toISOString(),
     };
 
