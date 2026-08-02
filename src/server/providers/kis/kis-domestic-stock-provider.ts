@@ -1,5 +1,6 @@
 import { DataEnvelope, MarketRegion } from "@/domain/common/data-status";
 import { Quote } from "@/domain/market/quote";
+import { OhlcvSeries, OhlcvCandle } from "@/domain/market/ohlcv";
 import { MarketDataProvider } from "../../adapters/types";
 import { providerRegistry } from "../provider-registry";
 import { KisHttpClient } from "./kis-http-client";
@@ -174,37 +175,60 @@ export class KisDomesticStockProvider implements MarketDataProvider {
         };
       }
 
-      const candles = res.output
+      const candles: OhlcvCandle[] = res.output
         .map((rawItem) => {
           const item = KisDailyItemSchema.parse(rawItem);
+          // Convert YYYYMMDD to ISO date string with KST close time (15:30)
+          const dateStr = `${item.stck_bsop_date.substring(0, 4)}-${item.stck_bsop_date.substring(4, 6)}-${item.stck_bsop_date.substring(6, 8)}`;
           return {
-            date: `${item.stck_bsop_date.substring(0, 4)}-${item.stck_bsop_date.substring(4, 6)}-${item.stck_bsop_date.substring(6, 8)}`,
+            assetId: `KR:${params.symbol}`,
+            market: "KR" as const,
+            timestamp: `${dateStr}T06:30:00.000Z`, // KST 15:30 = UTC 06:30
             open: parseFloat(item.stck_oprc),
             high: parseFloat(item.stck_hgpr),
             low: parseFloat(item.stck_lwpr),
             close: parseFloat(item.stck_clpr),
             volume: parseInt(item.acml_vol, 10),
+            source: "KIS Open API",
+            dataVersionId: "",
           };
         })
-        .reverse();
+        .filter((c) => c.high >= c.low && c.volume >= 0)
+        .reverse(); // ascending order
+
+      const newestCandle = candles.length > 0 ? candles[candles.length - 1] : null;
+      const nowStr = new Date().toISOString();
+
+      const series: OhlcvSeries = {
+        assetId: `KR:${params.symbol}`,
+        market: "KR",
+        range: params.range,
+        interval: params.interval,
+        candles,
+        source: "KIS Open API",
+        dataVersionId: null,
+        updatedAt: nowStr,
+      };
 
       return {
-        value: candles,
-        status: "eod",
+        value: candles.length > 0 ? series : null,
+        status: "eod" as const,
         source: "KIS Open API",
-        sourceTier: "official",
+        sourceTier: "official" as const,
         warnings: [],
-        updatedAt: new Date().toISOString(),
-      };
-    } catch (err: any) {
+        updatedAt: nowStr,
+        // dataAsOf = newest candle timestamp (upstream observation time)
+        dataAsOf: newestCandle?.timestamp ?? null,
+      } as DataEnvelope<OhlcvSeries> & { dataAsOf: string | null };
+    } catch {
       return {
         value: null,
-        status: "error",
+        status: "error" as const,
         source: "KIS Open API",
-        sourceTier: "official",
+        sourceTier: "official" as const,
         warnings: [],
         updatedAt: null,
-        message: err.message || String(err),
+        message: "KIS OHLCV 조회 중 오류가 발생했습니다.",
       };
     }
   }

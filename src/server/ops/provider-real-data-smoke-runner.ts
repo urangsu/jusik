@@ -9,116 +9,39 @@ import {
   validateSmokeValue,
   validateSmokeProvenance,
   validateSmokeFreshness,
-  PROVIDER_PROVENANCE,
 } from "./provider-smoke-contracts";
+import {
+  SMOKE_TARGET_POLICIES,
+  policyKey,
+  type SmokeTargetPolicy,
+} from "./provider-smoke-target-policy";
 
-type SmokeProfile = {
-  capability: ProviderRealDataSmokeCapability;
-  symbol: string;
-  region: "KR" | "US";
-  endpoint: string;
-  /** maxAgeMs for freshness validation — 0 means no freshness check */
-  maxAgeMs: number;
-};
-
-/**
- * Per-provider smoke profiles.
- * Only providers that are "ready" will have their profiles executed.
- * For KIS/Finnhub market capabilities, providerId is pinned via URL parameter.
- */
-const PROVIDER_SMOKE_PROFILES: Record<RuntimeProviderId, SmokeProfile[]> = {
-  kis: [
-    {
-      capability: "quote",
-      symbol: "005930",
-      region: "KR",
-      endpoint: "/api/market/quote?symbol=005930&region=KR",
-      maxAgeMs: 20 * 60 * 1000, // 20 minutes
-    },
-    {
-      capability: "ohlcv",
-      symbol: "005930",
-      region: "KR",
-      endpoint: "/api/market/ohlcv?symbol=005930&region=KR&range=1M&interval=1D",
-      maxAgeMs: 48 * 60 * 60 * 1000, // 48 hours
-    },
-  ],
-  opendart: [
-    {
-      capability: "filings",
-      symbol: "005930",
-      region: "KR",
-      endpoint: "/api/opendart/disclosures?stockCode=005930",
-      maxAgeMs: 24 * 60 * 60 * 1000, // 24 hours
-    },
-    {
-      capability: "financials",
-      symbol: "005930",
-      region: "KR",
-      endpoint: "/api/financials/statements?symbol=005930&region=KR",
-      maxAgeMs: 24 * 60 * 60 * 1000, // 24 hours
-    },
-  ],
-  fmp_free: [
-    {
-      capability: "quote",
-      symbol: "AAPL",
-      region: "US",
-      endpoint: "/api/market/quote?symbol=AAPL&region=US",
-      maxAgeMs: 20 * 60 * 1000,
-    },
-    {
-      capability: "ohlcv",
-      symbol: "AAPL",
-      region: "US",
-      endpoint: "/api/market/ohlcv?symbol=AAPL&region=US&range=1M&interval=1D",
-      maxAgeMs: 48 * 60 * 60 * 1000,
-    },
-  ],
-  finnhub_free: [
-    {
-      capability: "quote",
-      symbol: "AAPL",
-      region: "US",
-      endpoint: "/api/market/quote?symbol=AAPL&region=US",
-      maxAgeMs: 20 * 60 * 1000,
-    },
-  ],
-  alpha_vantage_free: [
-    {
-      capability: "quote",
-      symbol: "AAPL",
-      region: "US",
-      endpoint: "/api/market/quote?symbol=AAPL&region=US",
-      maxAgeMs: 20 * 60 * 1000,
-    },
-  ],
-  yfinance_personal: [
-    {
-      capability: "quote",
-      symbol: "005930.KS",
-      region: "KR",
-      endpoint: "/api/market/quote?symbol=005930.KS&region=KR",
-      maxAgeMs: 0,
-    },
-  ],
-  stooq_personal: [
-    {
-      capability: "ohlcv",
-      symbol: "AAPL",
-      region: "US",
-      endpoint: "/api/market/ohlcv?symbol=AAPL&region=US&range=1M&interval=1D",
-      maxAgeMs: 0,
-    },
-  ],
-};
-
-// Providers that have canonical provenance entries (can verify source identity)
-const PROVENANCE_PROVIDERS = new Set(Object.keys(PROVIDER_PROVENANCE) as RuntimeProviderId[]);
-
-// Capabilities for which schema validation is supported
+// ── Constants ──────────────────────────────────────────────────────────────
+const SMOKE_TIMEOUT_MS = 10_000; // 10 seconds per probe
+const PERSONAL_FALLBACK = new Set<RuntimeProviderId>(["yfinance_personal", "stooq_personal"]);
+const DATA_STATUSES = new Set(["real_time", "delayed", "eod", "cached", "stale", "empty_allowed"]);
 const SCHEMA_SUPPORTED = new Set<ProviderRealDataSmokeCapability>(["quote", "ohlcv", "filings", "financials"]);
 
+// ── Allowed loopback origins — smoke key NEVER leaves these ────────────────
+const ALLOWED_LOOPBACK_ORIGINS = new Set(["http://127.0.0.1:3000", "http://localhost:3000"]);
+
+function resolveAllowedOrigin(baseUrl: string): string | null {
+  const internalOrigin = process.env.INTERNAL_APP_ORIGIN;
+  try {
+    const origin = new URL(baseUrl).origin;
+    if (ALLOWED_LOOPBACK_ORIGINS.has(origin)) return origin;
+    if (internalOrigin) {
+      try {
+        if (origin === new URL(internalOrigin).origin) return origin;
+      } catch { /* ignore */ }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ── DataEnvelope parser ───────────────────────────────────────────────────
 type DataEnvelopeShape = {
   value?: unknown;
   status?: string;
@@ -126,6 +49,7 @@ type DataEnvelopeShape = {
   sourceTier?: string;
   warnings?: unknown[];
   updatedAt?: string | null;
+  dataAsOf?: string | null;
   message?: string;
 };
 
@@ -136,55 +60,18 @@ function parseEnvelope(raw: unknown): DataEnvelopeShape | null {
   return obj as DataEnvelopeShape;
 }
 
-const DATA_STATUSES = new Set([
-  "real_time", "delayed", "eod", "cached", "stale", "empty_allowed",
-]);
+// ── Result constructors ───────────────────────────────────────────────────
 
-/**
- * Build a failed smoke result with all required fields populated.
- * This is the single place that constructs "failed" results — no partial objects.
- */
-function failedSmoke(
-  providerId: RuntimeProviderId,
-  profile: SmokeProfile,
-  message: string,
-  now: string,
-): ProviderRealDataSmokeResult {
-  return {
-    providerId,
-    capability: profile.capability,
-    symbol: profile.symbol,
-    region: profile.region,
-    attempted: false,
-    skippedReason: message,
-    envelopeStatus: null,
-    dataAvailable: false,
-    source: null,
-    sourceTier: null,
-    warnings: [],
-    updatedAt: null,
-    message,
-    passed: false,
-    schemaValid: false,
-    schemaIssues: [message],
-    provenanceValid: false,
-    freshnessValid: false,
-    ageMs: null,
-    checkedAt: now,
-  };
-}
-
-function skippedSmoke(
-  providerId: RuntimeProviderId,
-  profile: SmokeProfile,
+function makeSkipped(
+  policy: SmokeTargetPolicy,
   reason: string,
   now: string,
 ): ProviderRealDataSmokeResult {
   return {
-    providerId,
-    capability: profile.capability,
-    symbol: profile.symbol,
-    region: profile.region,
+    providerId: policy.providerId,
+    capability: policy.capability,
+    symbol: policy.symbol,
+    region: policy.region,
     attempted: false,
     skippedReason: reason,
     envelopeStatus: null,
@@ -193,8 +80,9 @@ function skippedSmoke(
     sourceTier: null,
     warnings: [],
     updatedAt: null,
+    dataAsOf: null,
     message: null,
-    passed: true, // skip is not a failure
+    passed: true, // skipped = not a failure for non-required
     schemaValid: false,
     schemaIssues: [],
     provenanceValid: false,
@@ -204,227 +92,237 @@ function skippedSmoke(
   };
 }
 
-// Allowed internal origins — smoke key is NEVER sent to external origins
-const ALLOWED_LOOPBACK_ORIGINS = new Set([
-  "http://127.0.0.1:3000",
-  "http://localhost:3000",
-]);
-
-function isAllowedSmokeOrigin(baseUrl: string): boolean {
-  const internalOrigin = process.env.INTERNAL_APP_ORIGIN;
-  try {
-    const origin = new URL(baseUrl).origin;
-    return (
-      ALLOWED_LOOPBACK_ORIGINS.has(origin) ||
-      (!!internalOrigin && origin === new URL(internalOrigin).origin)
-    );
-  } catch {
-    return false;
-  }
+function makeTransportError(
+  policy: SmokeTargetPolicy,
+  message: string,
+  now: string,
+): ProviderRealDataSmokeResult {
+  return {
+    providerId: policy.providerId,
+    capability: policy.capability,
+    symbol: policy.symbol,
+    region: policy.region,
+    attempted: true,
+    skippedReason: null,
+    envelopeStatus: null,
+    dataAvailable: false,
+    source: null,
+    sourceTier: null,
+    warnings: [],
+    updatedAt: null,
+    dataAsOf: null,
+    message,
+    passed: false,
+    schemaValid: false,
+    schemaIssues: [],
+    provenanceValid: false,
+    freshnessValid: false,
+    ageMs: null,
+    checkedAt: now,
+  };
 }
 
+// ── Single probe ──────────────────────────────────────────────────────────
+
 async function runSingleSmoke(
-  providerId: RuntimeProviderId,
-  profile: SmokeProfile,
-  baseUrl: string
+  policy: SmokeTargetPolicy,
+  allowedOrigin: string,
+  smokeKey: string,
+  now: string,
 ): Promise<ProviderRealDataSmokeResult> {
-  const now = new Date().toISOString();
-
-  // Security: only send smoke key to allowed internal origins
-  if (!isAllowedSmokeOrigin(baseUrl)) {
-    return failedSmoke(providerId, profile, `보안: baseUrl '${new URL(baseUrl).hostname}'은 허용된 내부 origin이 아닙니다.`, now);
-  }
-
-  const smokeKey = process.env.INTERNAL_SMOKE_KEY;
-  if (!smokeKey) {
-    return failedSmoke(providerId, profile, "INTERNAL_SMOKE_KEY가 설정되지 않았습니다.", now);
-  }
-
-  // Build URL and pin provider for market capabilities
-  let urlObj: URL;
+  // Build URL with provider pinning for market capabilities
+  let url: URL;
   try {
-    urlObj = new URL(profile.endpoint, baseUrl);
+    url = new URL(policy.endpoint, allowedOrigin);
   } catch {
-    return failedSmoke(providerId, profile, "잘못된 smoke endpoint URL", now);
+    return makeTransportError(policy, "잘못된 smoke endpoint URL", now);
   }
 
-  if (profile.capability === "quote" || profile.capability === "ohlcv") {
-    urlObj.searchParams.set("providerId", providerId);
+  if (policy.capability === "quote" || policy.capability === "ohlcv") {
+    url.searchParams.set("providerId", policy.providerId);
   }
 
-  let envelopeStatus: string | null = null;
-  let dataAvailable = false;
-  let source: string | null = null;
-  let sourceTier: string | null = null;
-  let warnings: string[] = [];
-  let updatedAt: string | null = null;
-  let message: string | null = null;
-  let passed = false;
-  let schemaValid = false;
-  let schemaIssues: string[] = [];
-  let provenanceValid = false;
-  let freshnessValid = false;
-  let ageMs: number | null = null;
-
+  let res: Response;
   try {
-    const res = await fetch(urlObj, {
+    // Task 4: redirect=manual prevents credential leakage across redirects
+    // Task 4: AbortSignal.timeout enforces hard timeout
+    res = await fetch(url.toString(), {
       method: "GET",
       headers: {
         accept: "application/json",
         "x-internal-smoke-key": smokeKey,
       },
+      redirect: "manual",                             // Task 4: NEVER follow redirects
+      signal: AbortSignal.timeout(SMOKE_TIMEOUT_MS),  // Task 4: hard timeout
     });
+  } catch (err) {
+    const isTimeout = err instanceof Error && err.name === "TimeoutError";
+    return makeTransportError(policy, isTimeout ? "요청 시간 초과" : "네트워크 오류 또는 서버 미실행", now);
+  }
 
-    if (res.status >= 500) {
-      return {
-        providerId, capability: profile.capability, symbol: profile.symbol, region: profile.region,
-        attempted: true, skippedReason: null,
-        envelopeStatus: "error", dataAvailable: false, source: null, sourceTier: null,
-        warnings: [], updatedAt: null, message: `HTTP ${res.status}: 서버 오류`,
-        passed: false, schemaValid: false, schemaIssues: [`HTTP ${res.status}`],
-        provenanceValid: false, freshnessValid: false, ageMs: null, checkedAt: now,
-      };
-    }
+  // Task 4: reject ALL 3xx before parsing — smoke key must not leak to redirected origin
+  if (res.status >= 300 && res.status < 400) {
+    return makeTransportError(policy, `리다이렉트 거부 (HTTP ${res.status}): smoke 키가 다른 origin으로 전달되지 않습니다.`, now);
+  }
 
-    const raw = await res.json().catch(() => null);
-    const envelope = parseEnvelope(raw);
+  if (res.status >= 500) {
+    return makeTransportError(policy, `HTTP ${res.status}: 서버 오류`, now);
+  }
 
-    if (!envelope) {
-      return {
-        providerId, capability: profile.capability, symbol: profile.symbol, region: profile.region,
-        attempted: true, skippedReason: null,
-        envelopeStatus: null, dataAvailable: false, source: null, sourceTier: null,
-        warnings: [], updatedAt: null, message: "DataEnvelope 구조가 없거나 source/status 필드 누락",
-        passed: false, schemaValid: false, schemaIssues: ["missing envelope structure"],
-        provenanceValid: false, freshnessValid: false, ageMs: null, checkedAt: now,
-      };
-    }
+  const raw = await res.json().catch(() => null);
+  const envelope = parseEnvelope(raw);
 
-    envelopeStatus = envelope.status ?? null;
-    source = envelope.source ?? null;
-    sourceTier = envelope.sourceTier ?? null;
-    updatedAt = envelope.updatedAt ?? null;
-    warnings = Array.isArray(envelope.warnings)
-      ? (envelope.warnings as string[]).filter((w) => typeof w === "string")
-      : [];
-    message = envelope.message ?? null;
+  if (!envelope) {
+    return makeTransportError(policy, "DataEnvelope 구조가 없거나 source/status 필드 누락", now);
+  }
 
-    if (envelopeStatus === "api_required") {
+  const envelopeStatus = envelope.status ?? null;
+  const source = envelope.source ?? null;
+  const sourceTier = envelope.sourceTier ?? null;
+  const updatedAt = envelope.updatedAt ?? null;
+  // Task 3: prefer envelope.dataAsOf if server provides it; otherwise leave null
+  const dataAsOf = (envelope.dataAsOf ?? null) as string | null;
+  const warnings = Array.isArray(envelope.warnings)
+    ? (envelope.warnings as string[]).filter((w) => typeof w === "string")
+    : [];
+  const message = envelope.message ?? null;
+
+  let passed = false;
+  let dataAvailable = false;
+  let schemaValid = false;
+  let schemaIssues: string[] = [];
+  let provenanceValid = false;
+  let freshnessValid = false;
+  let ageMs: number | null = null;
+  let finalMessage: string | null = message;
+
+  if (envelopeStatus === "api_required") {
+    finalMessage = finalMessage || "provider가 ready이나 api_required 응답을 반환했습니다.";
+  } else if (DATA_STATUSES.has(envelopeStatus ?? "")) {
+    dataAvailable = envelope.value !== null && envelope.value !== undefined;
+    passed = dataAvailable;
+  } else if (envelopeStatus === "not_supported") {
+    finalMessage = finalMessage || "provider가 이 capability를 지원하지 않습니다.";
+  }
+
+  // Schema validation
+  if (passed && SCHEMA_SUPPORTED.has(policy.capability)) {
+    const cap = policy.capability as Exclude<ProviderRealDataSmokeCapability, "news">;
+    const schemaResult = validateSmokeValue(cap, envelope.value);
+    schemaValid = schemaResult.success;
+    if (!schemaResult.success) {
+      schemaIssues = (schemaResult.error.issues as unknown as Array<{ path: (string | number)[]; message: string }>)
+        .map((i) => `${i.path.join(".")}: ${i.message}`);
       passed = false;
-      message = message || "provider가 ready이나 api_required 응답을 반환했습니다.";
-    } else if (DATA_STATUSES.has(envelopeStatus ?? "")) {
-      dataAvailable = envelope.value !== null && envelope.value !== undefined;
-      passed = true;
-    } else if (envelopeStatus === "not_supported") {
+      finalMessage = `Schema validation failed: ${schemaIssues[0]}`;
+    }
+  }
+
+  // Provenance validation (using policy-derived expected values)
+  if (passed) {
+    const provResult = validateSmokeProvenance(
+      policy.expectedSource,
+      policy.expectedSourceTier,
+      source,
+      sourceTier,
+    );
+    provenanceValid = provResult.success;
+    if (!provResult.success) {
       passed = false;
-      message = message || "provider가 이 capability를 지원하지 않습니다.";
-    } else {
+      finalMessage = `Provenance mismatch: expected source="${policy.expectedSource}" tier="${policy.expectedSourceTier}" but got source="${source}" tier="${sourceTier}"`;
+    }
+  }
+
+  // Task 3: freshness from dataAsOf (upstream observation time), not updatedAt (fetch time)
+  if (passed && policy.maxDataAgeMs > 0) {
+    const checkedAtMs = Date.parse(now);
+    const freshnessResult = validateSmokeFreshness(dataAsOf, policy.maxDataAgeMs, checkedAtMs);
+    freshnessValid = freshnessResult.valid;
+    ageMs = freshnessResult.ageMs;
+    if (!freshnessValid) {
       passed = false;
+      finalMessage = `Freshness invalid: dataAsOf=${dataAsOf}, ageMs=${ageMs}, maxDataAgeMs=${policy.maxDataAgeMs}`;
     }
-
-    // Schema validation (only for supported capabilities with non-null value)
-    if (passed && dataAvailable && SCHEMA_SUPPORTED.has(profile.capability)) {
-      const cap = profile.capability as Exclude<ProviderRealDataSmokeCapability, "news">;
-      const schemaResult = validateSmokeValue(cap, envelope.value);
-      schemaValid = schemaResult.success;
-      if (!schemaResult.success) {
-        schemaIssues = (schemaResult.error.issues as unknown as Array<{ path: (string|number)[]; message: string }>).map((i) => `${i.path.join(".")}: ${i.message}`);
-        passed = false;
-        message = `Schema validation failed: ${schemaIssues[0]}`;
-      }
-    }
-
-    // Provenance validation (only for providers with canonical source entries)
-    if (passed && PROVENANCE_PROVIDERS.has(providerId)) {
-      const provResult = validateSmokeProvenance(
-        providerId as keyof typeof PROVIDER_PROVENANCE,
-        source,
-        sourceTier,
-      );
-      provenanceValid = provResult.success;
-      if (!provResult.success) {
-        passed = false;
-        message = `Provenance mismatch: expected source="${provResult.expected.source}" tier="${provResult.expected.sourceTier}" but got source="${source}" tier="${sourceTier}"`;
-      }
-    }
-
-    // Freshness validation (only when maxAgeMs > 0)
-    if (passed && profile.maxAgeMs > 0) {
-      const freshnessResult = validateSmokeFreshness(updatedAt, profile.maxAgeMs);
-      freshnessValid = freshnessResult.valid;
-      ageMs = freshnessResult.ageMs;
-      if (!freshnessValid) {
-        passed = false;
-        message = `Freshness invalid: updatedAt=${updatedAt}, ageMs=${ageMs}, maxAgeMs=${profile.maxAgeMs}`;
-      }
-    }
-  } catch {
-    message = "네트워크 오류 또는 서버 미실행";
-    passed = false;
   }
 
   return {
-    providerId, capability: profile.capability, symbol: profile.symbol, region: profile.region,
-    attempted: true, skippedReason: null,
-    envelopeStatus, dataAvailable, source, sourceTier, warnings, updatedAt, message,
-    passed, schemaValid, schemaIssues, provenanceValid, freshnessValid, ageMs,
+    providerId: policy.providerId,
+    capability: policy.capability,
+    symbol: policy.symbol,
+    region: policy.region,
+    attempted: true,
+    skippedReason: null,
+    envelopeStatus,
+    dataAvailable,
+    source,
+    sourceTier,
+    warnings,
+    updatedAt,
+    dataAsOf,
+    message: finalMessage,
+    passed,
+    schemaValid,
+    schemaIssues,
+    provenanceValid,
+    freshnessValid,
+    ageMs,
     checkedAt: now,
   };
 }
 
-/**
- * Runs provider-specific real data smoke tests.
- *
- * Only providers that are "ready" (all required keys configured) will be tested.
- * Personal fallback providers are skipped unless includePersonalFallback=true.
- *
- * Requires a running server at baseUrl.
- */
+// ── Main runner ───────────────────────────────────────────────────────────
+
 export async function runProviderRealDataSmoke(input?: {
   includePersonalFallback?: boolean;
   baseUrl?: string;
 }): Promise<ProviderReadinessReport> {
-  const baseUrl = input?.baseUrl ?? "http://localhost:3000";
+  const baseUrl = input?.baseUrl ?? "http://127.0.0.1:3000";
   const includePersonalFallback = input?.includePersonalFallback ?? false;
-
   const now = new Date().toISOString();
+
+  // Task 4: validate baseUrl before doing anything
+  const allowedOrigin = resolveAllowedOrigin(baseUrl);
+  if (!allowedOrigin) {
+    throw new Error(
+      `Security: baseUrl '${baseUrl}' is not an allowed internal origin. Smoke probes only run against trusted loopback origins.`
+    );
+  }
+
+  // Task 4: validate smoke key
+  const smokeKey = process.env.INTERNAL_SMOKE_KEY ?? "";
+  if (smokeKey.length < 32) {
+    throw new Error("INTERNAL_SMOKE_KEY must be at least 32 characters. Set a random secret before running smoke tests.");
+  }
+
   const readiness = resolveProviderReadiness();
+  const readinessMap = new Map(readiness.map((r) => [r.providerId, r]));
   const smokeResults: ProviderRealDataSmokeResult[] = [];
 
-  const PERSONAL_FALLBACK = new Set<RuntimeProviderId>(["yfinance_personal", "stooq_personal"]);
+  for (const policy of SMOKE_TARGET_POLICIES) {
+    const check = readinessMap.get(policy.providerId);
 
-  for (const check of readiness) {
-    const profiles = PROVIDER_SMOKE_PROFILES[check.providerId] ?? [];
-
-    if (PERSONAL_FALLBACK.has(check.providerId) && !includePersonalFallback) {
-      for (const profile of profiles) {
-        smokeResults.push(
-          skippedSmoke(check.providerId, profile, "personal fallback는 명시적 flag 없이는 실행하지 않습니다.", now)
-        );
-      }
+    // Skip personal fallback unless explicitly included
+    if (PERSONAL_FALLBACK.has(policy.providerId) && !includePersonalFallback) {
+      smokeResults.push(makeSkipped(policy, "personal fallback는 명시적 flag 없이는 실행하지 않습니다.", now));
       continue;
     }
 
-    if (!check.canRunSmoke) {
-      for (const profile of profiles) {
-        smokeResults.push(
-          skippedSmoke(check.providerId, profile, `provider not configured: ${check.status}`, now)
-        );
-      }
+    // Not configured → skip (not a failure)
+    if (!check || !check.canRunSmoke) {
+      smokeResults.push(makeSkipped(policy, `provider not configured: ${check?.status ?? "unknown"}`, now));
       continue;
     }
 
-    for (const profile of profiles) {
-      const result = await runSingleSmoke(check.providerId, profile, baseUrl);
-      smokeResults.push(result);
-    }
+    const result = await runSingleSmoke(policy, allowedOrigin, smokeKey, now);
+    smokeResults.push(result);
   }
 
   const readyCount = readiness.filter((r) => r.status === "ready").length;
   const notConfiguredCount = readiness.filter(
     (r) => r.status === "not_configured" || r.status === "personal_fallback_disabled"
   ).length;
-  const failureCount = smokeResults.filter((r) => !r.passed && r.attempted).length;
+  // Task 4: failureCount counts every attempted non-pass result
+  const failureCount = smokeResults.filter((r) => r.attempted && !r.passed).length;
 
   return {
     id: `readiness_${Date.now()}`,

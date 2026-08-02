@@ -1,12 +1,18 @@
 import { describe, it, expect } from "vitest";
-import { evaluateBetaAcceptance, REQUIRED_BETA_TARGETS, type BetaAcceptanceTarget } from "./beta-acceptance";
-import type { ProviderReadinessReport, ProviderRealDataSmokeResult, RuntimeProviderId, ProviderReadinessStatus } from "../../domain/ops/provider-readiness";
+import { evaluateBetaAcceptance } from "./beta-acceptance";
+import { REQUIRED_BETA_POLICIES } from "./provider-smoke-target-policy";
+import type {
+  ProviderReadinessReport,
+  ProviderRealDataSmokeResult,
+  RuntimeProviderId,
+  ProviderReadinessStatus,
+} from "../../domain/ops/provider-readiness";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Fixture builders
+// Fixture helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-function makeReadinessCheck(providerId: RuntimeProviderId, status: ProviderReadinessStatus = "ready") {
+function makeReadiness(providerId: RuntimeProviderId, status: ProviderReadinessStatus = "ready") {
   return {
     providerId,
     displayName: providerId,
@@ -17,59 +23,65 @@ function makeReadinessCheck(providerId: RuntimeProviderId, status: ProviderReadi
     status,
     message: null,
     canRunSmoke: status === "ready",
-    checkedAt: "2026-08-01T00:00:00.000Z",
+    checkedAt: "2026-08-02T09:00:00.000Z",
   };
 }
 
-const BASE_SMOKE_FIELDS = {
-  attempted: true,
-  skippedReason: null,
-  warnings: [],
-  message: null,
-  passed: true,
-  schemaValid: true,
-  schemaIssues: [] as string[],
-  provenanceValid: true,
-  freshnessValid: true,
-  ageMs: 5 * 60 * 1000,
-} as const;
+const CHECKED_AT = "2026-08-02T09:00:00.000Z";
+const DATA_AS_OF_FRESH = "2026-08-02T08:50:00.000Z"; // 10 minutes before checkedAt
 
-function makeSmoke(
-  overrides: { providerId: RuntimeProviderId; capability: string; symbol: string } & Partial<ProviderRealDataSmokeResult>
-): ProviderRealDataSmokeResult {
+function makeResult(overrides: Partial<ProviderRealDataSmokeResult> & {
+  providerId: RuntimeProviderId;
+  capability: "quote" | "ohlcv" | "filings" | "financials";
+  symbol: string;
+}): ProviderRealDataSmokeResult {
+  const { providerId, capability, symbol, ...rest } = overrides;
   return {
+    providerId,
+    capability,
+    symbol,
     region: "KR",
+    attempted: true,
+    skippedReason: null,
     envelopeStatus: "real_time",
     dataAvailable: true,
-    source: `${overrides.providerId} source`,
+    source: "KIS Open API",
     sourceTier: "official",
-    updatedAt: "2026-08-01T00:00:00.000Z",
-    checkedAt: "2026-08-01T00:00:00.000Z",
-    ...BASE_SMOKE_FIELDS,
-    ...(overrides as any),
+    warnings: [],
+    updatedAt: CHECKED_AT,
+    dataAsOf: DATA_AS_OF_FRESH,
+    message: null,
+    passed: true,
+    schemaValid: true,
+    schemaIssues: [],
+    provenanceValid: true,
+    freshnessValid: true,
+    ageMs: 10 * 60_000,
+    checkedAt: CHECKED_AT,
+    ...rest,
   };
 }
 
-/** Build a complete passing report covering all REQUIRED_BETA_TARGETS */
-function makeCompletePassingReport(): ProviderReadinessReport {
+/** Build a complete passing report that passes all 5 required beta targets */
+function makePassingReport(): ProviderReadinessReport {
   return {
     id: "test_report",
     readiness: [
-      makeReadinessCheck("kis"),
-      makeReadinessCheck("opendart"),
-      makeReadinessCheck("finnhub_free"),
+      makeReadiness("kis"),
+      makeReadiness("opendart"),
+      makeReadiness("finnhub_free"),
     ],
     smokeResults: [
-      makeSmoke({ providerId: "kis", capability: "quote", symbol: "005930", envelopeStatus: "real_time", source: "KIS Open API", sourceTier: "official", region: "KR" }),
-      makeSmoke({ providerId: "kis", capability: "ohlcv", symbol: "005930", envelopeStatus: "eod", source: "KIS Open API", sourceTier: "official", region: "KR" }),
-      makeSmoke({ providerId: "opendart", capability: "filings", symbol: "005930", envelopeStatus: "eod", source: "OpenDART", sourceTier: "official", region: "KR" }),
-      makeSmoke({ providerId: "opendart", capability: "financials", symbol: "005930", envelopeStatus: "eod", source: "OpenDART", sourceTier: "official", region: "KR" }),
-      makeSmoke({ providerId: "finnhub_free", capability: "quote", symbol: "AAPL", envelopeStatus: "real_time", source: "Finnhub Free", sourceTier: "free_limited", region: "US" }),
+      makeResult({ providerId: "kis", capability: "quote", symbol: "005930", envelopeStatus: "real_time", source: "KIS Open API", sourceTier: "official" }),
+      makeResult({ providerId: "kis", capability: "ohlcv", symbol: "005930", envelopeStatus: "eod", source: "KIS Open API", sourceTier: "official", dataAsOf: "2026-08-01T15:30:00.000Z", ageMs: 64800000 }),
+      makeResult({ providerId: "opendart", capability: "filings", symbol: "005930", envelopeStatus: "eod", source: "OpenDART", sourceTier: "official", dataAsOf: "2026-08-02T03:00:00.000Z", ageMs: 21600000 }),
+      makeResult({ providerId: "opendart", capability: "financials", symbol: "005930", envelopeStatus: "eod", source: "OpenDART", sourceTier: "official", dataAsOf: "2026-08-02T03:00:00.000Z", ageMs: 21600000 }),
+      makeResult({ providerId: "finnhub_free", capability: "quote", symbol: "AAPL", region: "US", envelopeStatus: "real_time", source: "Finnhub Free", sourceTier: "free_limited" }),
     ],
     readyCount: 3,
     notConfiguredCount: 0,
     failureCount: 0,
-    createdAt: "2026-08-01T00:00:00.000Z",
+    createdAt: CHECKED_AT,
   };
 }
 
@@ -77,95 +89,189 @@ function makeCompletePassingReport(): ProviderReadinessReport {
 // Tests
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("evaluateBetaAcceptance (pure function)", () => {
-  it("all required live targets with exact provenance → exitCode=0", () => {
-    const result = evaluateBetaAcceptance(makeCompletePassingReport());
+describe("evaluateBetaAcceptance (independent raw field verification)", () => {
+  it("all five targets with correct raw fields → exitCode=0", () => {
+    const result = evaluateBetaAcceptance(makePassingReport());
     expect(result.exitCode).toBe(0);
     expect(result.violations).toHaveLength(0);
-    expect(result.verifiedTargets).toHaveLength(REQUIRED_BETA_TARGETS.length);
+    expect(result.verifiedTargets).toHaveLength(5);
   });
 
-  it("no provider configured → exitCode=1, noProviderConfigured=true", () => {
-    const report: ProviderReadinessReport = {
-      id: "test",
-      readiness: [makeReadinessCheck("kis", "not_configured")],
-      smokeResults: [],
-      readyCount: 0,
-      notConfiguredCount: 1,
-      failureCount: 0,
-      createdAt: "2026-08-01T00:00:00.000Z",
+  // ── P0 False-PASS reproduction: all booleans true but raw status=cached ───
+  it("[P0 REPRO] cached status with provenanceValid=true/freshnessValid=true → exitCode=1, status_not_allowed", () => {
+    const report = makePassingReport();
+    // Manipulate raw status to cached while keeping all runner booleans true
+    report.smokeResults[0] = {
+      ...report.smokeResults[0],
+      envelopeStatus: "cached",
+      provenanceValid: true,
+      freshnessValid: true,
+      schemaValid: true,
+      passed: true, // runner says passed — evaluator must reject independently
     };
+    const result = evaluateBetaAcceptance(report);
+    expect(result.exitCode).toBe(1);
+    const v = result.violations.find((v) => v.reason === "status_not_allowed");
+    expect(v).toBeDefined();
+    expect(v?.detail).toContain("cached");
+  });
+
+  // ── P0 False-PASS reproduction: stale status ──────────────────────────────
+  it("[P0 REPRO] stale status → exitCode=1 (stale is never valid Beta evidence)", () => {
+    const report = makePassingReport();
+    report.smokeResults[0] = { ...report.smokeResults[0], envelopeStatus: "stale", passed: true };
+    expect(evaluateBetaAcceptance(report).exitCode).toBe(1);
+    expect(evaluateBetaAcceptance(report).violations.find((v) => v.reason === "status_not_allowed")).toBeDefined();
+  });
+
+  // ── P0 False-PASS reproduction: forged source ─────────────────────────────
+  it("[P0 REPRO] forged source with provenanceValid=true → exitCode=1, source_mismatch", () => {
+    const report = makePassingReport();
+    report.smokeResults[0] = {
+      ...report.smokeResults[0],
+      source: "forged-source",
+      provenanceValid: true, // runner says valid — evaluator must reject
+      passed: true,
+    };
+    const result = evaluateBetaAcceptance(report);
+    expect(result.exitCode).toBe(1);
+    expect(result.violations.find((v) => v.reason === "source_mismatch")).toBeDefined();
+  });
+
+  // ── P0 False-PASS reproduction: wrong tier ────────────────────────────────
+  it("[P0 REPRO] wrong tier manual_import with provenanceValid=true → exitCode=1, tier_mismatch", () => {
+    const report = makePassingReport();
+    report.smokeResults[0] = {
+      ...report.smokeResults[0],
+      sourceTier: "manual_import",
+      provenanceValid: true,
+      passed: true,
+    };
+    const result = evaluateBetaAcceptance(report);
+    expect(result.exitCode).toBe(1);
+    expect(result.violations.find((v) => v.reason === "tier_mismatch")).toBeDefined();
+  });
+
+  // ── P0 False-PASS reproduction: stale dataAsOf with freshnessValid=true ──
+  it("[P0 REPRO] old dataAsOf with freshnessValid=true → exitCode=1, freshness_exceeded", () => {
+    const report = makePassingReport();
+    // KIS quote maxDataAgeMs = 20 minutes; set dataAsOf to 2 hours ago
+    const twoHoursAgo = new Date(Date.parse(CHECKED_AT) - 2 * 60 * 60_000).toISOString();
+    report.smokeResults[0] = {
+      ...report.smokeResults[0],
+      dataAsOf: twoHoursAgo,
+      freshnessValid: true, // runner says fresh — evaluator must reject independently
+      ageMs: 2 * 60 * 60_000,
+      passed: true,
+    };
+    const result = evaluateBetaAcceptance(report);
+    expect(result.exitCode).toBe(1);
+    expect(result.violations.find((v) => v.reason === "freshness_exceeded")).toBeDefined();
+  });
+
+  // ── All five cached simultaneously ────────────────────────────────────────
+  it("[P0 REPRO] all five targets cached with all booleans true → exitCode=1", () => {
+    const report = makePassingReport();
+    report.smokeResults = report.smokeResults.map((r) => ({
+      ...r,
+      envelopeStatus: "cached" as const,
+      passed: true,
+      provenanceValid: true,
+      freshnessValid: true,
+      schemaValid: true,
+    }));
+    const result = evaluateBetaAcceptance(report);
+    expect(result.exitCode).toBe(1);
+    expect(result.violations.filter((v) => v.reason === "status_not_allowed")).toHaveLength(5);
+  });
+
+  // ── dataAsOf=null → data_as_of_missing ───────────────────────────────────
+  it("null dataAsOf → exitCode=1, data_as_of_missing", () => {
+    const report = makePassingReport();
+    report.smokeResults[0] = { ...report.smokeResults[0], dataAsOf: null, freshnessValid: false };
+    expect(evaluateBetaAcceptance(report).exitCode).toBe(1);
+    expect(evaluateBetaAcceptance(report).violations.find((v) => v.reason === "data_as_of_missing")).toBeDefined();
+  });
+
+  it("unparseable dataAsOf → exitCode=1, data_as_of_invalid", () => {
+    const report = makePassingReport();
+    report.smokeResults[0] = { ...report.smokeResults[0], dataAsOf: "not-a-date" };
+    expect(evaluateBetaAcceptance(report).exitCode).toBe(1);
+    expect(evaluateBetaAcceptance(report).violations.find((v) => v.reason === "data_as_of_invalid")).toBeDefined();
+  });
+
+  it("future dataAsOf → exitCode=1, data_as_of_future", () => {
+    const report = makePassingReport();
+    const future = new Date(Date.parse(CHECKED_AT) + 60_000).toISOString();
+    report.smokeResults[0] = { ...report.smokeResults[0], dataAsOf: future };
+    expect(evaluateBetaAcceptance(report).exitCode).toBe(1);
+    expect(evaluateBetaAcceptance(report).violations.find((v) => v.reason === "data_as_of_future")).toBeDefined();
+  });
+
+  // ── Existing required checks ───────────────────────────────────────────────
+
+  it("no provider configured → exitCode=1, noProviderConfigured=true", () => {
+    const report = makePassingReport();
+    report.readiness = report.readiness.map((r) => makeReadiness(r.providerId, "not_configured"));
+    report.readyCount = 0;
     const result = evaluateBetaAcceptance(report);
     expect(result.exitCode).toBe(1);
     expect(result.noProviderConfigured).toBe(true);
   });
 
-  it("partial provider set — opendart missing → exitCode=1, missingRequiredProviders=[opendart]", () => {
-    const report = makeCompletePassingReport();
+  it("missing opendart → missingRequiredProviders contains opendart", () => {
+    const report = makePassingReport();
     report.readiness = report.readiness.filter((r) => r.providerId !== "opendart");
-    expect(evaluateBetaAcceptance(report).missingRequiredProviders).toContain("opendart");
-    expect(evaluateBetaAcceptance(report).exitCode).toBe(1);
+    report.readyCount = 2;
+    const result = evaluateBetaAcceptance(report);
+    expect(result.missingRequiredProviders).toContain("opendart");
+    expect(result.exitCode).toBe(1);
   });
 
-  it("opendart/financials not in smokeResults → exitCode=1, reason=target_not_run", () => {
-    const report = makeCompletePassingReport();
+  it("target not in smokeResults → exitCode=1, target_not_run", () => {
+    const report = makePassingReport();
     report.smokeResults = report.smokeResults.filter(
       (r) => !(r.providerId === "opendart" && r.capability === "financials")
     );
     const result = evaluateBetaAcceptance(report);
     expect(result.exitCode).toBe(1);
-    const v = result.violations.find((v) => v.reason === "target_not_run");
-    expect(v?.target.capability).toBe("financials");
+    expect(result.violations.find((v) => v.reason === "target_not_run")?.target.capability).toBe("financials");
   });
 
-  it("smoke passed but value=null → exitCode=1, reason=null_value_on_success", () => {
-    const report = makeCompletePassingReport();
-    report.smokeResults[0] = { ...report.smokeResults[0], dataAvailable: false };
+  it("skipped result → exitCode=1, target_skipped", () => {
+    const report = makePassingReport();
+    report.smokeResults[0] = {
+      ...report.smokeResults[0],
+      attempted: false,
+      skippedReason: "provider not configured",
+      passed: true, // runner marks skip as passed — evaluator must reject
+    };
     const result = evaluateBetaAcceptance(report);
     expect(result.exitCode).toBe(1);
-    expect(result.violations.find((v) => v.reason === "null_value_on_success")).toBeDefined();
+    expect(result.violations.find((v) => v.reason === "target_skipped")).toBeDefined();
   });
 
-  // ── Task 5 Step 1: new fixture tests ─────────────────────────────────────
-
-  it.each([
-    ["schema invalid", { schemaValid: false, schemaIssues: ["price: Expected number"] }],
-    ["provenance invalid", { provenanceValid: false }],
-    ["freshness invalid", { freshnessValid: false }],
-    ["missing updatedAt", { updatedAt: null, freshnessValid: false }],
-  ] as [string, Partial<ProviderRealDataSmokeResult>][])("fails closed when %s", (_name, patch) => {
-    const report = makeCompletePassingReport();
-    report.smokeResults[0] = { ...report.smokeResults[0], ...patch };
-    expect(evaluateBetaAcceptance(report).exitCode).toBe(1);
-  });
-
-  it("schema_invalid violation has correct reason", () => {
-    const report = makeCompletePassingReport();
+  it("schema_invalid → exitCode=1", () => {
+    const report = makePassingReport();
     report.smokeResults[0] = {
       ...report.smokeResults[0],
       schemaValid: false,
-      schemaIssues: ["price: Expected number, received string"],
+      schemaIssues: ["price: Expected number"],
     };
     const result = evaluateBetaAcceptance(report);
-    const v = result.violations.find((v) => v.reason === "schema_invalid");
-    expect(v).toBeDefined();
-    expect(v?.detail).toContain("price");
+    expect(result.exitCode).toBe(1);
+    expect(result.violations.find((v) => v.reason === "schema_invalid")?.detail).toContain("price");
   });
 
-  it("provenance_invalid violation when source doesn't exactly match (substring)", () => {
-    const report = makeCompletePassingReport();
-    // Simulate wrong source that contains provider name substring
-    report.smokeResults[0] = {
-      ...report.smokeResults[0],
-      provenanceValid: false,
-    };
-    const result = evaluateBetaAcceptance(report);
-    expect(result.violations.find((v) => v.reason === "provenance_invalid")).toBeDefined();
+  it("dataAvailable=false → exitCode=1, data_unavailable", () => {
+    const report = makePassingReport();
+    report.smokeResults[0] = { ...report.smokeResults[0], dataAvailable: false };
+    expect(evaluateBetaAcceptance(report).exitCode).toBe(1);
+    expect(evaluateBetaAcceptance(report).violations.find((v) => v.reason === "data_unavailable")).toBeDefined();
   });
 
-  it("fails when an attempted configured provider smoke fails (attempted_smoke_failed)", () => {
-    const report = makeCompletePassingReport();
-    // Add an extra attempted failing result after required targets all pass
+  it("non-required attempted failure → exitCode=1, attempted_smoke_failed", () => {
+    const report = makePassingReport();
     report.smokeResults.push({
       providerId: "fmp_free",
       capability: "quote",
@@ -175,18 +281,19 @@ describe("evaluateBetaAcceptance (pure function)", () => {
       skippedReason: null,
       envelopeStatus: "error",
       dataAvailable: false,
-      source: "FMP Free",
+      source: "FMP",
       sourceTier: "free_limited",
       warnings: [],
       updatedAt: null,
-      message: "provider request failed",
+      dataAsOf: null,
+      message: "connection refused",
       passed: false,
       schemaValid: false,
-      schemaIssues: ["value is null"],
-      provenanceValid: true,
+      schemaIssues: [],
+      provenanceValid: false,
       freshnessValid: false,
       ageMs: null,
-      checkedAt: "2026-08-01T00:00:00.000Z",
+      checkedAt: CHECKED_AT,
     });
     report.failureCount = 1;
     const result = evaluateBetaAcceptance(report);
@@ -194,23 +301,10 @@ describe("evaluateBetaAcceptance (pure function)", () => {
     expect(result.violations.find((v) => v.reason === "attempted_smoke_failed")).toBeDefined();
   });
 
-  it("target_skipped → exitCode=1, reason=target_skipped", () => {
-    const report = makeCompletePassingReport();
-    report.smokeResults[0] = {
-      ...report.smokeResults[0],
-      attempted: false,
-      skippedReason: "provider not configured",
-      passed: true, // runner marks skip as passed, evaluator must still reject
-    };
-    const result = evaluateBetaAcceptance(report);
-    expect(result.exitCode).toBe(1);
-    expect(result.violations.find((v) => v.reason === "target_skipped")).toBeDefined();
-  });
-
   it("multiple violations are all reported", () => {
-    const report = makeCompletePassingReport();
-    report.smokeResults[0] = { ...report.smokeResults[0], dataAvailable: false };
-    report.smokeResults[1] = { ...report.smokeResults[1], schemaValid: false, schemaIssues: ["candles: too short"] };
+    const report = makePassingReport();
+    report.smokeResults[0] = { ...report.smokeResults[0], source: "wrong-source" };
+    report.smokeResults[1] = { ...report.smokeResults[1], dataAsOf: null };
     const result = evaluateBetaAcceptance(report);
     expect(result.exitCode).toBe(1);
     expect(result.violations.length).toBeGreaterThanOrEqual(2);

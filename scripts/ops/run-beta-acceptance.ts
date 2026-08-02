@@ -7,7 +7,8 @@
  */
 import { resolveProviderReadiness } from "../../src/server/ops/provider-readiness-resolver";
 import { runProviderRealDataSmoke } from "../../src/server/ops/provider-real-data-smoke-runner";
-import { evaluateBetaAcceptance, REQUIRED_BETA_TARGETS } from "../../src/server/ops/beta-acceptance";
+import { evaluateBetaAcceptance } from "../../src/server/ops/beta-acceptance";
+import { REQUIRED_BETA_POLICIES } from "../../src/server/ops/provider-smoke-target-policy";
 import type { ProviderReadinessReport } from "../../src/domain/ops/provider-readiness";
 
 const args = process.argv.slice(2);
@@ -17,7 +18,7 @@ const BASE_URL = baseUrlArg ? baseUrlArg.split("=")[1] : "http://127.0.0.1:3000"
 async function main() {
   console.log("\n[Beta Acceptance] Real Data Beta Verification");
   console.log(`Base URL: ${BASE_URL}`);
-  console.log(`Required targets: ${REQUIRED_BETA_TARGETS.length}`);
+  console.log(`Required targets: ${REQUIRED_BETA_POLICIES.length}`);
 
   // --- Step 1: Provider configuration readiness ---
   const readiness = resolveProviderReadiness();
@@ -87,7 +88,7 @@ async function main() {
 
   if (evaluation.exitCode === 0) {
     const timestamp = new Date().toISOString();
-    console.log(`\n[PASS] Real Data Beta Acceptance: ALL ${REQUIRED_BETA_TARGETS.length} required targets verified.`);
+    console.log(`\n[PASS] Real Data Beta Acceptance: ALL ${REQUIRED_BETA_POLICIES.length} required targets verified.`);
     console.log(`Verified targets:`);
     for (const t of evaluation.verifiedTargets) {
       console.log(` ✓ ${t.providerId}/${t.capability}/${t.symbol}`);

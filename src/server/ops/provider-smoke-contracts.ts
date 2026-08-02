@@ -1,41 +1,49 @@
 import { z } from "zod";
-import { ProviderRealDataSmokeCapability } from "../../domain/ops/provider-readiness";
-import { SourceUsagePolicy } from "../../domain/source/provider-tier";
+import type { RuntimeProviderId, ProviderRealDataSmokeCapability } from "../../domain/ops/provider-readiness";
 
-// ── Canonical provenance map ───────────────────────────────────────────────
-// The source string and tier must exactly match these values.
-// Substring matching (e.g. "contains 'kis'") is explicitly rejected.
-export const PROVIDER_PROVENANCE = {
-  kis: { source: "KIS Open API", sourceTier: "official" as SourceUsagePolicy },
-  opendart: { source: "OpenDART", sourceTier: "official" as SourceUsagePolicy },
-  finnhub_free: { source: "Finnhub Free", sourceTier: "free_limited" as SourceUsagePolicy },
-} as const;
+// ── Capability Zod schemas — must match production domain types ────────────
 
-// ── Capability Zod schemas ─────────────────────────────────────────────────
-
+/** Quote — mirrors domain/market/quote.ts Quote */
 const quoteSchema = z.object({
   assetId: z.string().min(1),
+  market: z.string().min(1),
   symbol: z.string().min(1),
-  price: z.number().finite(),
-  currency: z.enum(["KRW", "USD"]),
+  price: z.number().finite().positive(),
+  currency: z.string().min(1),
   updatedAt: z.string().datetime(),
   source: z.string().min(1),
+  // volume may be null for some providers
+  volume: z.number().nonnegative().nullable().optional(),
 });
+
+/**
+ * OHLCV — mirrors domain/market/ohlcv.ts OhlcvSeries.
+ * Candles must have the canonical timestamp field (not bare `date`).
+ * high >= low, volume >= 0 are validated.
+ */
+const ohlcvCandleSchema = z.object({
+  assetId: z.string().min(1),
+  market: z.string().min(1),
+  timestamp: z.string().datetime(), // ISO datetime — rejects bare "YYYY-MM-DD" without time
+  open: z.number().finite(),
+  high: z.number().finite(),
+  low: z.number().finite(),
+  close: z.number().finite(),
+  volume: z.number().finite().nonnegative(),
+  source: z.string().min(1),
+}).refine((c) => c.high >= c.low, { message: "high must be >= low" });
 
 const ohlcvSchema = z.object({
   assetId: z.string().min(1),
-  candles: z.array(
-    z.object({
-      timestamp: z.string().datetime(),
-      open: z.number().finite(),
-      high: z.number().finite(),
-      low: z.number().finite(),
-      close: z.number().finite(),
-      volume: z.number().finite().nonnegative(),
-    })
-  ).min(1),
+  market: z.string().min(1),
+  candles: z.array(ohlcvCandleSchema).min(1),
+  source: z.string().min(1),
 });
 
+/**
+ * OpenDART filings — mirrors opendart disclosure list shape.
+ * Requires at least one filing entry.
+ */
 const filingsSchema = z.object({
   totalCount: z.number().int().nonnegative(),
   list: z.array(
@@ -47,6 +55,10 @@ const filingsSchema = z.object({
   ).min(1),
 });
 
+/**
+ * OpenDART financials — must include identifiers AND at least one non-null Beta operand.
+ * Metadata-only financials (all operands null) cannot pass.
+ */
 const financialsSchema = z.object({
   assetId: z.string().min(1),
   symbol: z.string().min(1),
@@ -56,7 +68,17 @@ const financialsSchema = z.object({
   currency: z.literal("KRW"),
   basis: z.enum(["CFS", "OFS"]),
   updatedAt: z.string().datetime(),
-});
+  // At least one of these must be non-null (revenue, operating income, net income, assets, liabilities, equity)
+  revenue: z.number().nullable().optional(),
+  operatingIncome: z.number().nullable().optional(),
+  netIncome: z.number().nullable().optional(),
+  assets: z.number().nullable().optional(),
+  liabilities: z.number().nullable().optional(),
+  equity: z.number().nullable().optional(),
+}).refine(
+  (d) => [d.revenue, d.operatingIncome, d.netIncome, d.assets, d.liabilities, d.equity].some((v) => v != null),
+  { message: "financials must have at least one non-null Beta operand (revenue, operatingIncome, netIncome, assets, liabilities, or equity)" }
+);
 
 type SupportedCapability = Exclude<ProviderRealDataSmokeCapability, "news">;
 
@@ -68,7 +90,7 @@ const VALUE_SCHEMAS: Record<SupportedCapability, z.ZodType> = {
 };
 
 /**
- * Validate a smoke result value against its capability's typed schema.
+ * Validate a smoke result value against its capability's canonical Zod schema.
  * Returns a Zod SafeParseResult — success=false means evidence is invalid.
  */
 export function validateSmokeValue(
@@ -82,39 +104,40 @@ export type ProvenanceValidationResult =
   | { success: true }
   | { success: false; expected: { source: string; sourceTier: string }; got: { source: string | null; sourceTier: string | null } };
 
+// PROVIDER_PROVENANCE is now derived from SMOKE_TARGET_POLICIES — no duplication allowed.
+// This module only exposes the validation function.
+
 /**
- * Validate that the smoke result's source and sourceTier exactly match
- * the canonical provenance for the given provider.
- *
- * Substring / contains matching is NOT accepted — a source that merely
- * "contains" the provider name is rejected to prevent spoofing.
+ * Validate that source and sourceTier exactly match expected values.
+ * Substring / contains matching is NOT accepted.
  */
 export function validateSmokeProvenance(
-  providerId: keyof typeof PROVIDER_PROVENANCE,
+  expectedSource: string,
+  expectedSourceTier: string,
   source: string | null,
   sourceTier: string | null,
 ): ProvenanceValidationResult {
-  const expected = PROVIDER_PROVENANCE[providerId];
-  if (source === expected.source && sourceTier === expected.sourceTier) {
+  if (source === expectedSource && sourceTier === expectedSourceTier) {
     return { success: true };
   }
   return {
     success: false,
-    expected,
+    expected: { source: expectedSource, sourceTier: expectedSourceTier },
     got: { source, sourceTier },
   };
 }
 
 /**
- * Validate that updatedAt is a parseable ISO datetime and not older than maxAgeMs.
+ * Validate freshness from upstream observation time (dataAsOf), not fetch time.
+ * Both future dataAsOf and stale dataAsOf fail.
  */
 export function validateSmokeFreshness(
-  updatedAt: string | null,
+  dataAsOf: string | null,
   maxAgeMs: number,
   nowMs: number = Date.now(),
 ): { valid: boolean; ageMs: number | null } {
-  if (!updatedAt) return { valid: false, ageMs: null };
-  const parsed = Date.parse(updatedAt);
+  if (!dataAsOf) return { valid: false, ageMs: null };
+  const parsed = Date.parse(dataAsOf);
   if (isNaN(parsed)) return { valid: false, ageMs: null };
   const ageMs = nowMs - parsed;
   return { valid: ageMs >= 0 && ageMs <= maxAgeMs, ageMs };

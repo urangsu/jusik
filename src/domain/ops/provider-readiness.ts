@@ -60,6 +60,8 @@ export type ProviderRealDataSmokeResult = {
   sourceTier: string | null;
   warnings: string[];
   updatedAt: string | null;
+  /** Upstream observation time (trade time, candle time, receipt date). NOT fetch time. */
+  dataAsOf: string | null;
   message: string | null;
 
   passed: boolean;

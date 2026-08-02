@@ -1,90 +1,55 @@
-import {
+/**
+ * Beta Acceptance Evaluator
+ *
+ * This is a PURE function. It independently re-verifies every raw field from
+ * ProviderRealDataSmokeResult against the target's SmokeTargetPolicy.
+ *
+ * It NEVER trusts runner-computed booleans (schemaValid, provenanceValid,
+ * freshnessValid). Those booleans are convenience fields for display only.
+ * The evaluator is the authoritative gate.
+ *
+ * A result passes ONLY when ALL of the following are true — independently:
+ *   - attempted === true (not skipped)
+ *   - envelopeStatus ∈ policy.allowedStatuses (no cached/stale/empty_allowed)
+ *   - source === policy.expectedSource (exact string, not substring)
+ *   - sourceTier === policy.expectedSourceTier (exact)
+ *   - dataAvailable === true
+ *   - schemaValid === true (verified by runner's Zod schema)
+ *   - dataAsOf is a parseable ISO string, not null, not in the future
+ *   - ageMs = (checkedAt - dataAsOf) ≥ 0 and ≤ policy.maxDataAgeMs
+ */
+
+import type {
   ProviderReadinessReport,
   ProviderRealDataSmokeResult,
   RuntimeProviderId,
-  ProviderRealDataSmokeCapability,
 } from "../../domain/ops/provider-readiness";
-import { SourceUsagePolicy } from "../../domain/source/provider-tier";
-import { DataStatus } from "../../domain/common/data-status";
+import type { SourceUsagePolicy } from "../../domain/source/provider-tier";
+import {
+  SMOKE_TARGET_POLICIES,
+  REQUIRED_BETA_POLICIES,
+  policyKey,
+  type SmokeTargetPolicy,
+} from "./provider-smoke-target-policy";
 
-/**
- * A required target for Beta acceptance.
- * ALL entries must be satisfied for exit 0.
- * Uses exact source/tier matching — not substring.
- */
-export type BetaAcceptanceTarget = {
-  readonly providerId: RuntimeProviderId;
-  readonly capability: ProviderRealDataSmokeCapability;
-  readonly symbol: string;
-  readonly expectedSource: string;
-  readonly expectedSourceTier: SourceUsagePolicy;
-  readonly allowedStatuses: readonly DataStatus[];
-  readonly maxAgeMs: number;
-};
-
-export const REQUIRED_BETA_TARGETS: readonly BetaAcceptanceTarget[] = [
-  {
-    providerId: "kis",
-    capability: "quote",
-    symbol: "005930",
-    expectedSource: "KIS Open API",
-    expectedSourceTier: "official",
-    allowedStatuses: ["real_time", "delayed"],
-    maxAgeMs: 20 * 60_000,
-  },
-  {
-    providerId: "kis",
-    capability: "ohlcv",
-    symbol: "005930",
-    expectedSource: "KIS Open API",
-    expectedSourceTier: "official",
-    allowedStatuses: ["delayed", "eod"],
-    maxAgeMs: 48 * 60 * 60_000,
-  },
-  {
-    providerId: "opendart",
-    capability: "filings",
-    symbol: "005930",
-    expectedSource: "OpenDART",
-    expectedSourceTier: "official",
-    allowedStatuses: ["eod"],
-    maxAgeMs: 24 * 60 * 60_000,
-  },
-  {
-    providerId: "opendart",
-    capability: "financials",
-    symbol: "005930",
-    expectedSource: "OpenDART",
-    expectedSourceTier: "official",
-    allowedStatuses: ["eod"],
-    maxAgeMs: 24 * 60 * 60_000,
-  },
-  {
-    providerId: "finnhub_free",
-    capability: "quote",
-    symbol: "AAPL",
-    expectedSource: "Finnhub Free",
-    expectedSourceTier: "free_limited",
-    allowedStatuses: ["real_time", "delayed"],
-    maxAgeMs: 20 * 60_000,
-  },
-] as const;
+export type AcceptanceViolationReason =
+  | "target_not_run"
+  | "target_skipped"
+  | "smoke_failed"
+  | "data_unavailable"
+  | "status_not_allowed"        // envelopeStatus ∉ allowedStatuses
+  | "source_mismatch"           // raw source ≠ expectedSource
+  | "tier_mismatch"             // raw sourceTier ≠ expectedSourceTier
+  | "schema_invalid"
+  | "data_as_of_missing"        // dataAsOf is null
+  | "data_as_of_invalid"        // dataAsOf is not parseable
+  | "data_as_of_future"         // dataAsOf > checkedAt
+  | "freshness_exceeded"        // age > maxDataAgeMs
+  | "attempted_smoke_failed";   // non-required attempted result failed
 
 export type AcceptanceViolation = {
-  target: BetaAcceptanceTarget;
-  reason:
-    | "target_not_run"
-    | "target_skipped"
-    | "smoke_failed"
-    | "data_unavailable"
-    | "null_value_on_success"
-    | "schema_invalid"
-    | "provenance_invalid"
-    | "freshness_invalid"
-    | "attempted_smoke_failed"
-    | "wrong_provider_source"
-    | "stale_data_not_accepted"
-    | "cached_not_accepted";
+  target: Pick<SmokeTargetPolicy, "providerId" | "capability" | "symbol">;
+  reason: AcceptanceViolationReason;
   detail: string;
 };
 
@@ -93,123 +58,160 @@ export type BetaAcceptanceEvaluation = {
   violations: AcceptanceViolation[];
   noProviderConfigured: boolean;
   missingRequiredProviders: RuntimeProviderId[];
-  verifiedTargets: BetaAcceptanceTarget[];
+  verifiedTargets: SmokeTargetPolicy[];
 };
 
+function addViolation(
+  violations: AcceptanceViolation[],
+  policy: Pick<SmokeTargetPolicy, "providerId" | "capability" | "symbol">,
+  reason: AcceptanceViolationReason,
+  detail: string,
+): void {
+  violations.push({ target: { providerId: policy.providerId, capability: policy.capability, symbol: policy.symbol }, reason, detail });
+}
+
 /**
- * Pure function: evaluate a ProviderReadinessReport against REQUIRED_BETA_TARGETS.
+ * Independently verify one result against its policy without trusting any runner boolean.
+ */
+function verifyResult(
+  policy: SmokeTargetPolicy,
+  result: ProviderRealDataSmokeResult,
+  violations: AcceptanceViolation[],
+): boolean {
+  const key = `${policy.providerId}/${policy.capability}/${policy.symbol}`;
+
+  if (!result.attempted) {
+    addViolation(violations, policy, "target_skipped", `Result for ${key} has attempted=false: ${result.skippedReason ?? "no reason"}`);
+    return false;
+  }
+
+  // 1. Raw envelopeStatus must be in allowedStatuses — cached/stale/empty_allowed rejected
+  const allowed = policy.allowedStatuses as readonly string[];
+  if (!result.envelopeStatus || !allowed.includes(result.envelopeStatus)) {
+    addViolation(violations, policy, "status_not_allowed",
+      `envelopeStatus=${JSON.stringify(result.envelopeStatus)} is not in allowedStatuses=[${allowed.join(",")}]. cached/stale/empty_allowed are never valid Beta evidence.`);
+    return false;
+  }
+
+  // 2. Data must be present
+  if (!result.dataAvailable) {
+    addViolation(violations, policy, "data_unavailable",
+      `dataAvailable=false for ${key}. A successful envelope with null value is not acceptable evidence.`);
+    return false;
+  }
+
+  // 3. Raw source must exactly match (not substring, not null)
+  if (result.source !== policy.expectedSource) {
+    addViolation(violations, policy, "source_mismatch",
+      `source=${JSON.stringify(result.source)} ≠ expectedSource=${JSON.stringify(policy.expectedSource)}. Exact string match required. Substring match rejected.`);
+    return false;
+  }
+
+  // 4. Raw sourceTier must exactly match
+  if (result.sourceTier !== (policy.expectedSourceTier as string)) {
+    addViolation(violations, policy, "tier_mismatch",
+      `sourceTier=${JSON.stringify(result.sourceTier)} ≠ expectedSourceTier=${JSON.stringify(policy.expectedSourceTier)}.`);
+    return false;
+  }
+
+  // 5. Schema must be valid (runner-computed, but presence of schemaIssues is authoritative)
+  if (!result.schemaValid || result.schemaIssues.length > 0) {
+    addViolation(violations, policy, "schema_invalid",
+      result.schemaIssues.length > 0 ? result.schemaIssues.join("; ") : "schemaValid=false");
+    return false;
+  }
+
+  // 6. dataAsOf-based freshness — evaluated independently from runner's freshnessValid boolean
+  if (policy.maxDataAgeMs > 0) {
+    if (!result.dataAsOf) {
+      addViolation(violations, policy, "data_as_of_missing",
+        `dataAsOf is null for ${key}. Freshness cannot be established without upstream observation time.`);
+      return false;
+    }
+
+    const dataAsOfMs = Date.parse(result.dataAsOf);
+    if (isNaN(dataAsOfMs)) {
+      addViolation(violations, policy, "data_as_of_invalid",
+        `dataAsOf=${JSON.stringify(result.dataAsOf)} is not a valid ISO datetime.`);
+      return false;
+    }
+
+    const checkedAtMs = Date.parse(result.checkedAt);
+    const ageMs = checkedAtMs - dataAsOfMs;
+
+    if (ageMs < 0) {
+      addViolation(violations, policy, "data_as_of_future",
+        `dataAsOf=${result.dataAsOf} is in the future relative to checkedAt=${result.checkedAt}. ageMs=${ageMs}.`);
+      return false;
+    }
+
+    if (ageMs > policy.maxDataAgeMs) {
+      addViolation(violations, policy, "freshness_exceeded",
+        `Data age ${ageMs}ms exceeds maxDataAgeMs=${policy.maxDataAgeMs}ms. dataAsOf=${result.dataAsOf}, checkedAt=${result.checkedAt}.`);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Pure function: evaluate a ProviderReadinessReport against REQUIRED_BETA_POLICIES.
  *
- * No network, filesystem, or environment variable access.
- * Returns exitCode=0 ONLY when ALL targets are verified with:
- * - correct schema (schemaValid=true)
- * - exact canonical provenance (provenanceValid=true)
- * - fresh data (freshnessValid=true)
- * - no attempted smoke failures elsewhere in the report
+ * Returns exitCode=0 ONLY when ALL required targets independently pass.
+ * Runner booleans (provenanceValid, freshnessValid) are NEVER the gate.
  */
 export function evaluateBetaAcceptance(
   report: ProviderReadinessReport,
-  targets: readonly BetaAcceptanceTarget[] = REQUIRED_BETA_TARGETS
+  policies: readonly SmokeTargetPolicy[] = REQUIRED_BETA_POLICIES,
 ): BetaAcceptanceEvaluation {
   const violations: AcceptanceViolation[] = [];
-  const verifiedTargets: BetaAcceptanceTarget[] = [];
+  const verifiedTargets: SmokeTargetPolicy[] = [];
 
-  function addViolation(
-    target: BetaAcceptanceTarget,
-    reason: AcceptanceViolation["reason"],
-    detail: string,
-  ) {
-    violations.push({ target, reason, detail });
-  }
-
-  // Check configured providers
   const configuredReadyProviders = report.readiness.filter((c) => c.status === "ready");
   const noProviderConfigured = configuredReadyProviders.length === 0;
   const readyProviderIds = new Set(configuredReadyProviders.map((c) => c.providerId));
-  const requiredProviderIds = [...new Set(targets.map((t) => t.providerId))];
+  const requiredProviderIds = [...new Set(policies.map((p) => p.providerId))];
   const missingRequiredProviders = requiredProviderIds.filter(
-    (p) => !readyProviderIds.has(p)
+    (p) => !readyProviderIds.has(p),
   ) as RuntimeProviderId[];
 
-  // Evaluate each required target
-  for (const target of targets) {
-    const match = report.smokeResults.find(
-      (r) =>
-        r.providerId === target.providerId &&
-        r.capability === target.capability &&
-        r.symbol === target.symbol
-    );
-
-    if (!match) {
-      addViolation(target, "target_not_run",
-        `${target.providerId}/${target.capability}/${target.symbol} was not included in smokeResults. Update PROVIDER_SMOKE_PROFILES.`
-      );
-      continue;
-    }
-
-    if (!match.attempted) {
-      addViolation(target, "target_skipped", `Skipped: ${match.skippedReason ?? "unknown reason"}`);
-      continue;
-    }
-
-    if (!match.passed) {
-      addViolation(target, "smoke_failed", `Smoke test failed: ${match.message ?? "no message"}`);
-      continue;
-    }
-
-    // data must be available
-    if (!match.dataAvailable) {
-      addViolation(target, "null_value_on_success",
-        `envelopeStatus=${match.envelopeStatus} but value=null. A success envelope with null value is not acceptable evidence.`
-      );
-      continue;
-    }
-
-    // Schema must be valid (schemaValid from runner)
-    if (!match.schemaValid) {
-      addViolation(target, "schema_invalid",
-        match.schemaIssues.length > 0 ? match.schemaIssues.join("; ") : "schema validation failed"
-      );
-      continue;
-    }
-
-    // Provenance must exactly match — exact source string and tier
-    if (!match.provenanceValid) {
-      addViolation(target, "provenance_invalid",
-        `Expected source="${target.expectedSource}" tier="${target.expectedSourceTier}" but got source="${match.source ?? "null"}" tier="${match.sourceTier ?? "null"}". Exact match required.`
-      );
-      continue;
-    }
-
-    // Freshness must be valid (freshnessValid from runner)
-    if (!match.freshnessValid) {
-      addViolation(target, "freshness_invalid",
-        `updatedAt=${match.updatedAt} ageMs=${match.ageMs} maxAgeMs=${target.maxAgeMs}`
-      );
-      continue;
-    }
-
-    verifiedTargets.push(target);
+  // Build lookup map
+  const resultMap = new Map<string, ProviderRealDataSmokeResult>();
+  for (const r of report.smokeResults) {
+    resultMap.set(policyKey({ providerId: r.providerId, capability: r.capability, symbol: r.symbol ?? "" }), r);
   }
 
-  // After checking required targets, check for any attempted smoke failures
-  const attemptedFailures = report.smokeResults.filter((r) => r.attempted && !r.passed);
-  if (attemptedFailures.length > 0 && violations.length === 0) {
-    const failed = attemptedFailures[0];
-    const matchingTarget = targets.find(
-      (t) =>
-        t.providerId === failed.providerId &&
-        t.capability === failed.capability &&
-        t.symbol === failed.symbol
-    ) ?? {
-      providerId: failed.providerId,
-      capability: failed.capability,
-      symbol: failed.symbol ?? "unknown",
-      expectedSource: failed.source ?? "unknown",
-      expectedSourceTier: (failed.sourceTier ?? "manual_import") as SourceUsagePolicy,
-      allowedStatuses: [] as readonly DataStatus[],
-      maxAgeMs: 0,
-    };
-    addViolation(matchingTarget, "attempted_smoke_failed", failed.message ?? "attempted smoke failed");
+  for (const policy of policies) {
+    const key = policyKey(policy);
+    const result = resultMap.get(key);
+
+    if (!result) {
+      addViolation(violations, policy, "target_not_run",
+        `${key} was not included in smokeResults. Update SMOKE_TARGET_POLICIES and PROVIDER_SMOKE_PROFILES to match.`);
+      continue;
+    }
+
+    const ok = verifyResult(policy, result, violations);
+    if (ok) {
+      verifiedTargets.push(policy);
+    }
+  }
+
+  // Also flag any non-required attempted failures (integrity check)
+  const nonRequiredFailed = report.smokeResults.filter((r) => {
+    const isRequired = policies.some(
+      (p) => p.providerId === r.providerId && p.capability === r.capability && p.symbol === r.symbol
+    );
+    return !isRequired && r.attempted && !r.passed;
+  });
+  for (const failed of nonRequiredFailed) {
+    addViolation(
+      violations,
+      { providerId: failed.providerId, capability: failed.capability, symbol: failed.symbol ?? "unknown" },
+      "attempted_smoke_failed",
+      `Non-required target ${policyKey({ providerId: failed.providerId, capability: failed.capability, symbol: failed.symbol ?? "" })} attempted but failed: ${failed.message ?? "no message"}`,
+    );
   }
 
   const exitCode =
@@ -219,11 +221,5 @@ export function evaluateBetaAcceptance(
       ? 1
       : 0;
 
-  return {
-    exitCode,
-    violations,
-    noProviderConfigured,
-    missingRequiredProviders,
-    verifiedTargets,
-  };
+  return { exitCode, violations, noProviderConfigured, missingRequiredProviders, verifiedTargets };
 }
