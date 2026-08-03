@@ -6,10 +6,17 @@ import { ProviderId } from "../../../../../domain/settings/provider-id";
 import { DataEnvelope } from "../../../../../domain/common/data-status";
 import { ProviderSettingSnapshot } from "../../../../../domain/settings/provider-setting-snapshot";
 
+import { requireProviderAdmin } from "../../../../../server/security/provider-admin-guard";
+
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ providerId: string }> }
 ) {
+  const adminGuard = requireProviderAdmin(request);
+  if (!adminGuard.authorized) {
+    return adminGuard.response;
+  }
+
   try {
     const { providerId } = await params;
     const snap = await getProviderSettings(providerId as ProviderId);
@@ -40,6 +47,11 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ providerId: string }> }
 ) {
+  const adminGuard = requireProviderAdmin(request, { isMutation: true });
+  if (!adminGuard.authorized) {
+    return adminGuard.response;
+  }
+
   const { providerId } = await params;
   
   const guard = checkSettingsWriteEnabled({

@@ -12,17 +12,31 @@ import type { ProviderReadinessReport } from "@/domain/ops/provider-readiness";
  *
  * Body: { includePersonalFallback?: boolean, baseUrl?: string }
  */
+import { requireProviderAdmin } from "@/server/security/provider-admin-guard";
+
+/**
+ * POST /api/ops/provider-readiness/smoke
+ *
+ * Runs real data smoke tests for all ready providers.
+ * Requires admin token authentication and same-origin mutation.
+ * Origin is derived server-side only.
+ *
+ * Body: { includePersonalFallback?: boolean }
+ */
 export async function POST(request: NextRequest) {
+  const guard = requireProviderAdmin(request, { isMutation: true });
+  if (!guard.authorized) {
+    return guard.response;
+  }
+
   try {
     const body = await request.json().catch(() => ({}));
     const includePersonalFallback =
       body && typeof body.includePersonalFallback === "boolean"
         ? body.includePersonalFallback
         : false;
-    const baseUrl =
-      body && typeof body.baseUrl === "string"
-        ? body.baseUrl
-        : `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+    // Derive origin server-side ONLY. Do not trust client-selected baseUrl.
+    const baseUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}`;
 
     const report = await runProviderRealDataSmoke({
       includePersonalFallback,

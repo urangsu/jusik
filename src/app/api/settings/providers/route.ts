@@ -4,7 +4,14 @@ import { listProviderSettings } from "../../../../server/settings/provider-setti
 import { DataEnvelope } from "../../../../domain/common/data-status";
 import { ProviderSettingSnapshot } from "../../../../domain/settings/provider-setting-snapshot";
 
-export async function GET(_request: NextRequest) {
+import { requireProviderAdmin } from "../../../../server/security/provider-admin-guard";
+
+export async function GET(request: NextRequest) {
+  const guard = requireProviderAdmin(request);
+  if (!guard.authorized) {
+    return guard.response;
+  }
+
   try {
     const list = await listProviderSettings();
     const envelope: DataEnvelope<ProviderSettingSnapshot[]> = {

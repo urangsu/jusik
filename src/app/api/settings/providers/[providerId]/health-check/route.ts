@@ -15,10 +15,17 @@ const cachedSnapshots = new Map<string, { snapshot: ProviderSettingSnapshot; exp
 const COOLDOWN_MS = 3000; // 3 seconds minimum between live test executions
 const CACHE_TTL_MS = 5000; // 5 seconds cache TTL
 
+import { requireProviderAdmin } from "@/server/security/provider-admin-guard";
+
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ providerId: string }> }
 ) {
+  const adminGuard = requireProviderAdmin(request, { isMutation: true });
+  if (!adminGuard.authorized) {
+    return adminGuard.response;
+  }
+
   try {
     const { providerId } = await params;
     const isKnownProvider = PROVIDER_SETTING_DEFINITIONS.some((d) => d.providerId === providerId);

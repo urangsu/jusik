@@ -5,10 +5,17 @@ import { getProviderSettings, updateProviderStatus } from "../../../../../../../
 import { checkSettingsWriteEnabled } from "../../../../../../../server/security/settings-write-guard";
 import { ProviderId } from "../../../../../../../domain/settings/provider-id";
 
+import { requireProviderAdmin } from "../../../../../../../server/security/provider-admin-guard";
+
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ providerId: string; key: string }> }
 ) {
+  const adminGuard = requireProviderAdmin(request, { isMutation: true });
+  if (!adminGuard.authorized) {
+    return adminGuard.response;
+  }
+
   const { providerId, key } = await params;
 
   const guard = checkSettingsWriteEnabled({
