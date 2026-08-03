@@ -1,10 +1,12 @@
 /**
- * Task 2 — orchestration test: production checker saves evaluator result.
+ * Task 2 & Task 5 — orchestration test: production checker saves evaluator result.
  *
  * Tests verify:
  * 1. checkProviderHealth() calls updateProviderStatus with the evaluator's exact result
  * 2. raw upstream body is NOT stored or returned in any message
  * 3. null quote value → provider_error (not healthy)
+ * 4. Task 5: telegram, email, llm use definition-derived required keys
+ * 5. Task 5: unknown providers fail closed with credentials_missing
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { checkProviderHealth } from "./provider-health-checker";
@@ -56,7 +58,7 @@ function makeHealthySnap(status = "healthy") {
   };
 }
 
-describe("provider-health-checker orchestration (Task 2)", () => {
+describe("provider-health-checker orchestration (Task 2 & 5)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(KisAuthClient.clearCache).mockImplementation(() => {});
@@ -160,6 +162,90 @@ describe("provider-health-checker orchestration (Task 2)", () => {
       "kis",
       "healthy",
       "KIS Open API 시세 연결 및 인증 테스트 성공",
+    );
+  });
+
+  // ── Task 5: Generic provider definition-derived key tests ─────────────────
+
+  it("telegram with missing TELEGRAM_BOT_TOKEN → credentials_missing", async () => {
+    vi.mocked(resolveProviderConfigSync).mockReturnValue({
+      TELEGRAM_ENABLED: true,
+      // TELEGRAM_BOT_TOKEN missing
+      TELEGRAM_ALLOWED_CHAT_IDS: "123456",
+    });
+    vi.mocked(getProviderSettings).mockResolvedValue(makeHealthySnap("credentials_missing"));
+
+    await checkProviderHealth("telegram" as any);
+
+    expect(updateProviderStatus).toHaveBeenCalledWith(
+      "telegram",
+      "credentials_missing",
+      expect.stringContaining("누락"),
+    );
+  });
+
+  it("telegram with all required keys → healthy", async () => {
+    vi.mocked(resolveProviderConfigSync).mockReturnValue({
+      TELEGRAM_ENABLED: true,
+      TELEGRAM_BOT_TOKEN: "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
+      TELEGRAM_ALLOWED_CHAT_IDS: "123456",
+    });
+    vi.mocked(getProviderSettings).mockResolvedValue(makeHealthySnap("healthy"));
+
+    await checkProviderHealth("telegram" as any);
+
+    expect(updateProviderStatus).toHaveBeenCalledWith(
+      "telegram",
+      "healthy",
+      expect.stringContaining("완료"),
+    );
+  });
+
+  it("email with missing SMTP_PASSWORD → credentials_missing", async () => {
+    vi.mocked(resolveProviderConfigSync).mockReturnValue({
+      SMTP_HOST: "smtp.example.com",
+      SMTP_PORT: 587,
+      SMTP_USER: "user@example.com",
+      // SMTP_PASSWORD missing
+      EMAIL_FROM: "noreply@example.com",
+    });
+    vi.mocked(getProviderSettings).mockResolvedValue(makeHealthySnap("credentials_missing"));
+
+    await checkProviderHealth("email" as any);
+
+    expect(updateProviderStatus).toHaveBeenCalledWith(
+      "email",
+      "credentials_missing",
+      expect.stringContaining("누락"),
+    );
+  });
+
+  it("llm with missing OPENAI_API_KEY → credentials_missing", async () => {
+    vi.mocked(resolveProviderConfigSync).mockReturnValue({
+      LLM_ENABLED: true,
+      // OPENAI_API_KEY missing
+    });
+    vi.mocked(getProviderSettings).mockResolvedValue(makeHealthySnap("credentials_missing"));
+
+    await checkProviderHealth("llm" as any);
+
+    expect(updateProviderStatus).toHaveBeenCalledWith(
+      "llm",
+      "credentials_missing",
+      expect.stringContaining("누락"),
+    );
+  });
+
+  it("unknown providerId → credentials_missing (fail closed)", async () => {
+    vi.mocked(resolveProviderConfigSync).mockReturnValue({});
+    vi.mocked(getProviderSettings).mockResolvedValue(makeHealthySnap("credentials_missing"));
+
+    await checkProviderHealth("unknown_provider_xyz" as any);
+
+    expect(updateProviderStatus).toHaveBeenCalledWith(
+      "unknown_provider_xyz",
+      "credentials_missing",
+      expect.stringContaining("지원되지 않는 Provider"),
     );
   });
 });

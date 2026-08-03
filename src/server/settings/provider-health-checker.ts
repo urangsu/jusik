@@ -7,7 +7,6 @@ import { getProviderSettings, updateProviderStatus } from "./provider-settings-s
 import { resolveProviderConfigSync } from "./provider-config-resolver";
 import { kisConfig } from "../providers/kis/kis-config";
 import { KisAuthClient } from "../providers/kis/kis-auth-client";
-import { isMockKey } from "../providers/provider-registry";
 import {
   evaluateKisDiagnostic,
   evaluateOpenDartDiagnostic,
@@ -15,6 +14,7 @@ import {
   DiagnosticResult,
   KisDiagnosticInput,
 } from "./provider-health-diagnostics";
+import { PROVIDER_SETTING_DEFINITIONS } from "../../domain/settings/provider-setting-definition";
 
 /**
  * Classify a caught error into a safe, non-revealing category string.
@@ -138,10 +138,21 @@ export async function checkProviderHealth(providerId: ProviderId): Promise<Provi
       return persist(providerId, evaluateFinnhubDiagnostic({ enabled: isEnabled, apiKey, quoteResult }));
 
     } else {
-      // Generic providers: check required key presence
+      // Generic providers: derive required keys from PROVIDER_SETTING_DEFINITIONS
       const requiredKeys = getRequiredKeysForProvider(providerId);
-      const hasKeys = requiredKeys.every((k) => !!config[k]);
-      const result: DiagnosticResult = hasKeys
+      // Unknown provider (not in definitions) → fail closed
+      if (requiredKeys === null) {
+        return persist(providerId, {
+          status: "credentials_missing",
+          safeMessage: "Provider 정의를 찾을 수 없습니다. 지원되지 않는 Provider입니다.",
+        });
+      }
+      // Empty required list with empty array: all() returns true → but we verify any credentials exist
+      const hasAllRequired = requiredKeys.every((k) => {
+        const v = config[k];
+        return typeof v === "string" ? v.length > 0 : v !== undefined && v !== null && v !== false;
+      });
+      const result: DiagnosticResult = hasAllRequired
         ? { status: "healthy", safeMessage: "설정이 완료되었습니다." }
         : { status: "credentials_missing", safeMessage: "필수 설정 값이 누락되었습니다." };
       return persist(providerId, result);
@@ -156,12 +167,13 @@ export async function checkProviderHealth(providerId: ProviderId): Promise<Provi
   }
 }
 
-function getRequiredKeysForProvider(providerId: ProviderId): string[] {
-  switch (providerId) {
-    case "kis": return ["KIS_APP_KEY", "KIS_APP_SECRET"];
-    case "fmp": return ["FMP_API_KEY"];
-    case "finnhub": return ["FINNHUB_API_KEY"];
-    case "alpha_vantage": return ["ALPHA_VANTAGE_API_KEY"];
-    default: return [];
-  }
+/**
+ * Derive required credential keys from PROVIDER_SETTING_DEFINITIONS.
+ * Providers not in the registry fail closed (unknown = credentials_missing).
+ * Empty required list is only valid if the definition explicitly has no required fields.
+ */
+function getRequiredKeysForProvider(providerId: ProviderId): string[] | null {
+  const definition = PROVIDER_SETTING_DEFINITIONS.find((d) => d.providerId === providerId);
+  if (!definition) return null; // unknown provider → fail closed
+  return definition.fields.filter((f) => f.required).map((f) => f.key);
 }
