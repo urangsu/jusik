@@ -1,17 +1,33 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { POST } from "./route";
 import { NextRequest } from "next/server";
 import * as healthChecker from "@/server/settings/provider-health-checker";
 
+const VALID_TOKEN = "valid_admin_token_1234567890";
+
+function makeAdminReq(url = "http://localhost:3000/api/settings/providers/kis/health-check") {
+  return new NextRequest(url, {
+    method: "POST",
+    headers: {
+      "x-provider-admin-token": VALID_TOKEN,
+      origin: "http://localhost:3000",
+    },
+  });
+}
+
 describe("Health Check API Route Protection", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.stubEnv("PROVIDER_ADMIN_TOKEN", VALID_TOKEN);
+    vi.stubEnv("INTERNAL_APP_ORIGIN", "http://localhost:3000");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("returns 400 for unknown providerId", async () => {
-    const req = new NextRequest("http://localhost:3000/api/settings/providers/unknown_p/health-check", {
-      method: "POST",
-    });
+    const req = makeAdminReq("http://localhost:3000/api/settings/providers/unknown_p/health-check");
     const params = Promise.resolve({ providerId: "unknown_p" });
     const res = await POST(req, { params });
     expect(res.status).toBe(400);
@@ -38,8 +54,8 @@ describe("Health Check API Route Protection", () => {
         )
     );
 
-    const req1 = new NextRequest("http://localhost:3000/api/settings/providers/kis/health-check", { method: "POST" });
-    const req2 = new NextRequest("http://localhost:3000/api/settings/providers/kis/health-check", { method: "POST" });
+    const req1 = makeAdminReq();
+    const req2 = makeAdminReq();
 
     const params = Promise.resolve({ providerId: "kis" });
 

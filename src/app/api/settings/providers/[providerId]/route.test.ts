@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { GET, POST } from "./route";
 import { NextRequest } from "next/server";
 import { getProviderSettings, updateProviderSettings } from "../../../../../server/settings/provider-settings-store";
@@ -13,9 +13,35 @@ vi.mock("../../../../../server/security/settings-write-guard", () => ({
   checkSettingsWriteEnabled: vi.fn(),
 }));
 
+const VALID_TOKEN = "valid_admin_token_1234567890";
+
+function makeAdminGetReq() {
+  return new NextRequest("http://localhost:3000/api/settings/providers/opendart", {
+    headers: { "x-provider-admin-token": VALID_TOKEN },
+  });
+}
+
+function makeAdminPostReq(body: unknown) {
+  return new NextRequest("http://localhost:3000/api/settings/providers/opendart", {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "content-type": "application/json",
+      "x-provider-admin-token": VALID_TOKEN,
+      origin: "http://localhost:3000",
+    },
+  });
+}
+
 describe("API settings/providers/[providerId]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("PROVIDER_ADMIN_TOKEN", VALID_TOKEN);
+    vi.stubEnv("INTERNAL_APP_ORIGIN", "http://localhost:3000");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("GET returns provider settings snapshot", async () => {
@@ -28,8 +54,7 @@ describe("API settings/providers/[providerId]", () => {
       message: null,
     });
 
-    const req = new NextRequest("http://localhost/api/settings/providers/opendart");
-    const res = await GET(req, { params: Promise.resolve({ providerId: "opendart" }) });
+    const res = await GET(makeAdminGetReq(), { params: Promise.resolve({ providerId: "opendart" }) });
 
     expect(res.status).toBe(200);
     const json = await res.json();
@@ -40,12 +65,9 @@ describe("API settings/providers/[providerId]", () => {
     const mockForbiddenResponse = new Response("Forbidden", { status: 403 });
     vi.mocked(checkSettingsWriteEnabled).mockReturnValue(mockForbiddenResponse);
 
-    const req = new NextRequest("http://localhost/api/settings/providers/opendart", {
-      method: "POST",
-      body: JSON.stringify({ values: { OPENDART_ENABLED: true } }),
+    const res = await POST(makeAdminPostReq({ values: { OPENDART_ENABLED: true } }), {
+      params: Promise.resolve({ providerId: "opendart" }),
     });
-    
-    const res = await POST(req, { params: Promise.resolve({ providerId: "opendart" }) });
     expect(res.status).toBe(403);
     expect(updateProviderSettings).not.toHaveBeenCalled();
   });
@@ -61,12 +83,9 @@ describe("API settings/providers/[providerId]", () => {
       message: null,
     });
 
-    const req = new NextRequest("http://localhost/api/settings/providers/opendart", {
-      method: "POST",
-      body: JSON.stringify({ values: { OPENDART_ENABLED: true } }),
+    const res = await POST(makeAdminPostReq({ values: { OPENDART_ENABLED: true } }), {
+      params: Promise.resolve({ providerId: "opendart" }),
     });
-
-    const res = await POST(req, { params: Promise.resolve({ providerId: "opendart" }) });
     expect(res.status).toBe(200);
     expect(updateProviderSettings).toHaveBeenCalledWith("opendart", { OPENDART_ENABLED: true });
   });
