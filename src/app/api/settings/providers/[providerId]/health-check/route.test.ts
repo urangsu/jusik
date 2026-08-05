@@ -1,35 +1,69 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { POST } from "./route";
 import { NextRequest } from "next/server";
-import { checkProviderHealth } from "../../../../../../server/settings/provider-health-checker";
+import * as healthChecker from "@/server/settings/provider-health-checker";
 
-vi.mock("../../../../../../server/settings/provider-health-checker", () => ({
-  checkProviderHealth: vi.fn(),
-}));
+const VALID_TOKEN = "valid_admin_token_1234567890";
 
-describe("POST /api/settings/providers/[providerId]/health-check", () => {
+function makeAdminReq(url = "http://localhost:3000/api/settings/providers/kis/health-check") {
+  return new NextRequest(url, {
+    method: "POST",
+    headers: {
+      "x-provider-admin-token": VALID_TOKEN,
+      origin: "http://localhost:3000",
+    },
+  });
+}
+
+describe("Health Check API Route Protection", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
+    vi.stubEnv("PROVIDER_ADMIN_TOKEN", VALID_TOKEN);
+    vi.stubEnv("INTERNAL_APP_ORIGIN", "http://localhost:3000");
   });
 
-  it("POST triggers health check and returns updated snapshot", async () => {
-    vi.mocked(checkProviderHealth).mockResolvedValue({
-      providerId: "opendart",
-      enabled: true,
-      values: {},
-      status: "healthy",
-      lastCheckedAt: "2026-06-18",
-      message: "정상적으로 연결되었습니다.",
-    });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
 
-    const req = new NextRequest("http://localhost/api/settings/providers/opendart/health-check", {
-      method: "POST",
-    });
-    
-    const res = await POST(req, { params: Promise.resolve({ providerId: "opendart" }) });
-    expect(res.status).toBe(200);
-    expect(checkProviderHealth).toHaveBeenCalledWith("opendart");
-    const json = await res.json();
-    expect(json.value.status).toBe("healthy");
+  it("returns 400 for unknown providerId", async () => {
+    const req = makeAdminReq("http://localhost:3000/api/settings/providers/unknown_p/health-check");
+    const params = Promise.resolve({ providerId: "unknown_p" });
+    const res = await POST(req, { params });
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.message).toContain("Unknown providerId");
+  });
+
+  it("deduplicates concurrent requests (single-flight execution)", async () => {
+    const checkSpy = vi.spyOn(healthChecker, "checkProviderHealth").mockImplementation(
+      async () =>
+        new Promise((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                providerId: "kis",
+                enabled: true,
+                values: {},
+                status: "healthy",
+                lastCheckedAt: new Date().toISOString(),
+                message: "Test success",
+              }),
+            50
+          )
+        )
+    );
+
+    const req1 = makeAdminReq();
+    const req2 = makeAdminReq();
+
+    const params = Promise.resolve({ providerId: "kis" });
+
+    const [res1, res2] = await Promise.all([POST(req1, { params }), POST(req2, { params })]);
+
+    expect(res1.status).toBe(200);
+    expect(res2.status).toBe(200);
+    // Spied health check function must be called exactly once
+    expect(checkSpy).toHaveBeenCalledTimes(1);
   });
 });

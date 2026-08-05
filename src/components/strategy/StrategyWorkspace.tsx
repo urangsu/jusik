@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Asset } from "@/domain/market/asset";
+import { KOSPI_SAMPLE_CONSTITUENTS, SP500_SAMPLE_CONSTITUENTS } from "@/domain/universe/market-universe";
 import { calculateStrategyAgreementSignal } from "@/domain/strategy/calculate-strategy-agreement-signal";
 import { StrategyAgreementSignal } from "@/domain/strategy/strategy-agreement-signal";
 import { StdDevSignal } from "@/domain/strategy/stddev-signal";
@@ -72,11 +73,25 @@ function createStrategyViews(asset: Asset | null): StrategyViewScore[] {
 }
 
 function createStrategyAgreementSignal(asset: Asset | null, views: StrategyViewScore[]): StrategyAgreementSignal {
+  let universeId: string | undefined = undefined;
+  if (asset) {
+    const isKospi = KOSPI_SAMPLE_CONSTITUENTS.some((c) => c.assetId === asset.id);
+    if (isKospi) {
+      universeId = "KOSPI_SAMPLE";
+    } else {
+      const isSp500 = SP500_SAMPLE_CONSTITUENTS.some((c) => c.assetId === asset.id);
+      if (isSp500) {
+        universeId = "SP500_SAMPLE";
+      }
+    }
+  }
+
   return calculateStrategyAgreementSignal({
     assetId: asset?.id ?? "unselected",
     symbol: asset?.symbol ?? "N/A",
     date: new Date().toISOString().slice(0, 10),
     signalId: "strategy_agreement",
+    universeId,
     views,
   });
 }

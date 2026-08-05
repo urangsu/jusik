@@ -33,11 +33,12 @@ export class SecEdgarProvider implements FilingProvider, FinancialProvider {
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "SEC EDGAR",
       sourceTier: "official",
       warnings: [],
       updatedAt: null,
+      message: "SEC EDGAR filing parsing is not implemented.",
     };
   }
 
@@ -72,11 +73,12 @@ export class SecEdgarProvider implements FilingProvider, FinancialProvider {
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "SEC EDGAR",
       sourceTier: "official",
       warnings: [],
       updatedAt: null,
+      message: "SEC EDGAR financial statement parsing is not implemented.",
     };
   }
 }

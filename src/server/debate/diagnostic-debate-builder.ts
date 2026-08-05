@@ -33,8 +33,8 @@ export function buildDiagnosticDebate(input: {
     summary: bullSections.length > 0
       ? `긍정적 시장 요인 분석: ${bullSections.map((s) => s.title).join(", ")}에 기반한 양호한 시계열 흐름 감지.`
       : "긍정적 요인을 감지할 만한 관련 신호 분석 자료가 불충분합니다.",
-    evidencePackIds,
-    reportSectionIds,
+    evidencePackIds: Array.from(new Set(bullSections.flatMap((s) => s.evidencePackIds))),
+    reportSectionIds: bullSections.map((s) => s.id),
     strength: bullSections.length > 0 ? "medium" : "low",
     limitations: [],
     warnings: [],
@@ -49,8 +49,8 @@ export function buildDiagnosticDebate(input: {
     summary: bearSections.length > 0
       ? `부정적/보수적 요인 분석: ${bearSections.map((s) => s.title).join(", ")}에 기반한 위험 및 변동성 노출 경고.`
       : "보수적 위험 요인을 나타내는 관련 신호 분석 자료가 아직 검출되지 않았습니다.",
-    evidencePackIds,
-    reportSectionIds,
+    evidencePackIds: Array.from(new Set(bearSections.flatMap((s) => s.evidencePackIds))),
+    reportSectionIds: bearSections.map((s) => s.id),
     strength: bearSections.length > 0 ? "medium" : "low",
     limitations: [],
     warnings: [],
@@ -65,8 +65,8 @@ export function buildDiagnosticDebate(input: {
     summary: neutralSections.length > 0
       ? `중립적 펀더멘탈 및 특이공시 검토: ${neutralSections.map((s) => s.title).join(", ")} 항목 확인.`
       : "펀더멘탈 및 공시 정보 기반의 특이 중립 요인이 확인되지 않았습니다.",
-    evidencePackIds,
-    reportSectionIds,
+    evidencePackIds: Array.from(new Set(neutralSections.flatMap((s) => s.evidencePackIds))),
+    reportSectionIds: neutralSections.map((s) => s.id),
     strength: "medium",
     limitations: [],
     warnings: [],
@@ -82,8 +82,8 @@ export function buildDiagnosticDebate(input: {
     summary: allMissing.length > 0
       ? `자료 검증 한계 분석: 누락 키(${allMissing.join(", ")})로 인한 신뢰도 제약 요인 존재.`
       : "감사 대상 증거 자료가 정합성 있게 충족되었습니다.",
-    evidencePackIds,
-    reportSectionIds,
+    evidencePackIds: Array.from(new Set(gapSections.flatMap((s) => s.evidencePackIds))),
+    reportSectionIds: gapSections.map((s) => s.id),
     strength: allMissing.length > 0 ? "high" : "low",
     limitations: allMissing.map((m) => `Missing key: ${m}`),
     warnings: allMissing.length > 0 ? ["incomplete_data"] : [],

@@ -53,27 +53,16 @@ export async function GET(request: NextRequest) {
   try {
     // If a specific providerId is requested internally (e.g. from smoke runner), bypass the priority chain.
     if (isValidProviderId(providerIdParam)) {
-      const providerId = providerIdParam;
-      const quote = await withMarketDataRuntimeGate({
-        providerId: providerId as RuntimeProviderId,
-        market: region,
-        assetId: getAssetId(symbol, region, assetId),
-        symbol,
-        capability: "quote",
-        fetcher: () => marketDataService.getQuoteForProvider(symbol, providerId),
-      });
+      const quote = (assetId || region !== "US") // Use US as default region in getQuoteForProvider. If region is not US, or assetId is present, pass them.
+        ? await marketDataService.getQuoteForProvider(symbol, providerIdParam, region, assetId || undefined)
+        : await marketDataService.getQuoteForProvider(symbol, providerIdParam);
       return createSafeResponse(quote);
     }
 
     // Default: priority-chain fallback
-    const quote = await withMarketDataRuntimeGate({
-      providerId: region === "KR" ? "kis" : "fmp_free",
-      market: region,
-      assetId: getAssetId(symbol, region, assetId),
-      symbol,
-      capability: "quote",
-      fetcher: () => marketDataService.getQuote(symbol, region),
-    });
+    const quote = assetId
+      ? await marketDataService.getQuote(symbol, region, assetId)
+      : await marketDataService.getQuote(symbol, region);
     return createSafeResponse(quote);
   } catch (err) {
     const envelope: DataEnvelope<null> = {

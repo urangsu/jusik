@@ -34,11 +34,12 @@ export class AlphaVantageProvider implements MarketDataProvider {
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "Alpha Vantage Free",
       sourceTier: "free_limited",
       warnings: [],
       updatedAt: null,
+      message: "Alpha Vantage Free provider parsing is not implemented.",
     };
   }
 
@@ -73,11 +74,12 @@ export class AlphaVantageProvider implements MarketDataProvider {
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "Alpha Vantage Free",
       sourceTier: "free_limited",
       warnings: [],
       updatedAt: null,
+      message: "Alpha Vantage Free OHLCV parsing is not implemented.",
     };
   }
 }

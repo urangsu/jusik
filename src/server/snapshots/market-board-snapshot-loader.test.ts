@@ -73,8 +73,15 @@ describe("MarketBoardSnapshotLoader", () => {
     expect(result.tiles[0].price).toBe(72000);
   });
 
-  it("should fallback to static default snapshot if file is invalid JSON or schema validation fails", async () => {
-    // Schema invalid data (missing universeId, generatedAt, etc.)
+  it("returns api_required rows with null metrics when no snapshot exists", async () => {
+    vi.spyOn(fs, "readFile").mockRejectedValue(new Error("ENOENT"));
+    const result = await loadMarketBoardSnapshot("KOSPI_SAMPLE");
+    expect(result.tiles).not.toHaveLength(0);
+    expect(result.tiles.every((row) => row.price === null)).toBe(true);
+    expect(result.tiles.every((row) => row.dataStatus === "api_required")).toBe(true);
+  });
+
+  it("should fallback to api_required snapshot if file is invalid JSON or schema validation fails", async () => {
     const invalidSnapshot = {
       somethingElse: "invalid"
     };
@@ -82,19 +89,8 @@ describe("MarketBoardSnapshotLoader", () => {
     vi.spyOn(fs, "readFile").mockResolvedValue(JSON.stringify(invalidSnapshot));
 
     const result = await loadMarketBoardSnapshot("KOSPI_SAMPLE");
-    
-    // Result should match getDefaultSnapshot("KOSPI_SAMPLE")
-    const staticDefault = getDefaultSnapshot("KOSPI_SAMPLE");
     expect(result.universeId).toBe("KOSPI_SAMPLE");
-    expect(result.tiles.length).toBe(staticDefault.tiles.length);
-    expect(result.tiles[0].symbol).toBe("005930");
-  });
-
-  it("should fallback to static default snapshot if file reading fails", async () => {
-    vi.spyOn(fs, "readFile").mockRejectedValue(new Error("File not found"));
-
-    const result = await loadMarketBoardSnapshot("KOSPI_SAMPLE");
-    expect(result.universeId).toBe("KOSPI_SAMPLE");
-    expect(result.tiles[0].symbol).toBe("005930");
+    expect(result.tiles.every((row) => row.price === null)).toBe(true);
+    expect(result.tiles.every((row) => row.dataStatus === "api_required")).toBe(true);
   });
 });

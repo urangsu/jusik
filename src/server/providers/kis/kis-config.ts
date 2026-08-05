@@ -1,35 +1,82 @@
 import { resolveProviderConfigSync } from "../../settings/provider-config-resolver";
+import { isMockKey } from "../provider-registry";
 
 export class KisConfig {
   private get config() {
-    return resolveProviderConfigSync("kis");
+    return resolveProviderConfigSync("kis") || {};
   }
 
   public get appKey(): string {
-    return (this.config["KIS_APP_KEY"] as string) || "";
+    const envVal = process.env.KIS_APP_KEY;
+    if (envVal) return envVal.trim();
+    const confVal = this.config["KIS_APP_KEY"];
+    return typeof confVal === "string" ? confVal.trim() : "";
   }
 
   public get appSecret(): string {
-    return (this.config["KIS_APP_SECRET"] as string) || "";
+    const envVal = process.env.KIS_APP_SECRET;
+    if (envVal) return envVal.trim();
+    const confVal = this.config["KIS_APP_SECRET"];
+    return typeof confVal === "string" ? confVal.trim() : "";
   }
 
   public get accountNo(): string {
-    return (this.config["KIS_ACCOUNT_NO"] as string) || "";
+    const envVal = process.env.KIS_ACCOUNT_NO;
+    if (envVal) return envVal.trim();
+    const confVal = this.config["KIS_ACCOUNT_NO"];
+    return typeof confVal === "string" ? confVal.trim() : "";
+  }
+
+  public get accountProductCode(): string {
+    const envVal = process.env.KIS_ACCOUNT_PRODUCT_CODE;
+    if (envVal) return envVal.trim();
+    const confVal = this.config["KIS_ACCOUNT_PRODUCT_CODE"];
+    return typeof confVal === "string" ? confVal.trim() : "01";
+  }
+
+  public get isPaper(): boolean {
+    if (process.env.KIS_APP_TYPE === "real") return false;
+    if (process.env.KIS_APP_TYPE === "paper") return true;
+
+    const envVal = process.env.KIS_IS_PAPER;
+    const confVal = this.config["KIS_IS_PAPER"];
+    const targetVal = envVal !== undefined ? envVal : confVal;
+
+    if (targetVal === "false" || targetVal === false) {
+      return false;
+    }
+    return true; // Default to paper mode
   }
 
   public get appType(): "paper" | "real" {
-    if (process.env.KIS_APP_TYPE === "real") {
-      return "real";
+    if (process.env.KIS_APP_TYPE === "real" || process.env.KIS_APP_TYPE === "paper") {
+      return process.env.KIS_APP_TYPE;
     }
-    if (process.env.KIS_APP_TYPE === "paper") {
-      return "paper";
-    }
-    const isPaper = this.config["KIS_IS_PAPER"] !== false;
-    return isPaper ? "paper" : "real";
+    return this.isPaper ? "paper" : "real";
+  }
+
+  /**
+   * P0 SECURITY FIX: baseUrl is ALWAYS derived from isPaper.
+   *
+   * KIS_BASE_URL (env or config) is intentionally ignored.
+   *
+   * Allowing arbitrary URLs was an App Key/Secret exfiltration attack surface:
+   *   1. Attacker sets KIS_BASE_URL to a malicious host
+   *   2. Unauthenticated health-check is triggered
+   *   3. kis-auth-client POSTs /oauth2/tokenP with appKey + appSecret to attacker
+   *   4. Credentials are stolen
+   *
+   * The only valid origins are the two official KIS endpoints.
+   * Test mock proxies must use dependency injection (not env vars).
+   */
+  public get baseUrl(): string {
+    const officialPaperUrl = "https://openapivts.koreainvestment.com:29443";
+    const officialRealUrl = "https://openapi.koreainvestment.com:9443";
+    return this.isPaper ? officialPaperUrl : officialRealUrl;
   }
 
   public get restUrl(): string {
-    return (this.config["KIS_BASE_URL"] as string) || "https://openapivts.koreainvestment.com";
+    return this.baseUrl;
   }
 
   public get isTradingEnabled(): boolean {
@@ -53,7 +100,12 @@ export class KisConfig {
   }
 
   public get isConfigured(): boolean {
-    return !!(this.appKey && this.appSecret && this.appKey !== "mock_kis_app_key");
+    return !!(
+      this.appKey &&
+      this.appSecret &&
+      !isMockKey(this.appKey) &&
+      !isMockKey(this.appSecret)
+    );
   }
 }
 

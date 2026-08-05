@@ -22,43 +22,16 @@ export class KisAccountProvider {
    * Retrieves account balance details (read-only skeleton).
    */
   public async getBalance(): Promise<DataEnvelope<KisAccountBalance>> {
-    if (!kisConfig.appKey || !kisConfig.appSecret || !kisConfig.accountNo) {
-      return {
-        value: null,
-        status: "api_required",
-        source: "KIS Open API (Account)",
-        sourceTier: "official",
-        warnings: [],
-        updatedAt: null,
-      };
-    }
-
-    // Simulating read-only broker account fetch
-    const mockBalance: KisAccountBalance = {
-      accountNo: kisConfig.accountNo,
-      totalAsset: 15420000,
-      cashBalance: 4200000,
-      positions: [
-        {
-          symbol: "005930",
-          name: "삼성전자",
-          qty: 150,
-          purchasePrice: 72000,
-          currentPrice: 74800,
-          evaluationAmount: 11220000,
-          profitAndLoss: 420000,
-          profitAndLossRate: 3.89,
-        },
-      ],
-    };
-
     return {
-      value: mockBalance,
-      status: "real_time",
+      value: null,
+      status: kisConfig.isConfigured ? "not_supported" : "api_required",
       source: "KIS Open API (Account)",
       sourceTier: "official",
       warnings: [],
-      updatedAt: new Date().toISOString(),
+      updatedAt: null,
+      message: kisConfig.isConfigured
+        ? "Read-only account balance parsing is not implemented."
+        : "KIS credentials are required.",
     };
   }
 }

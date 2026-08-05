@@ -42,22 +42,31 @@ export type RealProviderSmokeResult = {
   capability: RealProviderSmokeTarget["capability"];
   symbol: string | null;
   region: "KR" | "US" | null;
+  configured: boolean;
   attempted: boolean;
   expectationMode: Exclude<RealProviderSmokeExpectationMode, "auto">;
   expected: RealProviderSmokeExpectation;
   httpStatus: number | null;
   envelopeStatus: DataStatus | null;
+  status: DataStatus | null;
   dataAvailable: boolean;
   source: string | null;
   sourceTier: string | null;
   warnings: string[];
   updatedAt: string | null;
   contractPassed: boolean;
+  providerMatched: boolean;
   expectationPassed: boolean;
   passed: boolean;
   failures: string[];
   message: string | null;
   evidencePack: EvidencePack;
+  sampleMetadata: {
+    symbol?: string;
+    recordCount?: number;
+    firstDate?: string;
+    lastDate?: string;
+  };
   checkedAt: string;
 };
 

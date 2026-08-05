@@ -22,12 +22,30 @@ const makeView = (
 });
 
 describe("calculateStrategyAgreementSignal", () => {
+  it("returns insufficient_data when universeId is missing", () => {
+    const signal = calculateStrategyAgreementSignal({
+      assetId: "KR:005930",
+      symbol: "005930",
+      date: "2026-06-16",
+      signalId: "strategy_agreement",
+      views: [
+        makeView({ strategyId: "stddev_mean_reversion" }),
+        makeView({ strategyId: "momentum" }),
+      ],
+    });
+
+    expect(signal.status).toBe("insufficient_data");
+    expect(signal.agreementLabel).toBe("insufficient_data");
+    expect(signal.vetoReasons).toContain("universe_id_required");
+  });
+
   it("returns insufficient_data when fewer than three views can participate", () => {
     const signal = calculateStrategyAgreementSignal({
       assetId: "KR:005930",
       symbol: "005930",
       date: "2026-06-16",
       signalId: "strategy_agreement",
+      universeId: "KOSPI_SAMPLE",
       views: [
         makeView({ strategyId: "stddev_mean_reversion" }),
         makeView({ strategyId: "momentum" }),
@@ -44,6 +62,7 @@ describe("calculateStrategyAgreementSignal", () => {
       symbol: "005930",
       date: "2026-06-16",
       signalId: "strategy_agreement",
+      universeId: "KOSPI_SAMPLE",
       views: [
         makeView({ strategyId: "macro_first_largecap", dataQualityScore: 60 }),
         makeView({ strategyId: "stddev_mean_reversion", dataQualityScore: 65 }),
@@ -62,6 +81,7 @@ describe("calculateStrategyAgreementSignal", () => {
       symbol: "005930",
       date: "2026-06-16",
       signalId: "strategy_agreement",
+      universeId: "KOSPI_SAMPLE",
       views: [
         makeView({ strategyId: "macro_first_largecap", signal: "risk", score: 95 }),
         makeView({ strategyId: "stddev_mean_reversion", score: 95 }),
@@ -80,6 +100,7 @@ describe("calculateStrategyAgreementSignal", () => {
       symbol: "005930",
       date: "2026-06-16",
       signalId: "strategy_agreement",
+      universeId: "KOSPI_SAMPLE",
       views: [
         makeView({ strategyId: "macro_first_largecap" }),
         makeView({ strategyId: "stddev_mean_reversion" }),
@@ -97,6 +118,7 @@ describe("calculateStrategyAgreementSignal", () => {
       symbol: "005930",
       date: "2026-06-16",
       signalId: "strategy_agreement",
+      universeId: "KOSPI_SAMPLE",
       views: [
         makeView({ strategyId: "macro_first_largecap", vetoReasons: ["시장 레짐 확인 필요"] }),
         makeView({ strategyId: "stddev_mean_reversion" }),
@@ -113,6 +135,7 @@ describe("calculateStrategyAgreementSignal", () => {
       symbol: "005930",
       date: "2026-06-16",
       signalId: "strategy_agreement",
+      universeId: "KOSPI_SAMPLE",
       views: [
         makeView({ strategyId: "macro_first_largecap", score: null }),
         makeView({ strategyId: "stddev_mean_reversion", score: null }),
@@ -131,6 +154,7 @@ describe("calculateStrategyAgreementSignal", () => {
       symbol: "005930",
       date: "2026-06-16",
       signalId: "strategy_agreement",
+      universeId: "KOSPI_SAMPLE",
       views: [
         makeView({ strategyId: "macro_first_largecap", vetoReasons: ["P0 fatal: PIT data missing"] }),
         makeView({ strategyId: "stddev_mean_reversion" }),

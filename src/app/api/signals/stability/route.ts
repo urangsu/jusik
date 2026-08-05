@@ -8,11 +8,11 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const assetId = searchParams.get("assetId");
   const signalId = searchParams.get("signalId");
-  const universeId = searchParams.get("universeId") || undefined;
+  const universeId = searchParams.get("universeId");
   // Default to today's date if not provided
   const date = searchParams.get("date") || new Date().toISOString().slice(0, 10);
 
-  if (!assetId || !signalId) {
+  if (!assetId || !signalId || !universeId) {
     const envelope: DataEnvelope<null> = {
       value: null,
       status: "error",
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       sourceTier: "manual_import",
       warnings: [],
       updatedAt: null,
-      message: "Missing required parameters: assetId and signalId.",
+      message: "Missing required parameters: assetId, signalId, and universeId.",
     };
     return createSafeResponse(envelope, 400);
   }

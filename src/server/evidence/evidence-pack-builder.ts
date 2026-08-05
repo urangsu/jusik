@@ -77,6 +77,12 @@ export function buildEvidencePackFromAuditFinding(input: {
     status: "cached", // findings are aggregated and stored
     updatedAt: finding.calculatedAt || finding.detectedAt || nowStr,
     warnings: finding.warnings || [],
+    sourceUrl: null,
+    publishedAt: null,
+    contentHash: "",
+    claimIds: [],
+    sourceAuthor: null,
+    extractionMethod: "provider_direct",
   };
   evidenceRefs.push(findingRef);
 
@@ -94,6 +100,12 @@ export function buildEvidencePackFromAuditFinding(input: {
       status: env.status || "",
       updatedAt: env.updatedAt || null,
       warnings: env.warnings || [],
+      sourceUrl: null,
+      publishedAt: null,
+      contentHash: "",
+      claimIds: [],
+      sourceAuthor: null,
+      extractionMethod: "provider_direct",
     };
 
     // Validation checks for missing evidence
@@ -153,6 +165,12 @@ export function buildEvidencePackFromWatchlistReport(input: {
     status: report.status || "unread",
     updatedAt: report.updatedAt || report.detectedAt || nowStr,
     warnings: report.source.warnings || [],
+    sourceUrl: null,
+    publishedAt: null,
+    contentHash: "",
+    claimIds: [],
+    sourceAuthor: null,
+    extractionMethod: "provider_direct",
   };
   evidenceRefs.push(reportRef);
 
@@ -181,6 +199,12 @@ export function buildEvidencePackFromWatchlistReport(input: {
       status: "cached",
       updatedAt: finding.calculatedAt || finding.detectedAt || nowStr,
       warnings: finding.warnings || [],
+      sourceUrl: null,
+      publishedAt: null,
+      contentHash: "",
+      claimIds: [],
+      sourceAuthor: null,
+      extractionMethod: "provider_direct",
     };
     evidenceRefs.push(ref);
   });

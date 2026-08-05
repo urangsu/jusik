@@ -17,78 +17,71 @@ vi.mock("@/server/outcome/signal-outcome-observer", () => ({
 
 import { listOutcomeRecords } from "@/server/outcome/signal-outcome-journal-store";
 import { createPendingOutcomeRecord, observeOutcome } from "@/server/outcome/signal-outcome-observer";
+import type { SignalOutcomeJournalRecord } from "@/domain/outcome/signal-outcome-journal";
+
+function makeMockRecord(id: string, overrides: Partial<SignalOutcomeJournalRecord> = {}): SignalOutcomeJournalRecord {
+  return {
+    id,
+    rootOutcomeId: id,
+    supersedesOutcomeId: null,
+    revision: 0,
+    subjectType: "signal",
+    subjectId: "sig_123",
+    assetId: "KR_005930",
+    universeId: "KOSPI_SAMPLE",
+    signalId: "sig_123",
+    strategyId: null,
+    observationStartedAt: "2026-01-05T00:00:00Z",
+    basePriceDataVersionId: null,
+    horizon: "forward_20d",
+    baseTradeDate: null,
+    targetTradeDate: null,
+    observedForwardReturn: null,
+    marketBenchmarkAssetId: null,
+    marketBenchmarkReturn: null,
+    marketExcessReturn: null,
+    marketBenchmarkDataVersionId: null,
+    sectorBenchmarkAssetId: null,
+    sectorBenchmarkReturn: null,
+    sectorExcessReturn: null,
+    sectorBenchmarkDataVersionId: null,
+    initialWarnings: [],
+    finalWarnings: [],
+    outcomeStatus: "pending",
+    lesson: null,
+    confidenceAdjustment: "not_applicable",
+    evidencePackIds: [],
+    createdAt: new Date().toISOString(),
+    observedAt: null,
+    ...overrides,
+  };
+}
 
 describe("Signal Outcome Journal APIs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    vi.mocked(listOutcomeRecords).mockResolvedValue([
-      {
-        id: "out_ok",
-        subjectType: "signal",
-        subjectId: "sig_123",
-        assetId: "AAPL",
-        signalId: "sig_123",
-        strategyId: null,
-        horizon: "forward_20d",
-        observedForwardReturn: null,
-        benchmarkReturn: null,
-        alphaReturn: null,
-        initialWarnings: [],
-        finalWarnings: [],
-        outcomeStatus: "pending",
-        lesson: null,
-        confidenceAdjustment: "not_applicable",
-        evidencePackIds: [],
-        benchmarkSourceRef: null,
-        createdAt: new Date().toISOString(),
-        observedAt: null,
-      },
-    ]);
+    vi.mocked(listOutcomeRecords).mockResolvedValue([makeMockRecord("out_ok")]);
 
-    vi.mocked(createPendingOutcomeRecord).mockResolvedValue({
-      id: "out_new",
-      subjectType: "signal",
-      subjectId: "sig_456",
-      assetId: "MSFT",
-      signalId: "sig_456",
-      strategyId: null,
-      horizon: "forward_20d",
-      observedForwardReturn: null,
-      benchmarkReturn: null,
-      alphaReturn: null,
-      initialWarnings: [],
-      finalWarnings: [],
-      outcomeStatus: "pending",
-      lesson: null,
-      confidenceAdjustment: "not_applicable",
-      evidencePackIds: [],
-      benchmarkSourceRef: null,
-      createdAt: new Date().toISOString(),
-      observedAt: null,
-    });
+    vi.mocked(createPendingOutcomeRecord).mockResolvedValue(
+      makeMockRecord("out_new", { subjectId: "sig_456", assetId: "US_AAPL" }),
+    );
 
-    vi.mocked(observeOutcome).mockResolvedValue({
-      id: "out_ok",
-      subjectType: "signal",
-      subjectId: "sig_123",
-      assetId: "AAPL",
-      signalId: "sig_123",
-      strategyId: null,
-      horizon: "forward_20d",
-      observedForwardReturn: 0.05,
-      benchmarkReturn: 0.02,
-      alphaReturn: 0.03,
-      initialWarnings: [],
-      finalWarnings: [],
-      outcomeStatus: "observed",
-      lesson: "Beat benchmark.",
-      confidenceAdjustment: "increase",
-      evidencePackIds: [],
-      benchmarkSourceRef: null,
-      createdAt: new Date().toISOString(),
-      observedAt: new Date().toISOString(),
-    });
+    vi.mocked(observeOutcome).mockResolvedValue(
+      makeMockRecord("out_ok_r1", {
+        rootOutcomeId: "out_ok",
+        supersedesOutcomeId: "out_ok",
+        revision: 1,
+        observedForwardReturn: 0.05,
+        marketBenchmarkReturn: 0.02,
+        marketExcessReturn: 0.03,
+        outcomeStatus: "observed",
+        lesson: "Beat benchmark.",
+        baseTradeDate: "2026-01-05",
+        targetTradeDate: "2026-01-12",
+        observedAt: new Date().toISOString(),
+      }),
+    );
   });
 
   it("GET lists outcomes", async () => {
@@ -107,6 +100,9 @@ describe("Signal Outcome Journal APIs", () => {
       body: JSON.stringify({
         subjectType: "signal",
         subjectId: "sig_456",
+        assetId: "US_AAPL",
+        universeId: "SP500_SAMPLE",
+        observationStartedAt: "2026-01-05T00:00:00Z",
         horizon: "forward_20d",
       }),
       headers: { "content-type": "application/json" },
@@ -133,6 +129,7 @@ describe("Signal Outcome Journal APIs", () => {
     expect(res.status).toBe(200);
     expect(data.status).toBe("cached");
     expect(data.value.outcomeStatus).toBe("observed");
-    expect(data.value.alphaReturn).toBe(0.03);
+    // New field names (no alphaReturn)
+    expect(data.value.marketExcessReturn).toBe(0.03);
   });
 });

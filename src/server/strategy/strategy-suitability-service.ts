@@ -1,25 +1,74 @@
 import { StrategyAgreementLabel } from "@/domain/strategy/strategy-agreement-signal";
 import { StrategySuitability, RegimeGateComponent } from "@/domain/strategy/strategy-suitability";
 import { regimeStore } from "../regime/regime-store";
-import { signalStabilityService } from "../signals/signal-stability-service";
+import { signalStabilityService, getAssetsOfUniverse } from "../signals/signal-stability-service";
 import { getSignalHistory } from "../signals/signal-history-store";
+
+function isStrategyAgreementSignal(sig: any): sig is { agreementLabel: StrategyAgreementLabel; agreementScore: number | null } {
+  if (!sig || typeof sig !== "object") return false;
+  return "agreementLabel" in sig && "agreementScore" in sig;
+}
 
 export class StrategySuitabilityService {
   async calculateSuitability(
     assetId: string,
     symbol: string,
     signalId: string,
-    originalLabel: StrategyAgreementLabel | null,
-    originalScore: number | null,
     asOf: string,
     universeId?: string
   ): Promise<StrategySuitability> {
     // Determine market based on symbol prefix or pattern
     const isKr = symbol.startsWith("KR:") || /^\d{6}$/.test(symbol) || assetId.startsWith("KR:");
     const market = isKr ? "KR" : "US";
-    const resolvedUniverseId = universeId || (market === "KR" ? "KOSPI_SAMPLE" : "SP500_SAMPLE");
 
     const warnings: string[] = [];
+
+    // Item 3: universeId is mandatory, no auto fallback
+    if (!universeId) {
+      return {
+        assetId,
+        symbol,
+        date: asOf,
+        signalId,
+        suitabilityScore: null,
+        originalLabel: "insufficient_data",
+        adjustedLabel: "insufficient_data",
+        regimeGate: {
+          market,
+          regime: "insufficient_data",
+          allowsNewWatch: false,
+          allowsRiskUpgrading: false,
+          confidence: "low",
+          warning: "universeId is required.",
+        },
+        warnings: ["universe_id_required"],
+        calculatedAt: new Date().toISOString(),
+      };
+    }
+
+    // Validate universeId is known
+    const universeAssets = getAssetsOfUniverse(universeId);
+    if (!universeAssets) {
+      return {
+        assetId,
+        symbol,
+        date: asOf,
+        signalId,
+        suitabilityScore: null,
+        originalLabel: "insufficient_data",
+        adjustedLabel: "insufficient_data",
+        regimeGate: {
+          market,
+          regime: "insufficient_data",
+          allowsNewWatch: false,
+          allowsRiskUpgrading: false,
+          confidence: "low",
+          warning: "unknown_universe_id",
+        },
+        warnings: ["unknown_universe_id"],
+        calculatedAt: new Date().toISOString(),
+      };
+    }
 
     // Query canonical original label/score from signal history store first
     let historyLoadFailed = false;
@@ -31,7 +80,7 @@ export class StrategySuitabilityService {
       warnings.push("signal_history_load_failed");
     }
     
-    function defaultSignalId(sig: unknown): string {
+    function extractSignalId(sig: unknown): string {
       if (!sig || typeof sig !== "object") return "unknown";
       const candidate = sig as Record<string, unknown>;
       return String(
@@ -42,50 +91,24 @@ export class StrategySuitabilityService {
           "unknown"
       );
     }
-    
-    function defaultSignalLabel(sig: unknown): string | null {
-      if (!sig || typeof sig !== "object") return null;
-      const candidate = sig as Record<string, unknown>;
-      const value =
-        candidate.signal ??
-        candidate.direction ??
-        candidate.consensusLabel ??
-        candidate.position ??
-        candidate.label ??
-        candidate.status;
-      return typeof value === "string" && value.length > 0 ? value : null;
-    }
 
     const matchedRecord = historyRecords.find(
       (r) =>
         r.assetId === assetId &&
-        defaultSignalId(r.signal) === signalId &&
+        extractSignalId(r.signal) === signalId &&
         r.date === asOf
     );
 
-    let canonicalLabel = originalLabel;
-    let canonicalScore = originalScore;
+    let canonicalLabel: StrategyAgreementLabel = "insufficient_data";
+    let canonicalScore: number | null = null;
 
-    if (matchedRecord) {
-      const extractedLabel = matchedRecord.signal.signalLabel || defaultSignalLabel(matchedRecord.signal);
-      const extractedScore =
-        matchedRecord.signal.score !== undefined
-          ? matchedRecord.signal.score
-          : matchedRecord.signal.agreementScore !== undefined
-          ? matchedRecord.signal.agreementScore
-          : null;
-
-      canonicalLabel = extractedLabel as StrategyAgreementLabel;
-      canonicalScore = extractedScore;
+    if (matchedRecord && isStrategyAgreementSignal(matchedRecord.signal)) {
+      canonicalLabel = matchedRecord.signal.agreementLabel;
+      canonicalScore = matchedRecord.signal.agreementScore;
     } else if (historyLoadFailed) {
-      // History store was unavailable — cannot verify canonical data
-      canonicalLabel = "insufficient_data";
-      canonicalScore = null;
       warnings.push("canonical_lookup_unavailable");
-    } else if (!originalLabel) {
-      canonicalLabel = "insufficient_data";
-      canonicalScore = null;
-      warnings.push("source_signal_missing");
+    } else {
+      warnings.push("canonical_strategy_agreement_source_missing");
     }
 
     // Retrieve regime snapshot as of the requested date
@@ -100,7 +123,7 @@ export class StrategySuitabilityService {
       warning: snapshot?.warnings.join("; ") || null,
     };
 
-    let adjustedLabel: StrategyAgreementLabel | "insufficient_data" = canonicalLabel || "insufficient_data";
+    let adjustedLabel: StrategyAgreementLabel | "insufficient_data" = canonicalLabel;
     let suitabilityScore = canonicalScore;
 
     // Check Signal Stability Gate
@@ -109,14 +132,35 @@ export class StrategySuitabilityService {
         assetId,
         signalId,
         date: asOf,
-        universeId: resolvedUniverseId,
+        universeId,
       })
       .catch(() => null);
 
-    if (stability && !stability.actionableThresholdMet) {
+    if (!stability) {
       adjustedLabel = "insufficient_data";
       suitabilityScore = null;
-      warnings.push(`신호 불안정성 차단: ${stability.warnings.join(", ")}`);
+      warnings.push("안정성 평가 데이터가 부족합니다.");
+    } else {
+      if (stability.status === "insufficient_data") {
+        adjustedLabel = "insufficient_data";
+        suitabilityScore = null;
+        warnings.push(`신호 데이터 부족 차단: ${stability.warnings.join(", ")}`);
+      } else if (stability.status === "blocked") {
+        // Blocked is not converted to insufficient_data. Maps to caution or risk.
+        if (stability.warnings.includes("signal_flip_count_high")) {
+          adjustedLabel = "risk";
+          suitabilityScore = suitabilityScore !== null ? Math.min(suitabilityScore, 30) : null;
+          warnings.push("신호 반전 빈도 임계치 초과로 인해 등급이 risk로 강제 하향 조정되었습니다.");
+        } else if (stability.warnings.includes("rank_autocorrelation_low")) {
+          adjustedLabel = "caution";
+          suitabilityScore = suitabilityScore !== null ? Math.min(suitabilityScore, 50) : null;
+          warnings.push("순위 자기상관 계수 기준치 미달로 인해 등급이 caution으로 감쇄되었습니다.");
+        } else {
+          adjustedLabel = "caution";
+          suitabilityScore = suitabilityScore !== null ? Math.min(suitabilityScore, 50) : null;
+          warnings.push(`신호 불안정성 경고로 인해 등급이 caution으로 감쇄되었습니다: ${stability.warnings.join(", ")}`);
+        }
+      }
     }
 
     if (!snapshot) {
@@ -131,9 +175,8 @@ export class StrategySuitabilityService {
         adjustedLabel = "insufficient_data";
         warnings.push("레짐 패닉 상태로 인해 적합도 점수가 차단되었습니다.");
       } else if (regime === "risk_off") {
-        // P0-3: Stability Gate가 이미 차단한 경우 regime이 부활시키지 않음
-        // P0-2: operator precedence 수정 — 괄호 추가
-        if ((canonicalLabel === "strong_watch" || canonicalLabel === "watch") && adjustedLabel !== "insufficient_data") {
+        // Stability Gate가 이미 차단 또는 하향 조정한 상태면 risk_off가 이를 부활시키지 않음
+        if ((canonicalLabel === "strong_watch" || canonicalLabel === "watch") && adjustedLabel !== "insufficient_data" && adjustedLabel !== "risk" && adjustedLabel !== "caution") {
           adjustedLabel = "caution";
           warnings.push("시장 리스크 오프 국면으로 인해 등급이 caution으로 감쇄되었습니다.");
         }
@@ -150,7 +193,7 @@ export class StrategySuitabilityService {
       date: asOf,
       signalId,
       suitabilityScore,
-      originalLabel: canonicalLabel || "insufficient_data",
+      originalLabel: canonicalLabel,
       adjustedLabel,
       regimeGate: gateComponent,
       warnings,

@@ -99,7 +99,7 @@ export const PROVIDERS: ProviderProfile[] = [
     displayName: "Finnhub Free",
     tier: "free_limited",
     markets: ["US"],
-    capabilities: ["quote", "news", "asset_search"],
+    capabilities: ["quote", "news", "asset_search", "ohlcv"],
     requiresApiKey: true,
     isOfficialSource: false,
     isUnofficial: false,

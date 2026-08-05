@@ -3,28 +3,16 @@ import { createSafeResponse } from "@/server/security/safe-api-response";
 import { strategySuitabilityService } from "@/server/strategy/strategy-suitability-service";
 import { DataEnvelope } from "@/domain/common/data-status";
 import { StrategySuitability } from "@/domain/strategy/strategy-suitability";
-import { StrategyAgreementLabel } from "@/domain/strategy/strategy-agreement-signal";
-
-const VALID_LABELS = new Set<StrategyAgreementLabel>([
-  "strong_watch",
-  "watch",
-  "neutral",
-  "caution",
-  "risk",
-  "insufficient_data",
-]);
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const assetId = searchParams.get("assetId");
   const symbol = searchParams.get("symbol");
   const signalId = searchParams.get("signalId");
-  const originalLabelParam = searchParams.get("originalLabel");
-  const originalScoreParam = searchParams.get("originalScore");
   const asOf = searchParams.get("asOf");
-  const universeId = searchParams.get("universeId") || undefined;
+  const universeId = searchParams.get("universeId");
 
-  if (!assetId || !symbol || !signalId || !asOf) {
+  if (!assetId || !symbol || !signalId || !asOf || !universeId) {
     const envelope: DataEnvelope<null> = {
       value: null,
       status: "error",
@@ -32,45 +20,9 @@ export async function GET(request: NextRequest) {
       sourceTier: "official",
       warnings: [],
       updatedAt: null,
-      message: "Missing required parameters: assetId, symbol, signalId, and asOf.",
+      message: "Missing required parameters: assetId, symbol, signalId, asOf, and universeId.",
     };
     return createSafeResponse(envelope, 400);
-  }
-
-  // Optional Client fallback inputs strict validation
-  let originalLabel: StrategyAgreementLabel | null = null;
-  if (originalLabelParam) {
-    if (!VALID_LABELS.has(originalLabelParam as StrategyAgreementLabel)) {
-      const envelope: DataEnvelope<null> = {
-        value: null,
-        status: "error",
-        source: "StrategySuitabilityService",
-        sourceTier: "official",
-        warnings: [],
-        updatedAt: null,
-        message: "Invalid originalLabel value.",
-      };
-      return createSafeResponse(envelope, 400);
-    }
-    originalLabel = originalLabelParam as StrategyAgreementLabel;
-  }
-
-  let originalScore: number | null = null;
-  if (originalScoreParam !== null && originalScoreParam !== undefined && originalScoreParam !== "") {
-    const parsed = Number(originalScoreParam); // Strict Number() parse (no parseFloat)
-    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
-      const envelope: DataEnvelope<null> = {
-        value: null,
-        status: "error",
-        source: "StrategySuitabilityService",
-        sourceTier: "official",
-        warnings: [],
-        updatedAt: null,
-        message: "Invalid originalScore value (must be a finite number between 0 and 100).",
-      };
-      return createSafeResponse(envelope, 400);
-    }
-    originalScore = parsed;
   }
 
   try {
@@ -78,8 +30,6 @@ export async function GET(request: NextRequest) {
       assetId,
       symbol,
       signalId,
-      originalLabel,
-      originalScore,
       asOf,
       universeId
     );

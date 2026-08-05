@@ -27,12 +27,41 @@ export function getMarketEnvelopePath(params: {
   return resolveRuntimeDataPath("data", "market", folder, params.universe, `${safeAssetId}.json`);
 }
 
+import crypto from "crypto";
+
 export async function saveMarketEnvelope(params: {
   path: string;
   envelope: DataEnvelope<unknown>;
+  universe?: string;
+  assetId?: string;
+  capability?: string;
 }): Promise<void> {
-  await fs.mkdir(path.dirname(params.path), { recursive: true });
-  await writeAtomic(params.path, JSON.stringify(params.envelope, null, 2));
+  const { path: filePath, envelope, universe, assetId, capability } = params;
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+
+  const output: any = { ...envelope };
+
+  if (capability === "ohlcv" || filePath.includes("/ohlcv/")) {
+    const bars = (envelope.value as any[]) || [];
+    output.bars = bars;
+    output.assetId = assetId || (envelope as any).assetId || "";
+    output.universeId = universe || (envelope as any).universeId || "";
+
+    if (!output.dataVersionId) {
+      output.dataVersionId = `dv_${crypto.createHash("sha256").update(JSON.stringify(bars)).digest("hex").slice(0, 16)}`;
+    }
+    if (!output.asOfDate) {
+      output.asOfDate = bars.length ? bars.reduce((max, b) => (b.date > max ? b.date : max), bars[0].date) : null;
+    }
+    if (!output.effectiveAt) {
+      output.effectiveAt = new Date().toISOString();
+    }
+    if (!output.ingestedAt) {
+      output.ingestedAt = new Date().toISOString();
+    }
+  }
+
+  await writeAtomic(filePath, JSON.stringify(output, null, 2));
 }
 
 export async function saveMarketBackfillReport(report: MarketBackfillReport): Promise<void> {

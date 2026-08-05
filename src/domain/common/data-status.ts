@@ -11,7 +11,8 @@ export type DataStatus =
   | "not_supported"
   | "not_found"
   | "error"
-  | "insufficient_data";
+  | "insufficient_data"
+  | "plan_restricted";
 
 export type MarketRegion = "US" | "KR";
 

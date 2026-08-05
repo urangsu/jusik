@@ -22,6 +22,12 @@ export type EvidenceClaimType =
   | "news"
   | "unknown";
 
+export type EvidenceExtractionMethod =
+  | "provider_direct"
+  | "deterministic_parser"
+  | "ai_extraction"
+  | "user_import";
+
 export type EvidenceRef = {
   id: string;
   sourceType: EvidenceSourceType;
@@ -31,6 +37,13 @@ export type EvidenceRef = {
   status: string;
   updatedAt: string | null;
   warnings: string[];
+  // Provenance fields
+  sourceUrl: string | null;
+  publishedAt: string | null;
+  contentHash: string;
+  claimIds: string[];
+  sourceAuthor: string | null;
+  extractionMethod: EvidenceExtractionMethod;
 };
 
 export type EvidencePack = {

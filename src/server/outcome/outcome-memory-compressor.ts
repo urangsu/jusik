@@ -14,11 +14,15 @@ export function compressOutcomeMemory(records: SignalOutcomeJournalRecord[]): {
 
   // Summarize observed performance
   if (observed.length > 0) {
-    const outperformedCount = observed.filter((r) => r.confidenceAdjustment === "increase").length;
-    const underperformedCount = observed.filter((r) => r.confidenceAdjustment === "decrease").length;
+    const withPositiveExcess = observed.filter(
+      (r) => r.marketExcessReturn !== null && r.marketExcessReturn > 0,
+    ).length;
+    const withNegativeExcess = observed.filter(
+      (r) => r.marketExcessReturn !== null && r.marketExcessReturn < 0,
+    ).length;
 
     lessons.push(
-      `Analyzed ${observed.length} outcomes: ${outperformedCount} outperformed, ${underperformedCount} underperformed relative to indices.`
+      `Analyzed ${observed.length} outcomes: ${withPositiveExcess} outperformed, ${withNegativeExcess} underperformed relative to indices.`,
     );
 
     observed.forEach((r) => {

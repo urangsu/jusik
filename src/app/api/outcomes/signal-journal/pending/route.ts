@@ -12,9 +12,18 @@ import type { SignalOutcomeJournalRecord } from "@/domain/outcome/signal-outcome
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { subjectType, subjectId, assetId, signalId, horizon, evidencePackIds } = body;
+    const {
+      subjectType,
+      subjectId,
+      assetId,
+      universeId,
+      observationStartedAt,
+      signalId,
+      horizon,
+      evidencePackIds,
+    } = body;
 
-    if (!subjectType || !subjectId || !horizon) {
+    if (!subjectType || !subjectId || !assetId || !universeId || !observationStartedAt || !horizon) {
       const envelope: DataEnvelope<null> = {
         value: null,
         status: "error",
@@ -22,7 +31,7 @@ export async function POST(request: NextRequest) {
         sourceTier: "manual_import",
         warnings: [],
         updatedAt: null,
-        message: "subjectType, subjectId, and horizon are required",
+        message: "subjectType, subjectId, assetId, universeId, observationStartedAt, and horizon are required",
       };
       return createSafeResponse(envelope, 400);
     }
@@ -31,6 +40,8 @@ export async function POST(request: NextRequest) {
       subjectType,
       subjectId,
       assetId,
+      universeId,
+      observationStartedAt,
       signalId,
       horizon,
       evidencePackIds,

@@ -1,38 +1,45 @@
-# WO017-U4 Task Board
+# JUSIK Project Task Board
 
-## 1. Fail-closed Security
-- [x] Remove `internal_default_key` fallback in `src/app/api/market/quote/route.ts` & `ohlcv/route.ts`
-- [x] Disable provider override if `INTERNAL_SMOKE_KEY` is not set or empty
-- [x] Ensure smoke runner does not use fallback keys if env is missing
-- [x] Create tests to verify env missing, wrong key, and correct key behaviors
+## Non-Negotiable Principles
+This project enforces strict boundaries for data correctness and security:
+- Do not display fake financial numbers.
+- Do not convert null financial values to 0.
+- Every market, filing, financial, news, factor, strategy, and portfolio response must use `DataEnvelope<T>`.
+- Explain only from provided data, never invent target prices, target ratios, filings, or trading recommendations.
+- Keep live trading and broker order placement out of scope.
+- Enforce strict fail-closed security: unknown universeId or unauthorized provider access returns `insufficient_data` or `error`.
 
-## 2. Suitability Canonical Input & As-of consistency
-- [x] Add `getSnapshotAsOf(market, asOf)` to `RegimeStore`
-- [x] Update `StrategySuitabilityService` to accept `asOf` date and optional `universeId`
-- [x] Query canonical original label/score from `getSignalHistory()` inside suitability service, defaulting to strict parsing if fallback is used (using strict `Number` validation, range checks, and preventing `parseFloat`)
-- [x] Update `/api/strategy/suitability` route to accept `asOf` parameter, execute strict query parameter validation if needed, and map computed status to envelope
+## Product Direction
+JUSIK transitions from a localized mockup system to a robust, Real Data Beta platform:
+- **Core Value**: Direct, transparent data pipelines from official providers (KIS, OpenDART, Finnhub).
+- **Core Strategy**: Actionable signal validation with strict data quality gating and no silent fallbacks.
 
-## 3. UI Momentum Hardcoding Removal
-- [x] Add `signalId` and `universeId` to `StrategyAgreementSignal` type
-- [x] Add `universeId` to `SignalStability` type
-- [x] Update `calculateStrategyAgreementSignal` to output `signalId` and `universeId`
-- [x] Update `StrategyAgreementSummaryCard.tsx` to call API endpoints using `signal.signalId` and `signal.universeId`, passing `asOf=${signal.date}`
-- [x] Update `StrategyAgreementSummaryCard.test.tsx` to test with custom non-momentum signalId
+---
 
-## 4. Rank Sample Floor & Universe Isolation
-- [x] Implement `getAssetsOfUniverse` and `universeMembershipRegistry` in `src/server/signals/signal-stability-service.ts`
-- [x] Enforce minCommonAssets sample floor of 5, warning for 5~9, failing under 5
-- [x] Update `calculateCrossSectionalRankCorrelation` to isolate ranks strictly within same `universeId`
-- [x] Add unit test verifying that KOSPI_SAMPLE and watchlist/KOSDAQ do not mix
+## Work Order Roadmap
 
-## 5. UI Test Realism & Envelope Limitation
-- [x] Add realistic UI test case in `StrategyAgreementSummaryCard.test.tsx` where assetId is present but agreementScore is null, verifying that scores are not displayed even after async loads settle
-- [x] Create limitation document `docs/SUITABILITY_ENVELOPE_LIMITATION.md` for manual_import/official source tier behavior
+### WO017-U4: Fail-Closed & Canonical Strategy Agreement [COMPLETED]
+- [x] Remove mock key fallbacks from quote/OHLCV API routes.
+- [x] Enforce `INTERNAL_SMOKE_KEY` authorization on smoke API endpoints.
+- [x] Restrict Stability Gate to `status === "passed"` for actionable status.
+- [x] Enforce strict universe membership check (prevent mixing KOSPI and Watchlist assets).
+- [x] Prevent automatic KOSPI_SAMPLE/SP500_SAMPLE fallback when universeId is missing.
 
-## 6. Verification & Final Closure Commands
-- [x] npm run typecheck
-- [x] npm run lint
-- [x] npm run test
-- [x] npm run build
-- [x] run docs and wording checks
-- [x] Run git closure commands (pwd -P, git rev-parse HEAD, git remote -v, git status, git diff) and report
+### WO017-V: Real Data Beta Activation [IN PROGRESS]
+- [x] Phase 1: Security & Regression Cleanup
+  - [x] Invalidate leaked OpenDART API key and replace with placeholder in `provider-secrets.json`.
+  - [x] Remove universeId fallback from `calculateStrategyAgreementSignal` and require explicit `universeId` input.
+  - [x] Update strategy agreement tests to supply `universeId` and add missing validation test.
+  - [x] Restructure `task.md` to cleanly integrate required doc checker sections without HTML comment overrides.
+- [ ] Phase 2: Local Secret Setup
+  - Configure real credentials (`KIS_APP_KEY`, `KIS_APP_SECRET`, `FINNHUB_API_KEY`, new `OPENDART_API_KEY`) on the local developer machine.
+- [ ] Phase 3: Smoke Verification
+  - Run smoke runner to verify `dataAvailable=true` for active providers and output results.
+- [ ] Phase 4: Backfill & E2E Validation
+  - Run market backfill for KR_005930 and US_AAPL to verify that real OHLCV data propagates down to technical factors, atomic signals, stability gate, suitability, and evidence pack.
+- [ ] Phase 5: Browser Manual QA
+  - Perform structured UI testing in light/dark modes across Korean/English languages.
+- [ ] Phase 6: Git Closure
+  - Run validation build checks (typecheck, lint, build).
+  - Commit, push remote diff, and merge.
+

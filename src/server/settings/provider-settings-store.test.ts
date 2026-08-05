@@ -88,6 +88,12 @@ describe("Provider Settings Store", () => {
     expect(rawKey).toBe("my_opendart_key_12345");
   });
 
+  it("does not mark a provider configured when one required secret is missing", async () => {
+    await updateProviderSettings("kis", { KIS_APP_KEY: "valid-app-key", KIS_ENABLED: true });
+    const snapshot = await getProviderSettings("kis");
+    expect(snapshot.status).toBe("not_configured");
+  });
+
   it("should list settings snapshots for all providers", async () => {
     const list = await listProviderSettings();
     expect(list.length).toBeGreaterThan(0);

@@ -148,9 +148,12 @@ export function calculateSignalStability<TSignal>(
   const hasInsufficientHistory =
     warnings.includes("insufficient_signal_history") ||
     warnings.includes("insufficient_consecutive_history") ||
-    warnings.includes("insufficient_rank_autocorrelation_history");
+    warnings.includes("insufficient_rank_autocorrelation_history") ||
+    warnings.includes("universe_id_required") ||
+    warnings.includes("unknown_universe_id") ||
+    warnings.includes("rank_autocorrelation_not_provided");
 
-  const actionableThresholdMet =
+  const criteriaMet =
     consecutiveObservations >= minConsecutiveObservations &&
     flipCount30d <= maxFlipCount &&
     (rankAutocorrelation === null || rankAutocorrelation >= minRankAutocorrelation);
@@ -158,9 +161,11 @@ export function calculateSignalStability<TSignal>(
   let status: SignalStabilityStatus = "passed";
   if (hasInsufficientHistory) {
     status = "insufficient_data";
-  } else if (!actionableThresholdMet) {
+  } else if (!criteriaMet) {
     status = "blocked";
   }
+
+  const actionableThresholdMet = status === "passed";
 
   return {
     assetId: params.assetId,

@@ -34,11 +34,12 @@ export class YfinancePersonalProvider implements MarketDataProvider, FinancialPr
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "Yahoo Finance via yfinance",
       sourceTier: "personal_fallback",
       warnings: ["unofficial", "personal_use_only"],
       updatedAt: null,
+      message: "yfinance provider parsing is not implemented.",
     };
   }
 
@@ -73,11 +74,12 @@ export class YfinancePersonalProvider implements MarketDataProvider, FinancialPr
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "Yahoo Finance via yfinance",
       sourceTier: "personal_fallback",
       warnings: ["unofficial", "personal_use_only"],
       updatedAt: null,
+      message: "yfinance OHLCV provider parsing is not implemented.",
     };
   }
 
@@ -112,11 +114,12 @@ export class YfinancePersonalProvider implements MarketDataProvider, FinancialPr
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "Yahoo Finance via yfinance",
       sourceTier: "personal_fallback",
       warnings: ["unofficial", "personal_use_only"],
       updatedAt: null,
+      message: "yfinance financial statement parsing is not implemented.",
     };
   }
 }

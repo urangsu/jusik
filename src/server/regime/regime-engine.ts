@@ -205,11 +205,21 @@ export class RegimeEngine {
     // 8.3 Overriding rules
     // Rule 1: VIX spike or credit spread spike -> cap at risk_off/panic (minimum risk_off or panic)
     const isVixSpike = indicators.vix >= 25 || indicators.vixZScore >= 2.0;
-    const isCreditSpike = indicators.highYieldSpread >= 5.0;
-    if (isVixSpike || isCreditSpike) {
-      if (regime !== "panic" && regime !== "risk_off") {
-        regime = "risk_off";
-        warnings.push("VIX 또는 Credit Spread 급등으로 인해 레짐이 risk_off 이상으로 강제 조정되었습니다.");
+    const isCreditSpike = market === "US" && indicators.highYieldSpread >= 5.0; // Credit spike US-only
+
+    if (market === "US") {
+      if (isVixSpike || isCreditSpike) {
+        if (regime !== "panic" && regime !== "risk_off") {
+          regime = "risk_off";
+          warnings.push("VIX 또는 Credit Spread 급등으로 인해 레짐이 risk_off 이상으로 강제 조정되었습니다.");
+        }
+      }
+    } else {
+      if (isVixSpike) {
+        if (regime !== "panic" && regime !== "risk_off") {
+          regime = "risk_off";
+          warnings.push("VIX 급등으로 인해 레짐이 risk_off 이상으로 강제 조정되었습니다.");
+        }
       }
     }
 
@@ -230,6 +240,10 @@ export class RegimeEngine {
       allowsNewWatch = false;
       allowsRiskUpgrading = false;
       suppressesMomentumAlert = true;
+    } else if (regime === "overheated") {
+      allowsNewWatch = false;
+      allowsRiskUpgrading = false;
+      suppressesMomentumAlert = false;
     }
 
     // USD/KRW spike -> KR regime allowsNewWatch = false

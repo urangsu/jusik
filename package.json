@@ -11,6 +11,8 @@
     "test": "vitest run",
     "check:wording": "node scripts/check-forbidden-ui-text.mjs",
     "check:alpha-ui": "node scripts/check-alpha-ui-exposure.mjs",
+    "check:runtime-data": "node scripts/check-runtime-data.mjs",
+    "check:data-truth": "node scripts/check-no-financial-seeds.mjs",
     "alerts:evaluate": "tsx scripts/alerts/evaluate-alerts.ts",
     "reports:daily": "tsx scripts/reports/generate-daily-report.ts",
     "docs:check": "tsx scripts/docs/check-required-docs.ts",
@@ -39,12 +41,14 @@
     "ops:provider-key-smoke": "tsx scripts/ops/run-provider-key-smoke.ts",
     "market:backfill": "tsx scripts/market/backfill-market-data.ts",
     "outcomes:observe": "tsx scripts/outcome/observe-signal-outcomes.ts",
-    "surge:detect": "tsx scripts/surge/detect-surge-candidates.ts"
+    "surge:detect": "tsx scripts/surge/detect-surge-candidates.ts",
+    "test:live-providers": "tsx scripts/ops/test-live-providers.ts",
+    "acceptance:beta": "tsx scripts/ops/run-beta-acceptance.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
     "lucide-react": "^1.18.0",
-    "next": "16.2.9",
+    "next": "16.2.12",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zod": "^4.4.3",

@@ -12,13 +12,43 @@ function getOutcomePath(id: string): string {
   return resolveRuntimeDataPath("data", "outcome-journals", `${id}.json`);
 }
 
+/**
+ * Persist an outcome record.
+ *
+ * Immutability rule:
+ * - A record with the same `id` and identical content is a no-op (idempotent).
+ * - A record with the same `id` but different content is rejected with an error.
+ *   Observation must always create a new ID (higher revision).
+ */
 export async function saveOutcomeRecord(record: SignalOutcomeJournalRecord): Promise<void> {
   const dir = getOutcomeDir();
   await fs.mkdir(dir, { recursive: true });
 
   const filePath = getOutcomePath(record.id);
-  const payload = JSON.stringify(record, null, 2);
 
+  // Immutability guard: reject conflicting writes
+  try {
+    const existing = await fs.readFile(filePath, "utf-8");
+    const existingRecord = JSON.parse(existing) as SignalOutcomeJournalRecord;
+    const existingJson = JSON.stringify(existingRecord);
+    const incomingJson = JSON.stringify(record);
+    if (existingJson !== incomingJson) {
+      throw new Error(
+        `Immutability violation: outcome record ${record.id} already exists with different content. ` +
+          `Create a new revision instead of overwriting.`,
+      );
+    }
+    // Identical content — idempotent, no write needed
+    return;
+  } catch (err: unknown) {
+    // If the file does not exist, proceed with write
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+      // Re-throw any other error (including immutability violations)
+      throw err;
+    }
+  }
+
+  const payload = JSON.stringify(record, null, 2);
   await writeAtomic(filePath, payload);
 }
 
@@ -60,7 +90,7 @@ export async function listOutcomeRecords(query?: {
             records.push(record);
           }
         } catch {
-          // ignore
+          // ignore corrupt files
         }
       }
     }
@@ -69,4 +99,23 @@ export async function listOutcomeRecords(query?: {
   } catch {
     return [];
   }
+}
+
+/**
+ * Returns only the latest revision for each `rootOutcomeId`.
+ * Use this when the UI needs one record per logical outcome.
+ */
+export async function listLatestOutcomeRecords(query?: {
+  subjectId?: string;
+  subjectType?: string;
+}): Promise<SignalOutcomeJournalRecord[]> {
+  const all = await listOutcomeRecords(query);
+  const latestByRoot = new Map<string, SignalOutcomeJournalRecord>();
+  for (const record of all) {
+    const existing = latestByRoot.get(record.rootOutcomeId);
+    if (!existing || record.revision > existing.revision) {
+      latestByRoot.set(record.rootOutcomeId, record);
+    }
+  }
+  return Array.from(latestByRoot.values());
 }

@@ -19,16 +19,19 @@ export async function withMarketDataRuntimeGate<T>(params: {
   cacheStore?: ProviderRuntimeCacheStore;
   fetcher: () => Promise<DataEnvelope<T>>;
 }): Promise<DataEnvelope<T>> {
-  const key = [
+  const keyParts = [
     "market-data",
     params.providerId,
+    params.capability,
     params.market,
     params.assetId,
     params.symbol,
-    params.capability,
-    params.range ?? "none",
-    params.interval ?? "none",
-  ].join(":");
+  ];
+  if (params.capability === "ohlcv") {
+    keyParts.push(params.range ?? "none");
+    keyParts.push(params.interval ?? "none");
+  }
+  const key = keyParts.join(":");
 
   return runWithProviderRuntimeGate<T>({
     cacheKey: key,

@@ -334,7 +334,7 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
         setEvidencePackDataMap((prev) => ({ ...prev, [findingId]: pack }));
 
         // Step 2: Compose & Synthesize Finding Report
-        const resSynth = await fetch("/api/reports/finding-synthesis/from-evidence-pack", {
+        const resSynth = await fetch("/api/reports/finding-synthesis", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ evidencePackId: pack.id }),
@@ -347,7 +347,7 @@ export const AuditFindingsPanel: React.FC<Props> = ({ universeId }) => {
         setSynthesisDataMap((prev) => ({ ...prev, [findingId]: report }));
 
         // Step 3: Run Diagnostic Debate
-        const resDebate = await fetch("/api/debate/diagnostic/from-report", {
+        const resDebate = await fetch("/api/debate/diagnostic", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ reportId: report.id }),

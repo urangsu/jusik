@@ -1,12 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DataEnvelope, MarketRegion } from "@/domain/common/data-status";
 import { Quote } from "@/domain/market/quote";
+import { OhlcvSeries, OhlcvCandle } from "@/domain/market/ohlcv";
 import { MarketDataProvider } from "../../adapters/types";
 import { providerRegistry } from "../provider-registry";
 import { KisHttpClient } from "./kis-http-client";
 import { normalizeKisError } from "./kis-error-normalizer";
 import { KisQuoteResponse, KisDailyPriceResponse } from "./kis-types";
 import { kisConfig } from "./kis-config";
+import { KisQuoteSchema, KisDailyItemSchema } from "../schemas/kis-market.schema";
+
+function isKospiMarketOpen(now = new Date()): boolean {
+  // KST is UTC+9
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const kst = new Date(utc + 9 * 3600000);
+  const day = kst.getDay();
+  if (day === 0 || day === 6) return false;
+  const minutes = kst.getHours() * 60 + kst.getMinutes();
+  return minutes >= 540 && minutes <= 930; // 09:00 - 15:30 KST
+}
 
 export class KisDomesticStockProvider implements MarketDataProvider {
   private providerId = "kis";
@@ -51,29 +62,38 @@ export class KisDomesticStockProvider implements MarketDataProvider {
         };
       }
 
-      const out = res.output;
+      const parsedOutput = KisQuoteSchema.parse(res.output);
+
+      const price = parseFloat(parsedOutput.stck_prpr);
+      const change = parseFloat(parsedOutput.prdy_vrss);
+      const changePct = parseFloat(parsedOutput.prdy_ctrt);
+      const volume = parseInt(parsedOutput.acml_vol, 10);
+
+      const quoteStatus = isKospiMarketOpen() ? "real_time" : "eod";
+      const nowStr = new Date().toISOString();
+
       const quote: Quote = {
         assetId: `KR:${symbol}`,
         market: "KR",
         symbol,
-        price: parseFloat(out.stck_prpr),
+        price,
         currency: "KRW",
-        change: parseFloat(out.prdy_vrss),
-        changePct: parseFloat(out.prdy_ctrt),
-        volume: parseInt(out.acml_vol, 10),
-        tradeDate: new Date().toISOString().split("T")[0],
-        updatedAt: new Date().toISOString(),
+        change,
+        changePct,
+        volume: volume >= 0 ? volume : null,
+        tradeDate: nowStr.split("T")[0],
+        updatedAt: nowStr,
         source: "KIS Open API",
         dataVersionId: null,
       };
 
       return {
         value: quote,
-        status: "real_time",
+        status: quoteStatus,
         source: "KIS Open API",
         sourceTier: "official",
         warnings: [],
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowStr,
       };
     } catch (err: any) {
       return {
@@ -109,7 +129,7 @@ export class KisDomesticStockProvider implements MarketDataProvider {
     try {
       const today = new Date();
       const endStr = today.toISOString().split("T")[0].replace(/-/g, "");
-      
+
       const start = new Date();
       if (params.range === "1M") start.setMonth(today.getMonth() - 1);
       else if (params.range === "3M") start.setMonth(today.getMonth() - 3);
@@ -118,7 +138,7 @@ export class KisDomesticStockProvider implements MarketDataProvider {
       else if (params.range === "3Y") start.setFullYear(today.getFullYear() - 3);
       else if (params.range === "5Y") start.setFullYear(today.getFullYear() - 5);
       else start.setFullYear(today.getFullYear() - 10);
-      
+
       const startStr = start.toISOString().split("T")[0].replace(/-/g, "");
 
       let periodDiv = "D";
@@ -155,34 +175,60 @@ export class KisDomesticStockProvider implements MarketDataProvider {
         };
       }
 
-      const candles = res.output
-        .map((item) => ({
-          date: `${item.stck_bsop_date.substring(0, 4)}-${item.stck_bsop_date.substring(4, 6)}-${item.stck_bsop_date.substring(6, 8)}`,
-          open: parseFloat(item.stck_oprc),
-          high: parseFloat(item.stck_hgpr),
-          low: parseFloat(item.stck_lwpr),
-          close: parseFloat(item.stck_clpr),
-          volume: parseInt(item.acml_vol, 10),
-        }))
-        .reverse(); // KIS returns newest first; reverse to chronological order
+      const candles: OhlcvCandle[] = res.output
+        .map((rawItem) => {
+          const item = KisDailyItemSchema.parse(rawItem);
+          // Convert YYYYMMDD to ISO date string with KST close time (15:30)
+          const dateStr = `${item.stck_bsop_date.substring(0, 4)}-${item.stck_bsop_date.substring(4, 6)}-${item.stck_bsop_date.substring(6, 8)}`;
+          return {
+            assetId: `KR:${params.symbol}`,
+            market: "KR" as const,
+            timestamp: `${dateStr}T06:30:00.000Z`, // KST 15:30 = UTC 06:30
+            open: parseFloat(item.stck_oprc),
+            high: parseFloat(item.stck_hgpr),
+            low: parseFloat(item.stck_lwpr),
+            close: parseFloat(item.stck_clpr),
+            volume: parseInt(item.acml_vol, 10),
+            source: "KIS Open API",
+            dataVersionId: "",
+          };
+        })
+        .filter((c) => c.high >= c.low && c.volume >= 0)
+        .reverse(); // ascending order
+
+      const newestCandle = candles.length > 0 ? candles[candles.length - 1] : null;
+      const nowStr = new Date().toISOString();
+
+      const series: OhlcvSeries = {
+        assetId: `KR:${params.symbol}`,
+        market: "KR",
+        range: params.range,
+        interval: params.interval,
+        candles,
+        source: "KIS Open API",
+        dataVersionId: null,
+        updatedAt: nowStr,
+      };
 
       return {
-        value: candles,
-        status: "real_time",
+        value: candles.length > 0 ? series : null,
+        status: "eod" as const,
         source: "KIS Open API",
-        sourceTier: "official",
+        sourceTier: "official" as const,
         warnings: [],
-        updatedAt: new Date().toISOString(),
-      };
-    } catch (err: any) {
+        updatedAt: nowStr,
+        // dataAsOf = newest candle timestamp (upstream observation time)
+        dataAsOf: newestCandle?.timestamp ?? null,
+      } as DataEnvelope<OhlcvSeries> & { dataAsOf: string | null };
+    } catch {
       return {
         value: null,
-        status: "error",
+        status: "error" as const,
         source: "KIS Open API",
-        sourceTier: "official",
+        sourceTier: "official" as const,
         warnings: [],
         updatedAt: null,
-        message: err.message || String(err),
+        message: "KIS OHLCV 조회 중 오류가 발생했습니다.",
       };
     }
   }

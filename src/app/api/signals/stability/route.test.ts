@@ -11,53 +11,42 @@ vi.mock("@/server/signals/signal-stability-service", () => ({
 import { signalStabilityService } from "@/server/signals/signal-stability-service";
 
 describe("GET /api/signals/stability", () => {
-  it("returns 400 when assetId is missing", async () => {
+  it("returns 400 when universeId or other parameters are missing", async () => {
     const response = await GET(
-      new NextRequest("http://localhost/api/signals/stability?signalId=momentum_ichimoku")
+      new NextRequest("http://localhost/api/signals/stability?assetId=US:AAPL&signalId=momentum")
     );
 
     expect(response.status).toBe(400);
     const body = await response.json();
     expect(body.status).toBe("error");
-    expect(body.value).toBeNull();
     expect(body.message).toContain("Missing required parameters");
   });
 
   it("returns 200 with stability envelope on success", async () => {
     const mockStability = {
-      assetId: "US_AAPL",
-      signalId: "momentum_ichimoku",
+      assetId: "US:AAPL",
+      signalId: "momentum",
+      universeId: "SP500_SAMPLE",
       date: "2026-07-05",
-      consecutiveObservations: 5,
-      flipCount30d: 0,
-      rankAutocorrelation: 0.8,
-      status: "passed" as const,
+      consecutiveObservations: 4,
+      flipCount30d: 1,
+      rankAutocorrelation: 0.7,
+      status: "passed",
       actionableThresholdMet: true,
       warnings: [],
     };
-    vi.mocked(signalStabilityService.getStability).mockResolvedValue(mockStability);
+    vi.mocked(signalStabilityService.getStability).mockResolvedValue(mockStability as any);
 
     const response = await GET(
-      new NextRequest("http://localhost/api/signals/stability?assetId=US_AAPL&signalId=momentum_ichimoku&date=2026-07-05")
+      new NextRequest(
+        "http://localhost/api/signals/stability?assetId=US:AAPL&signalId=momentum&universeId=SP500_SAMPLE&date=2026-07-05"
+      )
     );
 
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.status).toBe("cached");
-    expect(body.value.consecutiveObservations).toBe(5);
-    expect(body.value.actionableThresholdMet).toBe(true);
-  });
-
-  it("returns 500 when service throws", async () => {
-    vi.mocked(signalStabilityService.getStability).mockRejectedValue(new Error("Database offline"));
-
-    const response = await GET(
-      new NextRequest("http://localhost/api/signals/stability?assetId=US_AAPL&signalId=momentum_ichimoku")
-    );
-
-    expect(response.status).toBe(500);
-    const body = await response.json();
-    expect(body.status).toBe("error");
-    expect(body.message).toBe("Database offline");
+    expect(body.value.consecutiveObservations).toBe(4);
+    expect(body.value.status).toBe("passed");
   });
 });

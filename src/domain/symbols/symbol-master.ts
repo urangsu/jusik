@@ -17,6 +17,16 @@ export type SymbolMasterRecord = {
   status: SymbolAssetStatus;
   source: "seed" | "manual_import" | "provider";
   updatedAt: string;
+  /**
+   * Market-level benchmark asset ID for outcome observation (seed metadata only, not live truth).
+   * Example: "KR_INDEX_KOSPI" for Korean stocks, "US_SPY" for US stocks.
+   */
+  marketBenchmarkId?: string;
+  /**
+   * Sector-level benchmark asset ID for outcome observation (seed metadata only, not live truth).
+   * Example: "KR_INDEX_KRX_SEMICONDUCTOR" for semiconductors, "US_XLK" for US tech.
+   */
+  sectorBenchmarkId?: string;
 };
 
 export type SymbolSearchResult = {

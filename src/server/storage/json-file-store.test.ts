@@ -46,4 +46,17 @@ describe("JsonFileStore", () => {
     const corruptContent = await fs.readFile(`${testFilePath}.corrupt`, "utf8");
     expect(corruptContent).toBe("{ invalid json");
   });
+
+  it("should isolate fallback default data from mutations", async () => {
+    const defaultVal = { key: "value", list: [1, 2] };
+    const store = new JsonFileStore<Record<string, any>>(testFilePath, defaultVal);
+    
+    const data1 = await store.read();
+    data1.key = "changed";
+    data1.list.push(3);
+
+    const data2 = await store.read();
+    expect(data2.key).toBe("value");
+    expect(data2.list).toEqual([1, 2]);
+  });
 });

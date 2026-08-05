@@ -1,10 +1,12 @@
 import { resolveProviderConfigSync } from "../settings/provider-config-resolver";
+import { isMockKey } from "../providers/provider-registry";
 
 export function getOpenDartConfig() {
   const config = resolveProviderConfigSync("opendart");
 
   const enabled = config["OPENDART_ENABLED"] === true;
   const apiKey = (config["OPENDART_API_KEY"] as string) || null;
+  const isKeyValid = apiKey && !isMockKey(apiKey);
   const baseUrl = (config["OPENDART_BASE_URL"] as string) || "https://opendart.fss.or.kr/api";
   const pageCount = Math.min(
     100,
@@ -18,8 +20,8 @@ export function getOpenDartConfig() {
   );
 
   return {
-    enabled: enabled && !!apiKey,
-    apiKey,
+    enabled: enabled && !!isKeyValid,
+    apiKey: isKeyValid ? apiKey : null,
     baseUrl,
     pageCount,
     timeoutMs,

@@ -87,6 +87,7 @@ export const ThemeProvider: React.FC<{
 
     // Apply if changed
     if (finalPref !== themePreference) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setThemePreferenceState(finalPref);
       const resolved = finalPref === "system" ? resolveSystemTheme() : finalPref;
       setResolvedTheme(resolved);

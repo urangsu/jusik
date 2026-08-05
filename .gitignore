@@ -122,6 +122,10 @@ data/ops/smoke/history/*
 # O~S Integration Data Stores
 data/evidence/*
 !data/evidence/.gitkeep
+
+data/research/*
+!data/research/.gitkeep
+!data/research/**/.gitkeep
 !data/evidence/history/
 data/evidence/history/*
 !data/evidence/history/.gitkeep

@@ -34,11 +34,12 @@ export class FmpFreeProvider implements MarketDataProvider, FinancialProvider {
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "Financial Modeling Prep Free",
       sourceTier: "free_limited",
       warnings: [],
       updatedAt: null,
+      message: "FMP Free provider parsing is not implemented.",
     };
   }
 
@@ -73,11 +74,12 @@ export class FmpFreeProvider implements MarketDataProvider, FinancialProvider {
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "Financial Modeling Prep Free",
       sourceTier: "free_limited",
       warnings: [],
       updatedAt: null,
+      message: "FMP Free OHLCV provider parsing is not implemented.",
     };
   }
 
@@ -112,11 +114,12 @@ export class FmpFreeProvider implements MarketDataProvider, FinancialProvider {
 
     return {
       value: null,
-      status: "cached",
+      status: "not_supported",
       source: "Financial Modeling Prep Free",
       sourceTier: "free_limited",
       warnings: [],
       updatedAt: null,
+      message: "FMP Free financial statement parsing is not implemented.",
     };
   }
 }
