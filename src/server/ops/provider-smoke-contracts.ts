@@ -57,6 +57,7 @@ const filingsSchema = z.object({
 
 /**
  * OpenDART financials — must include identifiers AND at least one non-null Beta operand.
+ * Accepts both legacy (assets/liabilities/equity) and normalized (totalAssets/totalLiabilities/totalEquity).
  * Metadata-only financials (all operands null) cannot pass.
  */
 const financialsSchema = z.object({
@@ -68,16 +69,32 @@ const financialsSchema = z.object({
   currency: z.literal("KRW"),
   basis: z.enum(["CFS", "OFS"]),
   updatedAt: z.string().datetime(),
-  // At least one of these must be non-null (revenue, operating income, net income, assets, liabilities, equity)
   revenue: z.number().nullable().optional(),
   operatingIncome: z.number().nullable().optional(),
   netIncome: z.number().nullable().optional(),
   assets: z.number().nullable().optional(),
   liabilities: z.number().nullable().optional(),
   equity: z.number().nullable().optional(),
+  totalAssets: z.number().nullable().optional(),
+  totalLiabilities: z.number().nullable().optional(),
+  totalEquity: z.number().nullable().optional(),
 }).refine(
-  (d) => [d.revenue, d.operatingIncome, d.netIncome, d.assets, d.liabilities, d.equity].some((v) => v != null),
-  { message: "financials must have at least one non-null Beta operand (revenue, operatingIncome, netIncome, assets, liabilities, or equity)" }
+  (d) =>
+    [
+      d.revenue,
+      d.operatingIncome,
+      d.netIncome,
+      d.assets,
+      d.liabilities,
+      d.equity,
+      d.totalAssets,
+      d.totalLiabilities,
+      d.totalEquity,
+    ].some((v) => v != null),
+  {
+    message:
+      "financials must have at least one non-null Beta operand (revenue, operatingIncome, netIncome, assets/totalAssets, liabilities/totalLiabilities, or equity/totalEquity)",
+  }
 );
 
 type SupportedCapability = Exclude<ProviderRealDataSmokeCapability, "news">;
@@ -89,23 +106,69 @@ const VALUE_SCHEMAS: Record<SupportedCapability, z.ZodType> = {
   financials: financialsSchema,
 };
 
+export type TargetIdentityContext = {
+  expectedSymbol?: string;
+  expectedRegion?: "KR" | "US";
+  expectedSource?: string;
+};
+
 /**
- * Validate a smoke result value against its capability's canonical Zod schema.
- * Returns a Zod SafeParseResult — success=false means evidence is invalid.
+ * Validate a smoke result value against its capability's canonical Zod schema and target identity.
+ * Returns a Zod SafeParseResult — success=false means evidence or identity is invalid.
  */
 export function validateSmokeValue(
   capability: SupportedCapability,
   value: unknown,
+  context?: TargetIdentityContext
 ): z.ZodSafeParseSuccess<unknown> | z.ZodSafeParseError<unknown> {
-  return VALUE_SCHEMAS[capability].safeParse(value);
+  const parseResult = VALUE_SCHEMAS[capability].safeParse(value);
+  if (!parseResult.success) {
+    return parseResult;
+  }
+
+  // Identity validation against target context
+  if (context && value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const issues: z.ZodIssue[] = [];
+
+    if (context.expectedSymbol && typeof obj.symbol === "string" && obj.symbol !== context.expectedSymbol) {
+      issues.push({
+        code: z.ZodIssueCode.custom,
+        path: ["symbol"],
+        message: `symbol '${obj.symbol}' mismatch with expected '${context.expectedSymbol}'`,
+      });
+    }
+
+    if (context.expectedRegion && typeof obj.market === "string" && obj.market !== context.expectedRegion) {
+      issues.push({
+        code: z.ZodIssueCode.custom,
+        path: ["market"],
+        message: `market '${obj.market}' mismatch with expected region '${context.expectedRegion}'`,
+      });
+    }
+
+    if (context.expectedSource && typeof obj.source === "string" && obj.source !== context.expectedSource) {
+      issues.push({
+        code: z.ZodIssueCode.custom,
+        path: ["source"],
+        message: `inner source '${obj.source}' mismatch with expected '${context.expectedSource}'`,
+      });
+    }
+
+    if (issues.length > 0) {
+      return {
+        success: false,
+        error: new z.ZodError(issues),
+      };
+    }
+  }
+
+  return parseResult;
 }
 
 export type ProvenanceValidationResult =
   | { success: true }
   | { success: false; expected: { source: string; sourceTier: string }; got: { source: string | null; sourceTier: string | null } };
-
-// PROVIDER_PROVENANCE is now derived from SMOKE_TARGET_POLICIES — no duplication allowed.
-// This module only exposes the validation function.
 
 /**
  * Validate that source and sourceTier exactly match expected values.

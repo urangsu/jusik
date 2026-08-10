@@ -12,17 +12,21 @@ import type { OperationalSmokeReport } from "@/domain/ops/operational-smoke";
  * Returns DataEnvelope<OperationalSmokeReport>.
  * status = "cached" if all passed, "error" if failureCount > 0.
  */
+import { requireProviderAdmin } from "@/server/security/provider-admin-guard";
+
 export async function POST(request: NextRequest) {
+  const guard = requireProviderAdmin(request, { isMutation: true });
+  if (!guard.authorized) {
+    return guard.response;
+  }
+
   try {
     const body = await request.json().catch(() => ({}));
     const sampleFindingId =
       body && typeof body.sampleFindingId === "string"
         ? body.sampleFindingId
         : null;
-    const baseUrl =
-      body && typeof body.baseUrl === "string"
-        ? body.baseUrl
-        : `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+    const baseUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}`;
 
     const report = await runOperationalSmoke({
       baseUrl,

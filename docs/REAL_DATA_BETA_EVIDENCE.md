@@ -1,12 +1,11 @@
 # Real Data Beta Evidence Record
 
 > **Plan Reference:** `docs/superpowers/plans/2026-08-02-beta-acceptance-integrity-security-follow-up.md`  
-> **Evaluated Commit:** `eb29fa4`  
 > **Status:** **BLOCKED / NO-GO** (Requires active KIS / OpenDART / Finnhub API credentials & live running server)
 
 ---
 
-## Verification Commands Run & Results
+## Verification Commands & Integrity Summary
 
 ### Store Invariants
 
@@ -15,17 +14,8 @@
 a0a7418d6bb3af6c780108361b7b33d492ee45dbedc9eab98cb0d71e92a03415  data/secrets/provider-secrets.json
 ```
 
-- Pre-test and post-test SHA-256 hashes of `data/settings` and `data/secrets` match **EXACTLY**.
-
-### Gate Verification Matrix
-
-| Step | Command | Result | Notes |
-|---|---|---|---|
-| 1 | `npm run typecheck` | **PASS** | `tsc --noEmit` 0 errors |
-| 2 | `npm run lint` | **PASS** | 0 errors, 825 pre-existing warnings |
-| 3 | `npm run test` | **PASS** | **294 test files / 1,068 tests PASS** |
-| 4 | `npm run build` | **PASS** | Next.js 16.2.9 production build successful |
-| 5 | `npm run acceptance:beta` | **FAIL (Exit 1)** | Fails closed as expected when providers unconfigured |
+- Secrets are encrypted on disk using AES-256-GCM (`provider-secret-store.ts`).
+- Pre-test and post-test SHA-256 hashes match **EXACTLY**.
 
 ---
 
@@ -35,10 +25,10 @@ a0a7418d6bb3af6c780108361b7b33d492ee45dbedc9eab98cb0d71e92a03415  data/secrets/p
 
 | Target | Provider | Capability | Symbol | Allowed Statuses | Expected Source | Expected Tier | Max Age | Current Status |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `kis` | `quote` | `005930` | `real_time`, `delayed` | `KIS Open API` | `official` | 20m | `not_configured` (Pending API credentials) |
-| 2 | `kis` | `ohlcv` | `005930` | `delayed`, `eod` | `KIS Open API` | `official` | 48h | `not_configured` (Pending API credentials) |
-| 3 | `opendart` | `filings` | `005930` | `eod` | `OpenDART` | `official` | 24h | `not_configured` (Pending API credentials) |
-| 4 | `opendart` | `financials` | `005930` | `eod` | `OpenDART` | `official` | 24h | `not_configured` (Pending API credentials) |
+| 1 | `kis` | `quote` | `005930` | `real_time`, `delayed`, `eod` | `KIS Open API` | `official` | 20m | `not_configured` (Pending API credentials) |
+| 2 | `kis` | `ohlcv` | `005930` | `delayed`, `eod` | `KIS Open API` | `official` | 96h | `not_configured` (Pending API credentials) |
+| 3 | `opendart` | `filings` | `005930` | `eod` | `OpenDART` | `official` | 7 days | `not_configured` (Pending API credentials) |
+| 4 | `opendart` | `financials` | `005930` | `eod` | `OpenDART` | `official` | 1 year | `not_configured` (Pending API credentials) |
 | 5 | `finnhub_free` | `quote` | `AAPL` | `real_time`, `delayed` | `Finnhub Free` | `free_limited` | 20m | `not_configured` (Pending API credentials) |
 
 ---
@@ -50,18 +40,21 @@ a0a7418d6bb3af6c780108361b7b33d492ee45dbedc9eab98cb0d71e92a03415  data/secrets/p
    - Runner booleans (`provenanceValid`, `freshnessValid`) are ignored by evaluator.
    - `cached`, `stale`, and `empty_allowed` statuses are explicitly rejected.
 
-2. **Canonical Payload Normalization:**
+2. **Canonical Payload Normalization & Identity Validation:**
    - KIS OHLCV returns canonical `OhlcvSeries` with ISO datetime `timestamp`.
-   - OpenDART Financials require at least one non-null Beta financial operand (revenue, operating income, net income, assets, liabilities, equity).
+   - OpenDART Financials accepts both `assets`/`liabilities`/`equity` and normalized `totalAssets`/`totalLiabilities`/`totalEquity`.
+   - `validateSmokeValue` validates payload inner `symbol`, `market`/`region`, and `source` identity against target policy context.
 
-3. **Freshness Tracking:**
-   - Freshness measures `dataAsOf` (upstream observation time), not `checkedAt` (fetch time) or `updatedAt` (normalization time).
+3. **Freshness Tracking Across All Envelopes:**
+   - Upstream observation time `dataAsOf` is populated across all 5 provider targets (KIS quote/ohlcv, Finnhub quote, OpenDART filings/financials).
+   - Freshness measures `dataAsOf`, not `checkedAt` (fetch time) or `updatedAt` (normalization time).
+   - Trading cadence policies account for market close hours (KIS quote `eod`), weekend gaps (OHLCV 96h, filings 7d), and financial reporting cycles (financials 1yr).
 
-4. **Transport & Credential Security:**
-   - Internal smoke fetches use `redirect: "manual"` and `AbortSignal.timeout(10000)`.
-   - 3xx redirects trigger immediate transport errors to prevent key leakage.
-   - `INTERNAL_SMOKE_KEY` minimum length enforced at 32 bytes.
-   - Admin routes guarded by `requireProviderAdmin` with constant-time token comparison and origin validation.
+4. **Transport, BFF Admin Auth & Credential Encryption Security:**
+   - Provider settings UI (`ProviderApiSettingsPanel.tsx`) uses HttpOnly cookie session auth (`/api/auth/admin/login`).
+   - `requireProviderAdmin` guard validates minimum 32-character admin tokens and enforces strict scheme+host+port `Origin` comparison on mutations.
+   - All internal smoke fetches use `redirect: "manual"` and `AbortSignal.timeout(10000)`.
+   - Provider secrets stored in `data/secrets/provider-secrets.json` are encrypted using AES-256-GCM.
 
 ---
 

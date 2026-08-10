@@ -79,6 +79,8 @@ export class FinancialDataService {
       fetchRes.value
     );
 
+    const statementDataAsOf = `${bsnsYear}-12-31T00:00:00.000Z`;
+
     return {
       value: normalized,
       status: "eod",
@@ -86,6 +88,7 @@ export class FinancialDataService {
       sourceTier: "official",
       warnings: [],
       updatedAt: new Date().toISOString(),
+      dataAsOf: statementDataAsOf,
     };
   }
 

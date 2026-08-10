@@ -7,7 +7,7 @@ vi.mock("../../../../server/settings/provider-settings-store", () => ({
   listProviderSettings: vi.fn(),
 }));
 
-const VALID_TOKEN = "valid_admin_token_1234567890";
+const VALID_TOKEN = "valid_admin_token_32_characters_long_abcdef";
 
 describe("GET /api/settings/providers", () => {
   beforeEach(() => {

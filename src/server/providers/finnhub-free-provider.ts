@@ -105,6 +105,7 @@ export class FinnhubFreeProvider implements MarketDataProvider {
         sourceTier: "free_limited",
         warnings: [],
         updatedAt: new Date().toISOString(),
+        dataAsOf: tradeTimeStr,
       };
     } catch (err: any) {
       return {

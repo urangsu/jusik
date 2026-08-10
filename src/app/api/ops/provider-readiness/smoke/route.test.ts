@@ -9,7 +9,7 @@ vi.mock("@/server/ops/provider-real-data-smoke-runner", () => ({
 
 import { runProviderRealDataSmoke } from "@/server/ops/provider-real-data-smoke-runner";
 
-const VALID_TOKEN = "valid_admin_token_1234567890";
+const VALID_TOKEN = "valid_admin_token_32_characters_long_abcdef";
 
 function makeReport(overrides: Partial<ProviderReadinessReport> = {}): ProviderReadinessReport {
   return {

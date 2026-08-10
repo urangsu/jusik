@@ -13,7 +13,7 @@ vi.mock("../../../../../server/security/settings-write-guard", () => ({
   checkSettingsWriteEnabled: vi.fn(),
 }));
 
-const VALID_TOKEN = "valid_admin_token_1234567890";
+const VALID_TOKEN = "valid_admin_token_32_characters_long_abcdef";
 
 function makeAdminGetReq() {
   return new NextRequest("http://localhost:3000/api/settings/providers/opendart", {
@@ -63,7 +63,7 @@ describe("API settings/providers/[providerId]", () => {
 
   it("POST blocks update if write guard returns forbidden", async () => {
     const mockForbiddenResponse = new Response("Forbidden", { status: 403 });
-    vi.mocked(checkSettingsWriteEnabled).mockReturnValue(mockForbiddenResponse);
+    vi.mocked(checkSettingsWriteEnabled).mockReturnValue(mockForbiddenResponse as any);
 
     const res = await POST(makeAdminPostReq({ values: { OPENDART_ENABLED: true } }), {
       params: Promise.resolve({ providerId: "opendart" }),

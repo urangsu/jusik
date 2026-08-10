@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createSafeResponse } from "./safe-api-response";
 import { DataEnvelope } from "@/domain/common/data-status";
+import { SESSION_COOKIE_NAME, isValidSession } from "@/app/api/auth/admin/login/route";
 
-// Process-local simple rate limiter (token bucket per ip/token)
+// Process-local rate limiter
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const MAX_REQUESTS_PER_WINDOW = 30;
@@ -24,16 +25,16 @@ function isRateLimited(key: string): boolean {
 
 export type AdminGuardResult =
   | { authorized: true }
-  | { authorized: false; response: Response };
+  | { authorized: false; response: NextResponse };
 
 /**
  * Common admin guard for provider settings & probe routes.
  *
  * Checks:
- * 1. PROVIDER_ADMIN_TOKEN must be configured (≥ 16 chars)
- * 2. Header `x-provider-admin-token` must match using crypto.timingSafeEqual
- * 3. Browser mutation requests (POST/PUT/DELETE) must match allowed Origin
- * 4. Rate limiting applied per client
+ * 1. PROVIDER_ADMIN_TOKEN must be configured (≥ 32 chars)
+ * 2. Either Header `x-provider-admin-token` or HttpOnly `provider_admin_session` cookie valid
+ * 3. Browser mutation requests (POST/PUT/DELETE) must match allowed Origin exactly
+ * 4. Rate limiting applied
  */
 export function requireProviderAdmin(
   request: NextRequest,
@@ -41,8 +42,8 @@ export function requireProviderAdmin(
 ): AdminGuardResult {
   const expectedToken = process.env.PROVIDER_ADMIN_TOKEN ?? "";
 
-  // 1. Unconfigured or weak admin token
-  if (expectedToken.length < 16) {
+  // 1. Unconfigured or weak admin token (must be >= 32 chars)
+  if (expectedToken.length < 32) {
     const envelope: DataEnvelope<null> = {
       value: null,
       status: "error",
@@ -50,7 +51,7 @@ export function requireProviderAdmin(
       sourceTier: "official",
       warnings: [],
       updatedAt: new Date().toISOString(),
-      message: "서버의 PROVIDER_ADMIN_TOKEN 설정이 누락되었거나 너무 짧습니다.",
+      message: "서버의 PROVIDER_ADMIN_TOKEN 설정이 누락되었거나 32자 미만입니다.",
     };
     return {
       authorized: false,
@@ -58,17 +59,22 @@ export function requireProviderAdmin(
     };
   }
 
+  // Check header token
   const clientToken = request.headers.get("x-provider-admin-token") ?? "";
   const expectedBuf = Buffer.from(expectedToken);
   const clientBuf = Buffer.from(clientToken);
 
-  let tokenValid = false;
-  if (expectedBuf.length === clientBuf.length && expectedBuf.length > 0) {
-    tokenValid = crypto.timingSafeEqual(expectedBuf, clientBuf);
+  let headerValid = false;
+  if (expectedBuf.length === clientBuf.length && expectedBuf.length >= 32) {
+    headerValid = crypto.timingSafeEqual(expectedBuf, clientBuf);
   }
 
-  // 2. Token mismatch
-  if (!tokenValid) {
+  // Check cookie session
+  const cookieSession = request.cookies.get(SESSION_COOKIE_NAME)?.value ?? "";
+  const cookieValid = isValidSession(cookieSession);
+
+  // 2. Auth failure
+  if (!headerValid && !cookieValid) {
     const envelope: DataEnvelope<null> = {
       value: null,
       status: "error",
@@ -76,7 +82,7 @@ export function requireProviderAdmin(
       sourceTier: "official",
       warnings: [],
       updatedAt: new Date().toISOString(),
-      message: "인증 실패: 유효하지 않거나 누락된 admin 토큰입니다.",
+      message: "인증 실패: 유효한 관리자 토큰이나 세션 쿠키가 필요합니다.",
     };
     return {
       authorized: false,
@@ -84,32 +90,33 @@ export function requireProviderAdmin(
     };
   }
 
-  // 3. Browser mutation origin check (if applicable)
+  // 3. Strict Origin check for browser mutations
   const isMutation = options?.isMutation ?? ["POST", "PUT", "DELETE", "PATCH"].includes(request.method);
   if (isMutation) {
-    const origin = request.headers.get("origin");
-    const allowedOrigin = process.env.INTERNAL_APP_ORIGIN || `${request.nextUrl.protocol}//${request.nextUrl.host}`;
-    if (origin && allowedOrigin) {
-      try {
-        const reqOriginHost = new URL(origin).host;
-        const allowedOriginHost = new URL(allowedOrigin).host;
-        if (reqOriginHost !== allowedOriginHost) {
-          const envelope: DataEnvelope<null> = {
-            value: null,
-            status: "error",
-            source: "provider_admin_guard",
-            sourceTier: "official",
-            warnings: [],
-            updatedAt: new Date().toISOString(),
-            message: "CSRF 보호: 허용되지 않은 Origin입니다.",
-          };
-          return {
-            authorized: false,
-            response: createSafeResponse(envelope, 403),
-          };
-        }
-      } catch {
-        // Invalid origin header
+    const originHeader = request.headers.get("origin");
+    if (!originHeader) {
+      const envelope: DataEnvelope<null> = {
+        value: null,
+        status: "error",
+        source: "provider_admin_guard",
+        sourceTier: "official",
+        warnings: [],
+        updatedAt: new Date().toISOString(),
+        message: "CSRF 보호: Origin 헤더가 누락되었습니다.",
+      };
+      return {
+        authorized: false,
+        response: createSafeResponse(envelope, 403),
+      };
+    }
+
+    const internalOrigin = process.env.INTERNAL_APP_ORIGIN || `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+    try {
+      const reqOriginUrl = new URL(originHeader);
+      const allowedOriginUrl = new URL(internalOrigin);
+
+      // Compare exact protocol, host, and port
+      if (reqOriginUrl.origin !== allowedOriginUrl.origin) {
         const envelope: DataEnvelope<null> = {
           value: null,
           status: "error",
@@ -117,19 +124,33 @@ export function requireProviderAdmin(
           sourceTier: "official",
           warnings: [],
           updatedAt: new Date().toISOString(),
-          message: "CSRF 보호: 유효하지 않은 Origin 헤더입니다.",
+          message: "CSRF 보호: 허용되지 않은 Origin입니다.",
         };
         return {
           authorized: false,
           response: createSafeResponse(envelope, 403),
         };
       }
+    } catch {
+      const envelope: DataEnvelope<null> = {
+        value: null,
+        status: "error",
+        source: "provider_admin_guard",
+        sourceTier: "official",
+        warnings: [],
+        updatedAt: new Date().toISOString(),
+        message: "CSRF 보호: 유효하지 않은 Origin 헤더입니다.",
+      };
+      return {
+        authorized: false,
+        response: createSafeResponse(envelope, 403),
+      };
     }
   }
 
-  // 4. Rate limit check
-  const clientIp = request.headers.get("x-forwarded-for") || "local";
-  if (isRateLimited(clientIp)) {
+  // 4. Rate limiting (key by principal / socket rather than raw untrusted XFF)
+  const clientKey = cookieSession || clientToken.slice(0, 16) || "local_client";
+  if (isRateLimited(clientKey)) {
     const envelope: DataEnvelope<null> = {
       value: null,
       status: "rate_limited",

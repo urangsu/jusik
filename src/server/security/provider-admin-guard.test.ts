@@ -1,15 +1,25 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import { requireProviderAdmin } from "./provider-admin-guard";
+import { createSessionToken, SESSION_COOKIE_NAME } from "@/app/api/auth/admin/login/route";
 
-function makeReq(headers: Record<string, string> = {}, method = "GET", url = "http://localhost:3000/api/settings/providers") {
-  return new NextRequest(url, {
+function makeReq(
+  headers: Record<string, string> = {},
+  method = "GET",
+  url = "http://localhost:3000/api/settings/providers",
+  cookies: Record<string, string> = {}
+) {
+  const req = new NextRequest(url, {
     method,
     headers: new Headers(headers),
   });
+  for (const [k, v] of Object.entries(cookies)) {
+    req.cookies.set(k, v);
+  }
+  return req;
 }
 
-const VALID_TOKEN = "super_secret_admin_token_123456";
+const VALID_TOKEN = "super_secret_admin_token_123456789012345"; // 39 chars >= 32
 
 describe("requireProviderAdmin guard", () => {
   beforeEach(() => {
@@ -21,8 +31,8 @@ describe("requireProviderAdmin guard", () => {
     vi.unstubAllEnvs();
   });
 
-  it("fails 500 when PROVIDER_ADMIN_TOKEN is unconfigured or too short", () => {
-    vi.stubEnv("PROVIDER_ADMIN_TOKEN", "short");
+  it("fails 500 when PROVIDER_ADMIN_TOKEN is under 32 chars", () => {
+    vi.stubEnv("PROVIDER_ADMIN_TOKEN", "short_16_char_token_123");
     const result = requireProviderAdmin(makeReq());
     expect(result.authorized).toBe(false);
     if (!result.authorized) {
@@ -30,7 +40,7 @@ describe("requireProviderAdmin guard", () => {
     }
   });
 
-  it("fails 401 when x-provider-admin-token is missing", () => {
+  it("fails 401 when token and session are both missing", () => {
     const result = requireProviderAdmin(makeReq());
     expect(result.authorized).toBe(false);
     if (!result.authorized) {
@@ -38,23 +48,41 @@ describe("requireProviderAdmin guard", () => {
     }
   });
 
-  it("fails 401 when x-provider-admin-token is wrong", () => {
-    const result = requireProviderAdmin(makeReq({ "x-provider-admin-token": "wrong_token_123456789012345" }));
+  it("fails 401 when token is wrong", () => {
+    const result = requireProviderAdmin(makeReq({ "x-provider-admin-token": "wrong_token_1234567890123456789012345" }));
     expect(result.authorized).toBe(false);
     if (!result.authorized) {
       expect(result.response.status).toBe(401);
     }
   });
 
-  it("passes when valid token is provided for GET", () => {
+  it("passes when valid header token is provided for GET", () => {
     const result = requireProviderAdmin(makeReq({ "x-provider-admin-token": VALID_TOKEN }));
     expect(result.authorized).toBe(true);
   });
 
-  it("fails 403 when mutation origin does not match allowed origin", () => {
+  it("passes when valid session cookie is provided for GET", () => {
+    const sessionToken = createSessionToken();
+    const result = requireProviderAdmin(makeReq({}, "GET", "http://localhost:3000/api/settings/providers", {
+      [SESSION_COOKIE_NAME]: sessionToken,
+    }));
+    expect(result.authorized).toBe(true);
+  });
+
+  it("fails 403 when mutation request is missing Origin header", () => {
+    const result = requireProviderAdmin(
+      makeReq({ "x-provider-admin-token": VALID_TOKEN }, "POST")
+    );
+    expect(result.authorized).toBe(false);
+    if (!result.authorized) {
+      expect(result.response.status).toBe(403);
+    }
+  });
+
+  it("fails 403 when mutation origin scheme or host does not match", () => {
     const result = requireProviderAdmin(
       makeReq(
-        { "x-provider-admin-token": VALID_TOKEN, origin: "http://evil.com" },
+        { "x-provider-admin-token": VALID_TOKEN, origin: "https://localhost:3000" }, // scheme mismatch http vs https
         "POST"
       )
     );
@@ -64,7 +92,7 @@ describe("requireProviderAdmin guard", () => {
     }
   });
 
-  it("passes when mutation origin matches allowed origin", () => {
+  it("passes when mutation origin matches allowed origin exactly", () => {
     const result = requireProviderAdmin(
       makeReq(
         { "x-provider-admin-token": VALID_TOKEN, origin: "http://localhost:3000" },

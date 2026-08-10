@@ -184,7 +184,12 @@ async function runTarget(
             "x-internal-smoke-key": "",
           },
           body: target.method === "POST" && target.body ? JSON.stringify(target.body) : undefined,
+          redirect: "manual",
+          signal: AbortSignal.timeout(10000),
         });
+        if (response.status >= 300 && response.status < 400) {
+          throw new Error(`Redirect rejected (HTTP ${response.status}): smoke key will not be forwarded.`);
+        }
         httpStatus = response.status;
         raw = await response.json().catch(() => null);
       }
@@ -201,7 +206,12 @@ async function runTarget(
           "x-internal-smoke-key": internalKey || "",
         },
         body: target.method === "POST" && target.body ? JSON.stringify(target.body) : undefined,
+        redirect: "manual",
+        signal: AbortSignal.timeout(10000),
       });
+      if (response.status >= 300 && response.status < 400) {
+        throw new Error(`Redirect rejected (HTTP ${response.status}): smoke key will not be forwarded.`);
+      }
       httpStatus = response.status;
       raw = await response.json().catch(() => null);
     } catch (error) {

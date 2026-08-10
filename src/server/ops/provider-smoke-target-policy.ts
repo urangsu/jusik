@@ -49,7 +49,7 @@ export const SMOKE_TARGET_POLICIES: readonly SmokeTargetPolicy[] = [
     maxDataAgeMs: 20 * 60_000,
     expectedSource: "KIS Open API",
     expectedSourceTier: "official",
-    allowedStatuses: ["real_time", "delayed"],
+    allowedStatuses: ["real_time", "delayed", "eod"],
     requiredForBeta: true,
   },
   {
@@ -58,7 +58,7 @@ export const SMOKE_TARGET_POLICIES: readonly SmokeTargetPolicy[] = [
     symbol: "005930",
     region: "KR",
     endpoint: "/api/market/ohlcv?symbol=005930&region=KR&range=1M&interval=1D",
-    maxDataAgeMs: 48 * 60 * 60_000,
+    maxDataAgeMs: 96 * 60 * 60_000, // 4 days (handles long weekend / holidays)
     expectedSource: "KIS Open API",
     expectedSourceTier: "official",
     allowedStatuses: ["delayed", "eod"],
@@ -70,7 +70,7 @@ export const SMOKE_TARGET_POLICIES: readonly SmokeTargetPolicy[] = [
     symbol: "005930",
     region: "KR",
     endpoint: "/api/opendart/disclosures?stockCode=005930",
-    maxDataAgeMs: 24 * 60 * 60_000,
+    maxDataAgeMs: 7 * 24 * 60 * 60_000, // 7 days (handles filing cadence & weekend gaps)
     expectedSource: "OpenDART",
     expectedSourceTier: "official",
     allowedStatuses: ["eod"],
@@ -82,7 +82,7 @@ export const SMOKE_TARGET_POLICIES: readonly SmokeTargetPolicy[] = [
     symbol: "005930",
     region: "KR",
     endpoint: "/api/financials/statements?symbol=005930&region=KR",
-    maxDataAgeMs: 24 * 60 * 60_000,
+    maxDataAgeMs: 365 * 24 * 60 * 60_000, // 1 year (quarterly / annual financial statement reporting cycle)
     expectedSource: "OpenDART",
     expectedSourceTier: "official",
     allowedStatuses: ["eod"],

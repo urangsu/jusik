@@ -4,7 +4,7 @@ import { redactSensitive } from "./redact-sensitive";
 /**
  * Returns a NextResponse with redacted sensitive information.
  */
-export function createSafeResponse<T>(data: T, status = 200): Response {
+export function createSafeResponse<T>(data: T, status = 200): NextResponse {
   const redacted = redactSensitive(data);
   return NextResponse.json(redacted, { status });
 }

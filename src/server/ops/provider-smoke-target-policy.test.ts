@@ -49,9 +49,9 @@ describe("provider-smoke-target-policy registry", () => {
     expect(map.get("nonexistent/quote/X")).toBeUndefined();
   });
 
-  it("kis ohlcv has maxDataAgeMs of 48h", () => {
+  it("kis ohlcv has maxDataAgeMs of 96h", () => {
     const p = REQUIRED_BETA_POLICIES.find((p) => p.providerId === "kis" && p.capability === "ohlcv");
-    expect(p?.maxDataAgeMs).toBe(48 * 60 * 60_000);
+    expect(p?.maxDataAgeMs).toBe(96 * 60 * 60_000);
   });
 
   it("personal fallback providers are not required for beta", () => {

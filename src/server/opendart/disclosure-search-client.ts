@@ -161,6 +161,10 @@ export async function searchOpenDartDisclosures(
     const totalCount = parseInt(response.total_count || "0", 10);
     const totalPage = parseInt(response.total_page || "0", 10);
 
+    const newestDt = list.length > 0 && list[0].rcept_dt && /^\d{8}$/.test(list[0].rcept_dt)
+      ? `${list[0].rcept_dt.substring(0, 4)}-${list[0].rcept_dt.substring(4, 6)}-${list[0].rcept_dt.substring(6, 8)}T00:00:00.000Z`
+      : null;
+
     return {
       value: {
         pageNo,
@@ -174,6 +178,7 @@ export async function searchOpenDartDisclosures(
       sourceTier: "official",
       warnings: [],
       updatedAt: new Date().toISOString(),
+      dataAsOf: newestDt,
     };
   } catch (err: any) {
     return {

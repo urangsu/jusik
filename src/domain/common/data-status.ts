@@ -23,6 +23,8 @@ export type DataEnvelope<T> = {
   sourceTier: SourceUsagePolicy;
   warnings: SourceWarning[];
   updatedAt: string | null;
+  /** Upstream observation timestamp (trade time, candle timestamp, receipt date). NOT fetch time. */
+  dataAsOf?: string | null;
   delayMinutes?: number;
   errorCode?: string;
   message?: string;

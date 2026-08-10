@@ -54,6 +54,35 @@ describe("Provider Secret Store", () => {
     expect(key).toBe("my_opendart_key_12345");
   });
 
+  it("should store encrypted AES-256-GCM content on disk (not plaintext)", async () => {
+    await saveProviderSecret({
+      providerId: "opendart",
+      key: "OPENDART_API_KEY",
+      value: "secret_plaintext_value_abcde",
+    });
+
+    const rawDiskContent = (globalThis as any).__mockFileContent;
+    expect(rawDiskContent).not.toContain("secret_plaintext_value_abcde");
+    expect(rawDiskContent).toContain('"encrypted": true');
+  });
+
+  it("should support reading legacy unencrypted secret entries for backward compatibility", async () => {
+    (globalThis as any).__mockFileContent = JSON.stringify({
+      opendart: {
+        OPENDART_API_KEY: {
+          value: "legacy_unencrypted_secret_123",
+          updatedAt: "2026-06-01T00:00:00.000Z",
+        },
+      },
+    });
+
+    const key = await getProviderSecret({
+      providerId: "opendart",
+      key: "OPENDART_API_KEY",
+    });
+    expect(key).toBe("legacy_unencrypted_secret_123");
+  });
+
   it("should retrieve secrets synchronously", async () => {
     await saveProviderSecret({
       providerId: "kis",

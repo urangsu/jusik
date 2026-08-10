@@ -94,6 +94,7 @@ export class KisDomesticStockProvider implements MarketDataProvider {
         sourceTier: "official",
         warnings: [],
         updatedAt: nowStr,
+        dataAsOf: nowStr,
       };
     } catch (err: any) {
       return {

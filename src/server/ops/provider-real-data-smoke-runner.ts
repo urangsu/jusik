@@ -208,7 +208,11 @@ async function runSingleSmoke(
   // Schema validation
   if (passed && SCHEMA_SUPPORTED.has(policy.capability)) {
     const cap = policy.capability as Exclude<ProviderRealDataSmokeCapability, "news">;
-    const schemaResult = validateSmokeValue(cap, envelope.value);
+    const schemaResult = validateSmokeValue(cap, envelope.value, {
+      expectedSymbol: policy.symbol,
+      expectedRegion: policy.region,
+      expectedSource: policy.expectedSource,
+    });
     schemaValid = schemaResult.success;
     if (!schemaResult.success) {
       schemaIssues = (schemaResult.error.issues as unknown as Array<{ path: (string | number)[]; message: string }>)

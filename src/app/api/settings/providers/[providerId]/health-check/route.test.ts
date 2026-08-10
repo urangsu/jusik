@@ -3,7 +3,7 @@ import { POST } from "./route";
 import { NextRequest } from "next/server";
 import * as healthChecker from "@/server/settings/provider-health-checker";
 
-const VALID_TOKEN = "valid_admin_token_1234567890";
+const VALID_TOKEN = "valid_admin_token_32_characters_long_abcdef";
 
 function makeAdminReq(url = "http://localhost:3000/api/settings/providers/kis/health-check") {
   return new NextRequest(url, {
