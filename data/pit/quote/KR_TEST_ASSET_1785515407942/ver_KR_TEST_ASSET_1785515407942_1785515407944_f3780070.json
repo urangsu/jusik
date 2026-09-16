@@ -1,0 +1,17 @@
+{
+  "assetId": "KR:TEST_ASSET_1785515407942",
+  "providerId": "kis",
+  "capability": "quote",
+  "effectiveAt": "2026-07-15T10:00:00.000Z",
+  "ingestedAt": "2026-07-15T10:05:00.000Z",
+  "schemaVersion": "1.0",
+  "supersededRevisionId": "ver_KR_TEST_ASSET_1785515407942_1785515407943_d01b4149",
+  "status": "real_time",
+  "sourceTier": "official",
+  "warnings": [],
+  "value": {
+    "price": 55000
+  },
+  "dataVersionId": "ver_KR_TEST_ASSET_1785515407942_1785515407944_f3780070",
+  "contentHash": "f37800707b205244e4a1553bbacf9dbcca6a3ac17cf5caed56ea91c5470bbe3a"
+}

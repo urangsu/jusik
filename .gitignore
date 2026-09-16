@@ -144,3 +144,6 @@ data/debates/*
 
 data/surge/*
 !data/surge/.gitkeep
+
+# Subproject naver-blog-bot (has its own git repo: logonthe)
+/naver-blog-bot/
