@@ -1,6 +1,19 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import fs from "fs";
+import os from "os";
+import path from "path";
 import { saveVersionedEnvelope } from "./file-pit-store";
 import { selectPitRevision } from "./pit-revision-selector";
+
+let tmpDir = "";
+beforeAll(() => {
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "pit-test-"));
+  process.env.PIT_STORE_DIR = tmpDir;
+});
+afterAll(() => {
+  delete process.env.PIT_STORE_DIR;
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+});
 
 describe("PIT Store & Revision Selector", () => {
   it("selects correct point-in-time revision and rejects look-ahead revision", async () => {

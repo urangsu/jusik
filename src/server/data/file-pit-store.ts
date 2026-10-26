@@ -3,7 +3,11 @@ import path from "path";
 import crypto from "crypto";
 import { VersionedDataEnvelope } from "@/domain/data/versioned-data-envelope";
 
-const PIT_DIR = path.resolve(process.cwd(), "data", "pit");
+function getPitDir(): string {
+  return process.env.PIT_STORE_DIR
+    ? path.resolve(process.env.PIT_STORE_DIR)
+    : path.resolve(process.cwd(), "data", "pit");
+}
 
 export function computeEnvelopeHash(value: unknown): string {
   const json = JSON.stringify(value ?? null);
@@ -25,7 +29,7 @@ export async function saveVersionedEnvelope<T>(
     contentHash,
   };
 
-  const assetSubdir = path.join(PIT_DIR, envelope.capability, envelope.assetId.replace(/:/g, "_"));
+  const assetSubdir = path.join(getPitDir(), envelope.capability, envelope.assetId.replace(/:/g, "_"));
   await fs.mkdir(assetSubdir, { recursive: true });
 
   const finalPath = path.join(assetSubdir, `${dataVersionId}.json`);
@@ -42,7 +46,7 @@ export async function getVersionedEnvelopesForAsset<T>(
   capability: "quote" | "ohlcv" | "financials" | "filings",
   assetId: string
 ): Promise<VersionedDataEnvelope<T>[]> {
-  const assetSubdir = path.join(PIT_DIR, capability, assetId.replace(/:/g, "_"));
+  const assetSubdir = path.join(getPitDir(), capability, assetId.replace(/:/g, "_"));
   try {
     const files = await fs.readdir(assetSubdir);
     const envelopes: VersionedDataEnvelope<T>[] = [];
